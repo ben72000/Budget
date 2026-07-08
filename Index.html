@@ -1,0 +1,2036 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
+  <title>Budget — 100% privé, 100% local</title>
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ctext y='.9em' font-size='90'%3E%F0%9F%92%B0%3C/text%3E%3C/svg%3E" />
+  <style>
+/* ===== styles.css (inlined) ===== */
+/* ===== Budget app — styles ===== */
+
+:root {
+  --bg: #f5f6fa;
+  --surface: #ffffff;
+  --text: #2c3e50;
+  --muted: #7f8c8d;
+  --border: #e1e4e8;
+  --primary: #3498db;
+  --primary-dark: #2980b9;
+  --pos: #27ae60;
+  --neg: #e74c3c;
+  --warn: #f39c12;
+  --danger: #e74c3c;
+  --shadow: 0 1px 3px rgba(0, 0, 0, 0.05), 0 1px 2px rgba(0, 0, 0, 0.03);
+  --radius: 8px;
+  --gap: 16px;
+}
+
+* { box-sizing: border-box; }
+
+html, body {
+  margin: 0;
+  padding: 0;
+  background: var(--bg);
+  color: var(--text);
+  font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font-size: 15px;
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+}
+
+button { font-family: inherit; }
+
+/* ===== Layout ===== */
+
+body {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+}
+
+#app-header {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  box-shadow: var(--shadow);
+}
+
+#app-main {
+  flex: 1;
+  max-width: 1100px;
+  width: 100%;
+  margin: 0 auto;
+  padding: 20px;
+}
+
+/* ===== Header / nav ===== */
+
+.main-nav {
+  display: flex;
+  gap: 4px;
+  padding: 8px 16px 0;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.nav-btn {
+  background: none;
+  border: none;
+  padding: 10px 14px;
+  font-size: 14px;
+  color: var(--muted);
+  cursor: pointer;
+  border-radius: 6px 6px 0 0;
+  border-bottom: 2px solid transparent;
+  white-space: nowrap;
+  transition: color .15s, background .15s;
+}
+
+.nav-btn:hover { color: var(--text); background: rgba(0,0,0,0.03); }
+
+.nav-btn.active {
+  color: var(--primary);
+  border-bottom-color: var(--primary);
+}
+
+.month-nav {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 4px 16px 12px;
+  font-weight: 600;
+  flex-wrap: wrap;
+}
+
+.month-label {
+  min-width: 160px;
+  text-align: center;
+  text-transform: capitalize;
+  font-size: 16px;
+}
+
+/* ===== Buttons ===== */
+
+.btn {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  padding: 8px 14px;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 14px;
+  color: var(--text);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: background .15s, border-color .15s;
+}
+
+.btn:hover { background: #f8f9fa; border-color: #c8cdd2; }
+.btn:active { transform: translateY(1px); }
+
+.btn-primary {
+  background: var(--primary);
+  border-color: var(--primary);
+  color: #fff;
+}
+.btn-primary:hover { background: var(--primary-dark); border-color: var(--primary-dark); }
+
+.btn-danger {
+  background: var(--danger);
+  border-color: var(--danger);
+  color: #fff;
+}
+.btn-danger:hover { background: #c0392b; border-color: #c0392b; }
+
+.btn-ghost { background: transparent; border-color: transparent; color: var(--primary); }
+.btn-ghost:hover { background: rgba(52,152,219,0.08); }
+
+.btn-sm { padding: 5px 10px; font-size: 13px; }
+
+.icon-btn {
+  background: transparent;
+  border: none;
+  font-size: 18px;
+  width: 28px;
+  height: 28px;
+  border-radius: 50%;
+  cursor: pointer;
+  color: var(--muted);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  transition: background .15s, color .15s;
+}
+
+.icon-btn:hover { background: rgba(0,0,0,0.06); color: var(--text); }
+
+/* ===== Cards ===== */
+
+.cards {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: var(--gap);
+  margin-bottom: 20px;
+}
+
+.card {
+  background: var(--surface);
+  padding: 16px;
+  border-radius: var(--radius);
+  box-shadow: var(--shadow);
+  border-left: 4px solid var(--primary);
+}
+
+.card.pos { border-left-color: var(--pos); }
+.card.neg { border-left-color: var(--neg); }
+
+.card-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-bottom: 6px;
+}
+
+.card-value {
+  font-size: 22px;
+  font-weight: 700;
+}
+
+/* ===== Sections ===== */
+
+.section {
+  background: var(--surface);
+  border-radius: var(--radius);
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  box-shadow: var(--shadow);
+}
+
+.section h2 {
+  margin: 0;
+  font-size: 18px;
+}
+
+.section-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 14px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.actions { display: flex; gap: 8px; flex-wrap: wrap; }
+
+.empty {
+  color: var(--muted);
+  text-align: center;
+  padding: 20px;
+  font-style: italic;
+}
+
+.muted { color: var(--muted); font-size: 13px; }
+
+/* ===== Accounts ===== */
+
+.account-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+  gap: 12px;
+}
+
+.account-card {
+  background: #fafbfc;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  cursor: pointer;
+  transition: transform .12s, box-shadow .12s, border-color .12s;
+}
+
+.account-card:hover {
+  transform: translateY(-1px);
+  box-shadow: var(--shadow);
+  border-color: var(--primary);
+}
+
+.account-name { font-weight: 600; margin-bottom: 6px; }
+.account-balance { font-size: 18px; font-weight: 700; color: var(--pos); }
+.account-balance.neg { color: var(--neg); }
+.account-type { font-size: 12px; color: var(--muted); margin-top: 4px; }
+
+/* account table view */
+
+.account-table { display: flex; flex-direction: column; gap: 6px; }
+
+.account-row {
+  display: grid;
+  grid-template-columns: 1.5fr 1fr 1fr 1fr 80px;
+  gap: 10px;
+  padding: 10px 14px;
+  align-items: center;
+  background: #fafbfc;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .12s;
+}
+
+.account-row:hover { background: #f0f3f5; }
+.account-row.header {
+  background: transparent;
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: default;
+  padding: 4px 14px;
+}
+
+.account-row.header:hover { background: transparent; }
+
+/* ===== Envelopes ===== */
+
+.envelope-list { display: flex; flex-direction: column; gap: 8px; }
+
+.envelope-row {
+  display: grid;
+  grid-template-columns: 14px 1.5fr 1fr 1fr 1fr 1.5fr;
+  gap: 12px;
+  padding: 10px 12px;
+  align-items: center;
+  background: #fafbfc;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: background .12s;
+}
+
+.envelope-row:hover { background: #f0f3f5; }
+
+.envelope-row.header {
+  background: transparent;
+  font-weight: 600;
+  color: var(--muted);
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  cursor: default;
+  padding: 4px 12px;
+}
+
+.envelope-row.header:hover { background: transparent; }
+
+.envelope-color {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.envelope-name { font-weight: 500; }
+
+.envelope-budget, .envelope-spent, .envelope-remaining { font-variant-numeric: tabular-nums; }
+
+.envelope-remaining { font-weight: 600; color: var(--pos); }
+.envelope-remaining.warn { color: var(--warn); }
+.envelope-remaining.neg { color: var(--neg); }
+
+.envelope-bar {
+  background: #ecf0f1;
+  height: 8px;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.envelope-bar-fill {
+  height: 100%;
+  background: var(--pos);
+  transition: width .25s, background .25s;
+}
+
+.envelope-bar-fill.warn { background: var(--warn); }
+.envelope-bar-fill.over { background: var(--neg); }
+
+.envelope-actions { display: flex; gap: 4px; justify-content: flex-end; }
+
+.input-sm {
+  width: 100%;
+  padding: 4px 6px;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  font-size: 13px;
+  background: var(--surface);
+}
+
+/* ===== Transactions ===== */
+
+.filters {
+  display: flex;
+  gap: 16px;
+  flex-wrap: wrap;
+  align-items: center;
+  margin-bottom: 12px;
+  padding: 12px 16px;
+  background: #fafbfc;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+}
+
+.filters label {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.filters select { padding: 6px 10px; border: 1px solid var(--border); border-radius: 6px; background: var(--surface); font-size: 13px; }
+
+.filters-summary { margin-left: auto; display: flex; gap: 8px; }
+
+.pill {
+  display: inline-block;
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+.pill.pos { background: rgba(39,174,96,0.12); color: var(--pos); }
+.pill.neg { background: rgba(231,76,60,0.12); color: var(--neg); }
+
+.tx-list { display: flex; flex-direction: column; gap: 4px; }
+
+.tx-row {
+  display: grid;
+  grid-template-columns: 50px 1fr auto 28px;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #fafbfc;
+  border-radius: 6px;
+  align-items: center;
+  cursor: pointer;
+  transition: background .12s;
+}
+
+.tx-row:hover { background: #f0f3f5; }
+
+.tx-date {
+  font-variant-numeric: tabular-nums;
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.tx-main { min-width: 0; }
+.tx-payee { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-meta { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+
+.tx-amount {
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  text-align: right;
+}
+.tx-amount.pos { color: var(--pos); }
+.tx-amount.neg { color: var(--neg); }
+
+.tx-delete { visibility: hidden; }
+.tx-row:hover .tx-delete { visibility: visible; }
+
+/* ===== Modal ===== */
+
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0,0,0,0.4);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 100;
+  padding: 16px;
+}
+
+.modal {
+  background: var(--surface);
+  border-radius: var(--radius);
+  box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+  width: 100%;
+  max-width: 460px;
+  max-height: 90vh;
+  display: flex;
+  flex-direction: column;
+}
+
+.modal-header {
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+}
+
+.modal-header h2 { margin: 0; font-size: 18px; }
+
+.modal-body { padding: 16px 20px; overflow-y: auto; }
+
+.modal-footer {
+  padding: 12px 20px;
+  border-top: 1px solid var(--border);
+  display: flex;
+  justify-content: flex-end;
+  gap: 8px;
+}
+
+.modal-actions { display: flex; gap: 8px; justify-content: flex-end; }
+
+/* ===== Forms ===== */
+
+.form { display: flex; flex-direction: column; gap: 12px; }
+
+.form-row {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.form-row label {
+  font-size: 13px;
+  color: var(--muted);
+  font-weight: 500;
+}
+
+.form-row input,
+.form-row select {
+  padding: 8px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  font-size: 14px;
+  background: var(--surface);
+  color: var(--text);
+  width: 100%;
+}
+
+.form-row input:focus,
+.form-row select:focus {
+  outline: none;
+  border-color: var(--primary);
+  box-shadow: 0 0 0 2px rgba(52,152,219,0.15);
+}
+
+/* ===== Toast ===== */
+
+.toast {
+  position: fixed;
+  bottom: 24px;
+  left: 50%;
+  transform: translateX(-50%) translateY(20px);
+  background: #2c3e50;
+  color: #fff;
+  padding: 10px 18px;
+  border-radius: 6px;
+  font-size: 14px;
+  opacity: 0;
+  transition: opacity .25s, transform .25s;
+  z-index: 200;
+  box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+  pointer-events: none;
+}
+
+.toast.show { opacity: 1; transform: translateX(-50%) translateY(0); }
+.toast-success { background: var(--pos); }
+.toast-error { background: var(--neg); }
+
+/* ===== Mobile ===== */
+
+@media (max-width: 640px) {
+  #app-main { padding: 12px; }
+  .main-nav { padding: 6px 12px 0; }
+  .month-nav { padding: 4px 12px 10px; }
+  .nav-btn { padding: 8px 10px; font-size: 13px; }
+
+  .card-value { font-size: 18px; }
+
+  .envelope-row {
+    grid-template-columns: 12px 1fr 80px 80px;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .envelope-row.header { display: none; }
+  .envelope-bar { display: none; }
+  .envelope-spent, .envelope-budget, .envelope-remaining { font-size: 12px; }
+
+  .account-row {
+    grid-template-columns: 1.5fr 1fr 80px;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .account-row.header { display: none; }
+  .account-row > :nth-child(3) { display: none; } /* hide "Solde initial" on small screens */
+
+  .tx-row {
+    grid-template-columns: 40px 1fr auto;
+    gap: 8px;
+    font-size: 13px;
+  }
+  .tx-delete { display: none; }
+
+  .filters { padding: 10px; }
+  .filters label { font-size: 12px; }
+  .filters-summary { width: 100%; justify-content: flex-start; }
+}
+  </style>
+</head>
+<body>
+  <header id="app-header"></header>
+  <main id="app-main"></main>
+
+  <script>
+/* ===== db.js (inlined) ===== */
+// db.js — Storage layer. Uses localStorage so it works on file:// (iOS Safari)
+// AND on http(s)://. Same API surface as before so the rest of the app is untouched.
+
+const STORAGE_PREFIX = 'budget-app__';
+const KEY_VERSION = STORAGE_PREFIX + 'version';
+
+const STORES = ['accounts', 'envelopes', 'envelopeBudgets', 'transactions', 'settings'];
+
+let useFallback = false;
+
+function lsKey(store) {
+  return STORAGE_PREFIX + store;
+}
+
+function readStore(store) {
+  try {
+    const raw = localStorage.getItem(lsKey(store));
+    if (!raw) return [];
+    const parsed = JSON.parse(raw);
+    return Array.isArray(parsed) ? parsed : [];
+  } catch (e) {
+    console.warn(`db: failed to read ${store}`, e);
+    return [];
+  }
+}
+
+function writeStore(store, rows) {
+  try {
+    localStorage.setItem(lsKey(store), JSON.stringify(rows));
+    return true;
+  } catch (e) {
+    // Quota exceeded or localStorage unavailable — fall back to in-memory
+    console.warn(`db: failed to write ${store}, using in-memory fallback`, e);
+    useFallback = true;
+    memoryFallback[store] = rows;
+    return true;
+  }
+}
+
+const memoryFallback = {};
+for (const s of STORES) memoryFallback[s] = [];
+
+function uid() {
+  return (
+    Date.now().toString(36) +
+    Math.random().toString(36).slice(2, 8)
+  );
+}
+
+async function getAll(store) {
+  if (useFallback) return [...memoryFallback[store]];
+  return readStore(store);
+}
+
+async function get(store, id) {
+  const all = await getAll(store);
+  return all.find((r) => r.id === id || r.key === id) || null;
+}
+
+async function put(store, value) {
+  const all = await getAll(store);
+  const idField = store === 'settings' ? 'key' : 'id';
+  const idx = all.findIndex((r) => r[idField] === value[idField]);
+  if (idx >= 0) all[idx] = value;
+  else all.push(value);
+  writeStore(store, all);
+  return value;
+}
+
+async function del(store, id) {
+  const all = await getAll(store);
+  const idField = store === 'settings' ? 'key' : 'id';
+  const filtered = all.filter((r) => r[idField] !== id);
+  writeStore(store, filtered);
+}
+
+async function getSetting(key, fallback = null) {
+  const row = await get('settings', key);
+  return row ? row.value : fallback;
+}
+
+async function setSetting(key, value) {
+  return put('settings', { key, value });
+}
+
+async function exportAll() {
+  const [accounts, envelopes, envelopeBudgets, transactions, settings] =
+    await Promise.all([
+      getAll('accounts'),
+      getAll('envelopes'),
+      getAll('envelopeBudgets'),
+      getAll('transactions'),
+      getAll('settings'),
+    ]);
+  return {
+    version: 1,
+    exportedAt: new Date().toISOString(),
+    accounts,
+    envelopes,
+    envelopeBudgets,
+    transactions,
+    settings,
+  };
+}
+
+async function importAll(data, { merge = false } = {}) {
+  if (!data || typeof data !== 'object') throw new Error('Invalid backup file');
+  if (!merge) {
+    for (const s of STORES) writeStore(s, []);
+  }
+  for (const s of STORES) {
+    const arr = Array.isArray(data[s]) ? data[s] : [];
+    const existing = await getAll(s);
+    const idField = s === 'settings' ? 'key' : 'id';
+    const map = new Map(existing.map((r) => [r[idField], r]));
+    for (const row of arr) map.set(row[idField], row);
+    writeStore(s, Array.from(map.values()));
+  }
+}
+
+async function wipeAll() {
+  for (const s of STORES) writeStore(s, []);
+}
+
+// Sanity check on init — confirm storage works, otherwise fall back
+function checkStorage() {
+  try {
+    const test = '__budget_test__';
+    localStorage.setItem(test, '1');
+    localStorage.removeItem(test);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+if (!checkStorage()) {
+  console.warn('db: localStorage unavailable, using in-memory only (data will not persist)');
+  useFallback = true;
+}
+
+// Bump version so users with old IDB-based data know to start fresh
+localStorage.setItem(KEY_VERSION, '2');
+
+window.DB = {
+  uid,
+  getAll,
+  get,
+  put,
+  del,
+  getSetting,
+  setSetting,
+  exportAll,
+  importAll,
+  wipeAll,
+};
+  </script>
+  <script>
+/* ===== ui.js (inlined) ===== */
+// ui.js — Rendering and DOM helpers for the budget app
+// Pure rendering; no business logic. All data comes from window.App.
+
+const UI = (() => {
+  // ---------- formatters ----------
+  function fmtMoney(amount, currency = 'EUR') {
+    const n = Number(amount) || 0;
+    try {
+      return new Intl.NumberFormat('fr-FR', {
+        style: 'currency',
+        currency,
+        minimumFractionDigits: 2,
+      }).format(n);
+    } catch {
+      return `${n.toFixed(2)} ${currency}`;
+    }
+  }
+
+  function fmtSignedMoney(amount, currency = 'EUR') {
+    const s = fmtMoney(Math.abs(amount), currency);
+    return amount < 0 ? `−${s}` : amount > 0 ? `+${s}` : s;
+  }
+
+  function todayYM() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  function ymLabel(ym) {
+    const [y, m] = ym.split('-').map(Number);
+    const d = new Date(y, m - 1, 1);
+    return d.toLocaleDateString('fr-FR', { month: 'long', year: 'numeric' });
+  }
+
+  function shiftYM(ym, delta) {
+    const [y, m] = ym.split('-').map(Number);
+    const d = new Date(y, m - 1 + delta, 1);
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}`;
+  }
+
+  function ymRange(startYM, count) {
+    const arr = [];
+    let cur = startYM;
+    for (let i = 0; i < count; i++) {
+      arr.push(cur);
+      cur = shiftYM(cur, 1);
+    }
+    return arr;
+  }
+
+  function parseAmount(input) {
+    if (input === null || input === undefined) return 0;
+    const s = String(input).trim().replace(/\s/g, '').replace(',', '.');
+    const n = parseFloat(s);
+    return Number.isFinite(n) ? n : 0;
+  }
+
+  function todayISO() {
+    const d = new Date();
+    return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
+  }
+
+  function escapeHTML(s) {
+    return String(s ?? '').replace(/[&<>"']/g, (c) =>
+      ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[c])
+    );
+  }
+
+  // ---------- DOM helpers ----------
+  function el(tag, attrs = {}, ...children) {
+    const node = document.createElement(tag);
+    for (const [k, v] of Object.entries(attrs)) {
+      if (k === 'class') node.className = v;
+      else if (k === 'dataset') Object.assign(node.dataset, v);
+      else if (k.startsWith('on') && typeof v === 'function')
+        node.addEventListener(k.slice(2).toLowerCase(), v);
+      else if (v === true) node.setAttribute(k, '');
+      else if (v === false || v === null || v === undefined) continue;
+      else node.setAttribute(k, v);
+    }
+    for (const c of children.flat()) {
+      if (c === null || c === undefined || c === false) continue;
+      node.appendChild(typeof c === 'string' ? document.createTextNode(c) : c);
+    }
+    return node;
+  }
+
+  // ---------- modal ----------
+  function showModal(title, bodyNode, footerNode = null) {
+    closeModal();
+    const overlay = el('div', { class: 'modal-overlay', id: 'modal-overlay' });
+    const modal = el('div', { class: 'modal' });
+    modal.appendChild(el('div', { class: 'modal-header' }, el('h2', {}, title)));
+    modal.appendChild(el('div', { class: 'modal-body' }, bodyNode));
+    if (footerNode) modal.appendChild(el('div', { class: 'modal-footer' }, footerNode));
+    overlay.appendChild(modal);
+    overlay.addEventListener('click', (e) => {
+      if (e.target === overlay) closeModal();
+    });
+    document.body.appendChild(overlay);
+    return overlay;
+  }
+
+  function closeModal() {
+    const existing = document.getElementById('modal-overlay');
+    if (existing) existing.remove();
+  }
+
+  function confirmModal(message) {
+    return new Promise((resolve) => {
+      const yes = el(
+        'button',
+        { class: 'btn btn-danger', onclick: () => { closeModal(); resolve(true); } },
+        'Confirmer'
+      );
+      const no = el(
+        'button',
+        { class: 'btn', onclick: () => { closeModal(); resolve(false); } },
+        'Annuler'
+      );
+      showModal('Confirmation', el('p', {}, message), el('div', { class: 'modal-actions' }, no, yes));
+    });
+  }
+
+  function toast(message, kind = 'info') {
+    const t = el('div', { class: `toast toast-${kind}` }, message);
+    document.body.appendChild(t);
+    requestAnimationFrame(() => t.classList.add('show'));
+    setTimeout(() => {
+      t.classList.remove('show');
+      setTimeout(() => t.remove(), 250);
+    }, 2200);
+  }
+
+  // ---------- view renderers ----------
+  function renderHeader(state) {
+    const header = document.getElementById('app-header');
+    header.innerHTML = '';
+
+    const nav = el(
+      'nav',
+      { class: 'main-nav' },
+      navButton('dashboard', 'Tableau de bord'),
+      navButton('transactions', 'Transactions'),
+      navButton('envelopes', 'Enveloppes'),
+      navButton('accounts', 'Comptes'),
+      navButton('settings', 'Paramètres')
+    );
+
+    function navButton(view, label) {
+      return el(
+        'button',
+        {
+          class: `nav-btn ${state.view === view ? 'active' : ''}`,
+          onclick: () => App.setView(view),
+        },
+        label
+      );
+    }
+
+    const monthNav = el(
+      'div',
+      { class: 'month-nav' },
+      el(
+        'button',
+        {
+          class: 'icon-btn',
+          title: 'Mois précédent',
+          onclick: () => App.setMonth(shiftYM(state.month, -1)),
+        },
+        '‹'
+      ),
+      el('span', { class: 'month-label' }, ymLabel(state.month)),
+      el(
+        'button',
+        {
+          class: 'icon-btn',
+          title: 'Mois suivant',
+          onclick: () => App.setMonth(shiftYM(state.month, 1)),
+        },
+        '›'
+      ),
+      state.month !== todayYM()
+        ? el(
+            'button',
+            { class: 'btn btn-ghost btn-sm', onclick: () => App.setMonth(todayYM()) },
+            "Aujourd'hui"
+          )
+        : null
+    );
+
+    header.append(nav, monthNav);
+  }
+
+  // ---------- Dashboard ----------
+  function renderDashboard(state) {
+    const root = document.getElementById('app-main');
+    root.innerHTML = '';
+
+    const accounts = state.data.accounts.filter((a) => !a.archived);
+    const envelopes = state.data.envelopes.filter((e) => !e.archived);
+
+    // Net worth = sum of all account balances
+    const netWorth = accounts.reduce(
+      (acc, a) => acc + computeAccountBalance(a, state.data.transactions),
+      0
+    );
+
+    // Income / expense for the month
+    const { income, expense } = monthlyTotals(state);
+
+    // Envelope totals
+    const envelopeSummary = envelopes.map((env) => {
+      const budget = getBudgetForMonth(env, state.month, state.data.envelopeBudgets);
+      const spent = sumEnvelopeSpent(env.id, state.month, state.data.transactions);
+      return {
+        env,
+        budget,
+        spent,
+        remaining: budget - spent,
+      };
+    });
+    const totalBudget = envelopeSummary.reduce((a, b) => a + b.budget, 0);
+    const totalSpent = envelopeSummary.reduce((a, b) => a + b.spent, 0);
+
+    // Header cards
+    const cards = el(
+      'div',
+      { class: 'cards' },
+      card('Solde total', fmtMoney(netWorth, state.currency), netWorth >= 0 ? 'pos' : 'neg'),
+      card('Revenus du mois', fmtMoney(income, state.currency), 'pos'),
+      card('Dépenses du mois', fmtMoney(expense, state.currency), 'neg'),
+      card(
+        'Budget enveloppes',
+        `${fmtMoney(totalSpent, state.currency)} / ${fmtMoney(totalBudget, state.currency)}`,
+        totalSpent <= totalBudget ? 'pos' : 'neg'
+      )
+    );
+
+    // Accounts mini-list
+    const accountsSection = el(
+      'section',
+      { class: 'section' },
+      el(
+        'div',
+        { class: 'section-head' },
+        el('h2', {}, 'Comptes'),
+        el(
+          'button',
+          { class: 'btn btn-sm', onclick: () => App.openAccountModal() },
+          '+ Ajouter'
+        )
+      ),
+      el(
+        'div',
+        { class: 'account-grid' },
+        ...accounts.map((a) => {
+          const bal = computeAccountBalance(a, state.data.transactions);
+          return el(
+            'div',
+            { class: 'account-card', onclick: () => App.openAccountModal(a) },
+            el('div', { class: 'account-name' }, a.name),
+            el(
+              'div',
+              { class: `account-balance ${bal < 0 ? 'neg' : ''}` },
+              fmtMoney(bal, state.currency)
+            ),
+            el('div', { class: 'account-type' }, a.type || '—')
+          );
+        }),
+        accounts.length === 0
+          ? el('p', { class: 'empty' }, "Aucun compte. Commence par en créer un.")
+          : null
+      )
+    );
+
+    // Envelopes mini-list
+    const envelopesSection = el(
+      'section',
+      { class: 'section' },
+      el(
+        'div',
+        { class: 'section-head' },
+        el('h2', {}, 'Enveloppes'),
+        el(
+          'button',
+          { class: 'btn btn-sm', onclick: () => App.openEnvelopeModal() },
+          '+ Ajouter'
+        )
+      ),
+      el(
+        'div',
+        { class: 'envelope-list' },
+        ...envelopeSummary.map(({ env, budget, spent, remaining }) =>
+          el(
+            'div',
+            {
+              class: 'envelope-row',
+              onclick: () => App.openEnvelopeModal(env),
+            },
+            el(
+              'div',
+              { class: 'envelope-color', style: `background:${env.color || '#888'}` }
+            ),
+            el('div', { class: 'envelope-name' }, env.name),
+            el('div', { class: 'envelope-budget' }, fmtMoney(budget, state.currency)),
+            el('div', { class: 'envelope-spent' }, fmtMoney(spent, state.currency)),
+            el(
+              'div',
+              {
+                class: `envelope-remaining ${
+                  remaining < 0 ? 'neg' : remaining < budget * 0.1 ? 'warn' : ''
+                }`,
+              },
+              fmtMoney(remaining, state.currency)
+            ),
+            el(
+              'div',
+              { class: 'envelope-bar' },
+              el('div', {
+                class: `envelope-bar-fill ${
+                  spent > budget ? 'over' : spent > budget * 0.9 ? 'warn' : ''
+                }`,
+                style: `width:${Math.min(100, budget > 0 ? (spent / budget) * 100 : 0)}%`,
+              })
+            )
+          )
+        ),
+        envelopes.length === 0
+          ? el(
+              'p',
+              { class: 'empty' },
+              "Aucune enveloppe. Crée-en pour catégoriser tes dépenses."
+            )
+          : null
+      )
+    );
+
+    // Recent transactions
+    const recent = [...state.data.transactions]
+      .sort((a, b) => (b.date.localeCompare(a.date)) || (b.createdAt - a.createdAt))
+      .slice(0, 8);
+    const txSection = el(
+      'section',
+      { class: 'section' },
+      el(
+        'div',
+        { class: 'section-head' },
+        el('h2', {}, 'Transactions récentes'),
+        el(
+          'button',
+          { class: 'btn btn-sm', onclick: () => App.setView('transactions') },
+          'Voir tout'
+        )
+      ),
+      el(
+        'div',
+        { class: 'tx-list' },
+        ...recent.map((t) => renderTxRow(t, state)),
+        recent.length === 0 ? el('p', { class: 'empty' }, 'Aucune transaction.') : null
+      )
+    );
+
+    root.append(cards, accountsSection, envelopesSection, txSection);
+  }
+
+  function card(label, value, kind = '') {
+    return el(
+      'div',
+      { class: `card ${kind}` },
+      el('div', { class: 'card-label' }, label),
+      el('div', { class: 'card-value' }, value)
+    );
+  }
+
+  // ---------- Transactions view ----------
+  function renderTransactions(state) {
+    const root = document.getElementById('app-main');
+    root.innerHTML = '';
+
+    // Filters
+    const filterAccount = state.filters.accountId || '';
+    const filterEnvelope = state.filters.envelopeId || '';
+
+    const filtered = state.data.transactions.filter((t) => {
+      if (!inMonth(t.date, state.month)) return false;
+      if (filterAccount && t.accountId !== filterAccount) return false;
+      if (filterEnvelope && t.envelopeId !== filterEnvelope) return false;
+      return true;
+    });
+
+    const { income, expense } = totalsFor(filtered);
+
+    const filters = el(
+      'div',
+      { class: 'filters' },
+      el('label', {}, 'Compte ', selectAccounts(state, filterAccount, (v) => App.setFilter('accountId', v))),
+      el(
+        'label',
+        {},
+        'Enveloppe ',
+        selectEnvelopes(state, filterEnvelope, (v) => App.setFilter('envelopeId', v), true)
+      ),
+      el('div', { class: 'filters-summary' },
+        el('span', { class: 'pill pos' }, `+ ${fmtMoney(income, state.currency)}`),
+        el('span', { class: 'pill neg' }, `− ${fmtMoney(expense, state.currency)}`)
+      )
+    );
+
+    const addBtn = el(
+      'button',
+      { class: 'btn btn-primary', onclick: () => App.openTransactionModal() },
+      '+ Nouvelle transaction'
+    );
+
+    const headerRow = el(
+      'div',
+      { class: 'section-head' },
+      el('h2', {}, `Transactions — ${ymLabel(state.month)}`),
+      addBtn
+    );
+
+    const list = el(
+      'div',
+      { class: 'tx-list' },
+      ...filtered
+        .sort((a, b) => (b.date.localeCompare(a.date)) || (b.createdAt - a.createdAt))
+        .map((t) => renderTxRow(t, state)),
+      filtered.length === 0
+        ? el('p', { class: 'empty' }, 'Aucune transaction pour ce mois / ces filtres.')
+        : null
+    );
+
+    root.append(headerRow, filters, list);
+  }
+
+  function renderTxRow(t, state) {
+    const acc = state.data.accounts.find((a) => a.id === t.accountId);
+    const env = state.data.envelopes.find((e) => e.id === t.envelopeId);
+    const isExpense = t.type === 'expense';
+    return el(
+      'div',
+      { class: 'tx-row', onclick: () => App.openTransactionModal(t) },
+      el('div', { class: 'tx-date' }, t.date.slice(8, 10) + '/' + t.date.slice(5, 7)),
+      el(
+        'div',
+        { class: 'tx-main' },
+        el('div', { class: 'tx-payee' }, t.payee || '(sans libellé)'),
+        el(
+          'div',
+          { class: 'tx-meta' },
+          acc ? acc.name : '—',
+          env ? ` · ${env.name}` : '',
+          t.notes ? ` · ${t.notes}` : ''
+        )
+      ),
+      el(
+        'div',
+        { class: `tx-amount ${isExpense ? 'neg' : 'pos'}` },
+        fmtSignedMoney(isExpense ? -Math.abs(t.amount) : Math.abs(t.amount), state.currency)
+      ),
+      el(
+        'button',
+        {
+          class: 'icon-btn tx-delete',
+          title: 'Supprimer',
+          onclick: async (e) => {
+            e.stopPropagation();
+            const ok = await confirmModal('Supprimer cette transaction ?');
+            if (ok) await App.deleteTransaction(t.id);
+          },
+        },
+        '×'
+      )
+    );
+  }
+
+  function selectAccounts(state, value, onChange) {
+    const sel = el('select', {
+      onchange: (e) => onChange(e.target.value),
+    });
+    sel.appendChild(el('option', { value: '' }, 'Tous les comptes'));
+    for (const a of state.data.accounts) {
+      const opt = el('option', { value: a.id }, a.name);
+      if (a.id === value) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    return sel;
+  }
+
+  function selectEnvelopes(state, value, onChange, withNone = true) {
+    const sel = el('select', { onchange: (e) => onChange(e.target.value) });
+    if (withNone) sel.appendChild(el('option', { value: '' }, 'Toutes les enveloppes'));
+    for (const e of state.data.envelopes) {
+      const opt = el('option', { value: e.id }, e.name);
+      if (e.id === value) opt.selected = true;
+      sel.appendChild(opt);
+    }
+    return sel;
+  }
+
+  // ---------- Envelopes view ----------
+  function renderEnvelopes(state) {
+    const root = document.getElementById('app-main');
+    root.innerHTML = '';
+
+    const envelopes = state.data.envelopes;
+    const headerRow = el(
+      'div',
+      { class: 'section-head' },
+      el('h2', {}, `Enveloppes — ${ymLabel(state.month)}`),
+      el(
+        'div',
+        { class: 'actions' },
+        el(
+          'button',
+          { class: 'btn btn-primary', onclick: () => App.openEnvelopeModal() },
+          '+ Nouvelle enveloppe'
+        )
+      )
+    );
+
+    const list = el(
+      'div',
+      { class: 'envelope-table' },
+      el(
+        'div',
+        { class: 'envelope-row header' },
+        el('div', {}, ''),
+        el('div', {}, 'Nom'),
+        el('div', {}, 'Budget'),
+        el('div', {}, 'Dépensé'),
+        el('div', {}, 'Reste'),
+        el('div', {}, '')
+      ),
+      ...envelopes.map((env) => {
+        const budget = getBudgetForMonth(env, state.month, state.data.envelopeBudgets);
+        const spent = sumEnvelopeSpent(env.id, state.month, state.data.transactions);
+        const remaining = budget - spent;
+        const budgetInput = el('input', {
+          type: 'number',
+          step: '0.01',
+          value: budget || '',
+          placeholder: '0.00',
+          class: 'input-sm',
+          onchange: (e) =>
+            App.setEnvelopeBudget(env.id, state.month, parseAmount(e.target.value)),
+        });
+        return el(
+          'div',
+          { class: 'envelope-row' },
+          el('div', { class: 'envelope-color', style: `background:${env.color || '#888'}` }),
+          el(
+            'div',
+            { class: 'envelope-name', onclick: () => App.openEnvelopeModal(env) },
+            env.name
+          ),
+          el('div', { class: 'envelope-budget' }, budgetInput),
+          el('div', { class: 'envelope-spent' }, fmtMoney(spent, state.currency)),
+          el(
+            'div',
+            {
+              class: `envelope-remaining ${
+                remaining < 0 ? 'neg' : remaining < budget * 0.1 ? 'warn' : ''
+              }`,
+            },
+            fmtMoney(remaining, state.currency)
+          ),
+          el(
+            'div',
+            { class: 'envelope-actions' },
+            el(
+              'button',
+              { class: 'icon-btn', title: 'Modifier', onclick: () => App.openEnvelopeModal(env) },
+              '✎'
+            ),
+            el(
+              'button',
+              {
+                class: 'icon-btn',
+                title: 'Supprimer',
+                onclick: async () => {
+                  const ok = await confirmModal(`Supprimer l'enveloppe "${env.name}" ?`);
+                  if (ok) await App.deleteEnvelope(env.id);
+                },
+              },
+              '×'
+            )
+          )
+        );
+      }),
+      envelopes.length === 0
+        ? el('p', { class: 'empty' }, 'Aucune enveloppe.')
+        : null
+    );
+
+    root.append(headerRow, list);
+  }
+
+  // ---------- Accounts view ----------
+  function renderAccounts(state) {
+    const root = document.getElementById('app-main');
+    root.innerHTML = '';
+
+    const headerRow = el(
+      'div',
+      { class: 'section-head' },
+      el('h2', {}, 'Comptes'),
+      el(
+        'button',
+        { class: 'btn btn-primary', onclick: () => App.openAccountModal() },
+        '+ Nouveau compte'
+      )
+    );
+
+    const total = state.data.accounts.reduce(
+      (acc, a) => acc + computeAccountBalance(a, state.data.transactions),
+      0
+    );
+
+    const summary = el(
+      'div',
+      { class: 'cards' },
+      card('Solde global', fmtMoney(total, state.currency), total >= 0 ? 'pos' : 'neg')
+    );
+
+    const list = el(
+      'div',
+      { class: 'account-table' },
+      el(
+        'div',
+        { class: 'account-row header' },
+        el('div', {}, 'Nom'),
+        el('div', {}, 'Type'),
+        el('div', {}, 'Solde initial'),
+        el('div', {}, 'Solde actuel'),
+        el('div', {}, '')
+      ),
+      ...state.data.accounts.map((a) => {
+        const bal = computeAccountBalance(a, state.data.transactions);
+        return el(
+          'div',
+          { class: 'account-row', onclick: () => App.openAccountModal(a) },
+          el('div', { class: 'account-name' }, a.name),
+          el('div', { class: 'account-type' }, a.type || '—'),
+          el('div', {}, fmtMoney(a.openingBalance || 0, state.currency)),
+          el('div', { class: bal < 0 ? 'neg' : '' }, fmtMoney(bal, state.currency)),
+          el(
+            'div',
+            { class: 'envelope-actions' },
+            el(
+              'button',
+              { class: 'icon-btn', title: 'Modifier', onclick: (e) => { e.stopPropagation(); App.openAccountModal(a); } },
+              '✎'
+            ),
+            el(
+              'button',
+              {
+                class: 'icon-btn',
+                title: 'Supprimer',
+                onclick: async (e) => {
+                  e.stopPropagation();
+                  const ok = await confirmModal(`Supprimer le compte "${a.name}" ? Les transactions associées seront également supprimées.`);
+                  if (ok) await App.deleteAccount(a.id);
+                },
+              },
+              '×'
+            )
+          )
+        );
+      }),
+      state.data.accounts.length === 0
+        ? el('p', { class: 'empty' }, 'Aucun compte.')
+        : null
+    );
+
+    root.append(headerRow, summary, list);
+  }
+
+  // ---------- Settings view ----------
+  function renderSettings(state) {
+    const root = document.getElementById('app-main');
+    root.innerHTML = '';
+
+    const currencySection = el(
+      'section',
+      { class: 'section' },
+      el('h2', {}, 'Préférences'),
+      el(
+        'div',
+        { class: 'form-row' },
+        el('label', {}, 'Devise'),
+        (() => {
+          const sel = el('select', {
+            onchange: async (e) => {
+              await App.setCurrency(e.target.value);
+              UI.toast('Devise mise à jour', 'success');
+            },
+          });
+          for (const c of ['EUR', 'USD', 'GBP', 'CHF', 'CAD', 'JPY']) {
+            const opt = el('option', { value: c }, c);
+            if (c === state.currency) opt.selected = true;
+            sel.appendChild(opt);
+          }
+          return sel;
+        })()
+      )
+    );
+
+    const dataSection = el(
+      'section',
+      { class: 'section' },
+      el('h2', {}, 'Données'),
+      el(
+        'p',
+        { class: 'muted' },
+        'Tes données sont stockées localement dans ce navigateur (IndexedDB). Pense à exporter régulièrement un backup.'
+      ),
+      el(
+        'div',
+        { class: 'actions' },
+        el(
+          'button',
+          {
+            class: 'btn',
+            onclick: async () => {
+              const data = await DB.exportAll();
+              const blob = new Blob([JSON.stringify(data, null, 2)], {
+                type: 'application/json',
+              });
+              const url = URL.createObjectURL(blob);
+              const a = el('a', {
+                href: url,
+                download: `budget-backup-${todayISO()}.json`,
+              });
+              document.body.appendChild(a);
+              a.click();
+              a.remove();
+              URL.revokeObjectURL(url);
+              UI.toast('Export téléchargé', 'success');
+            },
+          },
+          '📥 Exporter en JSON'
+        ),
+        el(
+          'label',
+          { class: 'btn' },
+          '📤 Importer un JSON',
+          el('input', {
+            type: 'file',
+            accept: 'application/json',
+            style: 'display:none',
+            onchange: async (e) => {
+              const file = e.target.files[0];
+              if (!file) return;
+              const text = await file.text();
+              try {
+                const data = JSON.parse(text);
+                const merge = confirm('OK = fusionner avec les données existantes.\nAnnuler = remplacer toutes les données.');
+                await DB.importAll(data, { merge });
+                await App.reload();
+                UI.toast('Import réussi', 'success');
+              } catch (err) {
+                UI.toast('Fichier invalide', 'error');
+              }
+            },
+          })
+        )
+      )
+    );
+
+    const dangerSection = el(
+      'section',
+      { class: 'section' },
+      el('h2', {}, 'Zone dangereuse'),
+      el(
+        'p',
+        { class: 'muted' },
+        'Supprime définitivement toutes les données de ce navigateur.'
+      ),
+      el(
+        'button',
+        {
+          class: 'btn btn-danger',
+          onclick: async () => {
+            const ok = await confirmModal('Tout supprimer ? Cette action est irréversible.');
+            if (ok) {
+              await DB.wipeAll();
+              await App.reload();
+              UI.toast('Données supprimées', 'success');
+            }
+          },
+        },
+        '🗑️ Tout effacer'
+      )
+    );
+
+    const helpSection = el(
+      'section',
+      { class: 'section' },
+      el('h2', {}, 'À propos'),
+      el(
+        'p',
+        {},
+        'Budget app 100% offline. Zéro serveur, zéro compte, zéro cloud. ',
+        el('strong', {}, 'Tes données ne quittent jamais ce navigateur.')
+      ),
+      el(
+        'p',
+        { class: 'muted' },
+        'Compatible PWA : tu peux l’installer sur ton téléphone depuis le menu du navigateur.'
+      )
+    );
+
+    root.append(currencySection, dataSection, dangerSection, helpSection);
+  }
+
+  // ---------- compute helpers ----------
+  function computeAccountBalance(account, transactions) {
+    let bal = Number(account.openingBalance) || 0;
+    for (const t of transactions) {
+      if (t.accountId !== account.id) continue;
+      if (t.type === 'income') bal += Math.abs(t.amount);
+      else if (t.type === 'expense') bal -= Math.abs(t.amount);
+    }
+    return bal;
+  }
+
+  function sumEnvelopeSpent(envelopeId, ym, transactions) {
+    let sum = 0;
+    for (const t of transactions) {
+      if (t.envelopeId !== envelopeId) continue;
+      if (t.type !== 'expense') continue;
+      if (!inMonth(t.date, ym)) continue;
+      sum += Math.abs(t.amount);
+    }
+    return sum;
+  }
+
+  function getBudgetForMonth(env, ym, allBudgets) {
+    const id = `${env.id}__${ym}`;
+    const row = allBudgets.find((b) => b.id === id);
+    return row ? Number(row.amount) || 0 : 0;
+  }
+
+  function monthlyTotals(state) {
+    return totalsFor(
+      state.data.transactions.filter((t) => inMonth(t.date, state.month))
+    );
+  }
+
+  function totalsFor(txs) {
+    let income = 0, expense = 0;
+    for (const t of txs) {
+      if (t.type === 'income') income += Math.abs(t.amount);
+      else if (t.type === 'expense') expense += Math.abs(t.amount);
+    }
+    return { income, expense };
+  }
+
+  function inMonth(dateISO, ym) {
+    return typeof dateISO === 'string' && dateISO.slice(0, 7) === ym;
+  }
+
+  return {
+    fmtMoney,
+    fmtSignedMoney,
+    todayYM,
+    todayISO,
+    shiftYM,
+    ymLabel,
+    ymRange,
+    parseAmount,
+    escapeHTML,
+    el,
+    showModal,
+    closeModal,
+    confirmModal,
+    toast,
+    renderHeader,
+    renderDashboard,
+    renderTransactions,
+    renderEnvelopes,
+    renderAccounts,
+    renderSettings,
+    // expose compute helpers used by app.js
+    computeAccountBalance,
+    sumEnvelopeSpent,
+    getBudgetForMonth,
+    monthlyTotals,
+    inMonth,
+  };
+})();
+  </script>
+  <script>
+/* ===== app.js (inlined) ===== */
+// app.js — Main controller. Owns state, wires up events, manages modals.
+
+const App = (() => {
+  const state = {
+    view: 'dashboard',
+    month: UI.todayYM(),
+    currency: 'EUR',
+    filters: { accountId: '', envelopeId: '' },
+    data: {
+      accounts: [],
+      envelopes: [],
+      envelopeBudgets: [],
+      transactions: [],
+    },
+  };
+
+  // ---------- init ----------
+  async function init() {
+    await reload();
+    render();
+  }
+
+  async function reload() {
+    const [accounts, envelopes, envelopeBudgets, transactions, currency] =
+      await Promise.all([
+        DB.getAll('accounts'),
+        DB.getAll('envelopes'),
+        DB.getAll('envelopeBudgets'),
+        DB.getAll('transactions'),
+        DB.getSetting('currency', 'EUR'),
+      ]);
+    state.data = { accounts, envelopes, envelopeBudgets, transactions };
+    state.currency = currency || 'EUR';
+
+    // Seed example data on first run
+    if (
+      accounts.length === 0 &&
+      envelopes.length === 0 &&
+      transactions.length === 0
+    ) {
+      await seedStarter();
+      return reload();
+    }
+  }
+
+  async function seedStarter() {
+    const now = Date.now();
+    // 4 generic accounts (empty balance). User renames + fills openingBalance.
+    const accTemplates = [
+      { name: 'Compte courant', type: 'Compte courant', openingBalance: 0 },
+      { name: 'Livret épargne', type: 'Épargne', openingBalance: 0 },
+      { name: 'Carte bancaire', type: 'Carte bancaire', openingBalance: 0 },
+      { name: 'Espèces', type: 'Espèces', openingBalance: 0 },
+    ].map((a) => ({ id: DB.uid(), ...a, archived: false, createdAt: now }));
+    for (const a of accTemplates) await DB.put('accounts', a);
+
+    // 8 generic envelopes (no budgets). User renames + sets monthly budget.
+    const envTemplates = [
+      { name: 'Logement',        color: '#e74c3c' },
+      { name: 'Alimentation',    color: '#27ae60' },
+      { name: 'Transport',       color: '#3498db' },
+      { name: 'Restaurants',     color: '#f39c12' },
+      { name: 'Loisirs',         color: '#9b59b6' },
+      { name: 'Abonnements',     color: '#16a085' },
+      { name: 'Santé',           color: '#e67e22' },
+      { name: 'Épargne',         color: '#2c3e50' },
+    ].map((e) => ({ id: DB.uid(), ...e, group: '', archived: false, createdAt: now }));
+    for (const e of envTemplates) await DB.put('envelopes', e);
+  }
+
+  // ---------- view routing ----------
+  function setView(view) {
+    state.view = view;
+    render();
+  }
+
+  function setMonth(ym) {
+    state.month = ym;
+    render();
+  }
+
+  function setFilter(key, value) {
+    state.filters[key] = value;
+    render();
+  }
+
+  async function setCurrency(c) {
+    state.currency = c;
+    await DB.setSetting('currency', c);
+    render();
+  }
+
+  // ---------- envelope budgets ----------
+  async function setEnvelopeBudget(envelopeId, yearMonth, amount) {
+    const id = `${envelopeId}__${yearMonth}`;
+    await DB.put('envelopeBudgets', {
+      id,
+      envelopeId,
+      yearMonth,
+      amount: Number(amount) || 0,
+    });
+    await reload();
+    render();
+  }
+
+  // ---------- transaction modal ----------
+  function openTransactionModal(existing = null) {
+    UI.closeModal();
+
+    const isEdit = !!existing;
+    let { date = UI.todayISO(), accountId = '', envelopeId = '', type = 'expense', amount = '', payee = '', notes = '' } = existing || {};
+
+    const accountSel = UI.el('select', { name: 'accountId', required: true });
+    for (const a of state.data.accounts) {
+      const opt = UI.el('option', { value: a.id }, a.name);
+      if (a.id === accountId) opt.selected = true;
+      accountSel.appendChild(opt);
+    }
+    if (!accountId && state.data.accounts[0]) accountSel.value = state.data.accounts[0].id;
+
+    const envSel = UI.el('select', { name: 'envelopeId' });
+    envSel.appendChild(UI.el('option', { value: '' }, '(aucune)'));
+    for (const e of state.data.envelopes) {
+      const opt = UI.el('option', { value: e.id }, e.name);
+      if (e.id === envelopeId) opt.selected = true;
+      envSel.appendChild(opt);
+    }
+
+    const typeSel = UI.el('select', {
+      name: 'type',
+      onchange: () => {
+        envSel.disabled = typeSel.value === 'income';
+        if (typeSel.value === 'income') envSel.value = '';
+      },
+    });
+    typeSel.appendChild(UI.el('option', { value: 'expense' }, 'Dépense'));
+    typeSel.appendChild(UI.el('option', { value: 'income' }, 'Revenu'));
+    typeSel.value = type;
+    envSel.disabled = type === 'income';
+
+    const form = UI.el(
+      'form',
+      { class: 'form' },
+      UI.el('div', { class: 'form-row' },
+        UI.el('label', {}, 'Date'),
+        UI.el('input', { type: 'date', name: 'date', value: date, required: true })
+      ),
+      UI.el('div', { class: 'form-row' },
+        UI.el('label', {}, 'Type'),
+        typeSel
+      ),
+      UI.el('div', { class: 'form-row' },
+        UI.el('label', {}, 'Compte'),
+        accountSel
+      ),
+      UI.el('div', { class: 'form-row' },
+        UI.el('label', {}, 'Enveloppe'),
+        envSel
+      ),
+      UI.el('div', { class: 'form-row' },
+        UI.el('label', {}, 'Montant'),
+        UI.el('input', {
+          type: 'number',
+          step: '0.01',
+          name: 'amount',
+          value: amount,
+          placeholder: '0.00',
+          required: true,
+        })
+      ),
+      UI.el('div', { class: 'form-row' },
+        UI.el('label', {}, 'Libellé'),
+        UI.el('input', { type: 'text', name: 'payee', value: payee, placeholder: 'Carrefour, Salaire…' })
+      ),
+      UI.el('div', { class: 'form-row' },
+        UI.el('label', {}, 'Notes'),
+        UI.el('input', { type: 'text', name: 'notes', value: notes })
+      )
+    );
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const tx = {
+        id: existing ? existing.id : DB.uid(),
+        date: fd.get('date'),
+        accountId: fd.get('accountId'),
+        envelopeId: typeSel.value === 'income' ? null : (fd.get('envelopeId') || null),
+        type: typeSel.value,
+        amount: Math.abs(UI.parseAmount(fd.get('amount'))),
+        payee: (fd.get('payee') || '').trim(),
+        notes: (fd.get('notes') || '').trim(),
+        cleared: existing ? !!existing.cleared : true,
+        createdAt: existing ? existing.createdAt : Date.now(),
+      };
+      if (!tx.accountId) {
+        UI.toast('Compte requis', 'error');
+        return;
+      }
+      await DB.put('transactions', tx);
+      await reload();
+      render();
+      UI.closeModal();
+      UI.toast(isEdit ? 'Transaction modifiée' : 'Transaction ajoutée', 'success');
+    });
+
+    const saveBtn = UI.el('button', { type: 'submit', class: 'btn btn-primary' }, isEdit ? 'Enregistrer' : 'Ajouter');
+    const cancelBtn = UI.el('button', { type: 'button', class: 'btn', onclick: UI.closeModal }, 'Annuler');
+    // Buttons MUST be inside the form for the submit event to fire.
+    form.appendChild(UI.el('div', { class: 'modal-actions' }, cancelBtn, saveBtn));
+
+    UI.showModal(isEdit ? 'Modifier la transaction' : 'Nouvelle transaction', form);
+    setTimeout(() => form.querySelector('input[name="amount"]').focus(), 50);
+  }
+
+  async function deleteTransaction(id) {
+    await DB.del('transactions', id);
+    await reload();
+    render();
+    UI.toast('Transaction supprimée', 'success');
+  }
+
+  // ---------- envelope modal ----------
+  function openEnvelopeModal(existing = null) {
+    UI.closeModal();
+    const isEdit = !!existing;
+    const { name = '', color = '#3498db', group = '' } = existing || {};
+
+    const form = UI.el(
+      'form',
+      { class: 'form' },
+      UI.el('div', { class: 'form-row' },
+        UI.el('label', {}, 'Nom'),
+        UI.el('input', { type: 'text', name: 'name', value: name, required: true, placeholder: 'Courses, Loyer…' })
+      ),
+      UI.el('div', { class: 'form-row' },
+        UI.el('label', {}, 'Couleur'),
+        UI.el('input', { type: 'color', name: 'color', value: color })
+      ),
+      UI.el('div', { class: 'form-row' },
+        UI.el('label', {}, 'Groupe (optionnel)'),
+        UI.el('input', { type: 'text', name: 'group', value: group, placeholder: 'Maison, Vie sociale…' })
+      )
+    );
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const env = {
+        id: existing ? existing.id : DB.uid(),
+        name: (fd.get('name') || '').trim(),
+        color: fd.get('color') || '#3498db',
+        group: (fd.get('group') || '').trim(),
+        archived: existing ? !!existing.archived : false,
+        createdAt: existing ? existing.createdAt : Date.now(),
+      };
+      if (!env.name) return;
+      await DB.put('envelopes', env);
+      await reload();
+      render();
+      UI.closeModal();
+      UI.toast(isEdit ? 'Enveloppe modifiée' : 'Enveloppe créée', 'success');
+    });
+
+    const saveBtn = UI.el('button', { type: 'submit', class: 'btn btn-primary' }, isEdit ? 'Enregistrer' : 'Créer');
+    const cancelBtn = UI.el('button', { type: 'button', class: 'btn', onclick: UI.closeModal }, 'Annuler');
+    form.appendChild(UI.el('div', { class: 'modal-actions' }, cancelBtn, saveBtn));
+    UI.showModal(isEdit ? "Modifier l'enveloppe" : 'Nouvelle enveloppe', form);
+  }
+
+  async function deleteEnvelope(id) {
+    // Delete envelope + its budgets (keep transactions but orphan them)
+    const budgets = state.data.envelopeBudgets.filter((b) => b.envelopeId === id);
+    for (const b of budgets) await DB.del('envelopeBudgets', b.id);
+    // Set envelopeId to null on related transactions
+    const txs = state.data.transactions.filter((t) => t.envelopeId === id);
+    for (const t of txs) {
+      await DB.put('transactions', { ...t, envelopeId: null });
+    }
+    await DB.del('envelopes', id);
+    await reload();
+    render();
+    UI.toast('Enveloppe supprimée', 'success');
+  }
+
+  // ---------- account modal ----------
+  function openAccountModal(existing = null) {
+    UI.closeModal();
+    const isEdit = !!existing;
+    const { name = '', type = 'Compte courant', openingBalance = 0 } = existing || {};
+
+    const form = UI.el(
+      'form',
+      { class: 'form' },
+      UI.el('div', { class: 'form-row' },
+        UI.el('label', {}, 'Nom'),
+        UI.el('input', { type: 'text', name: 'name', value: name, required: true, placeholder: 'Compte courant, Livret A…' })
+      ),
+      UI.el('div', { class: 'form-row' },
+        UI.el('label', {}, 'Type'),
+        (() => {
+          const sel = UI.el('select', { name: 'type' });
+          ['Compte courant', 'Épargne', 'Espèces', 'Carte bancaire', 'Autre'].forEach((t) => {
+            const opt = UI.el('option', { value: t }, t);
+            if (t === type) opt.selected = true;
+            sel.appendChild(opt);
+          });
+          return sel;
+        })()
+      ),
+      UI.el('div', { class: 'form-row' },
+        UI.el('label', {}, 'Solde initial'),
+        UI.el('input', { type: 'number', step: '0.01', name: 'openingBalance', value: openingBalance, placeholder: '0.00' })
+      )
+    );
+
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      const fd = new FormData(form);
+      const acc = {
+        id: existing ? existing.id : DB.uid(),
+        name: (fd.get('name') || '').trim(),
+        type: fd.get('type'),
+        openingBalance: UI.parseAmount(fd.get('openingBalance')),
+        archived: existing ? !!existing.archived : false,
+        createdAt: existing ? existing.createdAt : Date.now(),
+      };
+      if (!acc.name) return;
+      await DB.put('accounts', acc);
+      await reload();
+      render();
+      UI.closeModal();
+      UI.toast(isEdit ? 'Compte modifié' : 'Compte créé', 'success');
+    });
+
+    const saveBtn = UI.el('button', { type: 'submit', class: 'btn btn-primary' }, isEdit ? 'Enregistrer' : 'Créer');
+    const cancelBtn = UI.el('button', { type: 'button', class: 'btn', onclick: UI.closeModal }, 'Annuler');
+    form.appendChild(UI.el('div', { class: 'modal-actions' }, cancelBtn, saveBtn));
+    UI.showModal(isEdit ? 'Modifier le compte' : 'Nouveau compte', form);
+  }
+
+  async function deleteAccount(id) {
+    // Cascade: delete the account's transactions
+    const txs = state.data.transactions.filter((t) => t.accountId === id);
+    for (const t of txs) await DB.del('transactions', t.id);
+    await DB.del('accounts', id);
+    await reload();
+    render();
+    UI.toast('Compte supprimé', 'success');
+  }
+
+  // ---------- render dispatcher ----------
+  function render() {
+    UI.renderHeader(state);
+    switch (state.view) {
+      case 'dashboard':
+        UI.renderDashboard(state);
+        break;
+      case 'transactions':
+        UI.renderTransactions(state);
+        break;
+      case 'envelopes':
+        UI.renderEnvelopes(state);
+        break;
+      case 'accounts':
+        UI.renderAccounts(state);
+        break;
+      case 'settings':
+        UI.renderSettings(state);
+        break;
+    }
+  }
+
+  return {
+    init,
+    reload,
+    setView,
+    setMonth,
+    setFilter,
+    setCurrency,
+    setEnvelopeBudget,
+    openTransactionModal,
+    deleteTransaction,
+    openEnvelopeModal,
+    deleteEnvelope,
+    openAccountModal,
+    deleteAccount,
+  };
+})();
+
+document.addEventListener('DOMContentLoaded', () => App.init());
+  </script>
+</body>
+</html>
