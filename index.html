@@ -264,6 +264,48 @@ table.preview td, table.preview th { padding: 3px 6px; border-bottom: 1px solid 
 .rec-row { display: grid; grid-template-columns: 1fr auto 34px; gap: 10px; align-items: center; padding: 10px 12px; background: var(--surface-2); border-radius: 8px; margin-bottom: 6px; }
 .rec-row.off { opacity: .6; }
 
+/* ---------- v2 : intelligence & ludique ---------- */
+.qbar { background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 10px 12px; margin-bottom: var(--gap); border: 1px solid color-mix(in srgb, var(--primary) 35%, var(--border)); }
+.qrow { display: flex; align-items: center; gap: 8px; }
+.qi { font-size: 18px; }
+.qrow input { border: none; box-shadow: none !important; padding: 8px 4px; background: transparent; }
+.qprev { margin-top: 6px; }
+.chip.strong { font-weight: 700; } .chip.neg { color: var(--neg); } .chip.pos { color: var(--pos); }
+.hero { display: flex; justify-content: space-between; align-items: center; gap: 10px; padding: 14px 16px; margin-bottom: var(--gap); border-radius: var(--radius); cursor: pointer;
+  background: linear-gradient(135deg, color-mix(in srgb, var(--primary) 16%, var(--surface)), var(--surface)); box-shadow: var(--shadow); border: 1px solid color-mix(in srgb, var(--primary) 25%, var(--border)); }
+.hero-v { font-size: 32px; font-weight: 800; font-variant-numeric: tabular-nums; line-height: 1.15; }
+.hero-i { color: var(--muted); font-size: 20px; }
+.minis { display: grid; grid-template-columns: repeat(auto-fit, minmax(210px, 1fr)); gap: 10px; margin-bottom: var(--gap); }
+.mini { display: flex; gap: 12px; align-items: center; background: var(--surface); border-radius: var(--radius); box-shadow: var(--shadow); padding: 10px 14px; cursor: pointer; }
+.mini .big { font-size: 40px; width: 64px; text-align: center; }
+.ring-t { fill: var(--text); font-weight: 800; } .ring-s { fill: var(--muted); }
+.insight { display: grid; grid-template-columns: 28px 1fr 34px; grid-template-areas: 'ii it x' '. act .'; gap: 4px 10px; align-items: center; padding: 9px 10px; border-radius: 8px; margin-bottom: 6px; background: var(--surface-2); border-left: 4px solid var(--primary); }
+.insight.warn { border-left-color: var(--warn); } .insight.ok { border-left-color: var(--pos); }
+.insight .ii { font-size: 20px; grid-area: ii; } .insight .it { grid-area: it; font-size: 14px; min-width: 0; }
+.insight .act { grid-area: act; justify-self: start; } .insight .x { grid-area: x; }
+.goal { display: flex; gap: 14px; align-items: center; padding: 10px 0; border-bottom: 1px solid var(--border); }
+.goal:last-child { border-bottom: none; }
+.score { display: flex; gap: 18px; align-items: center; flex-wrap: wrap; justify-content: center; }
+.tools { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: 10px; }
+.tool { display: flex; flex-direction: column; gap: 2px; align-items: flex-start; text-align: left; background: var(--surface-2); border: 1px solid var(--border); border-radius: var(--radius); padding: 12px; }
+.tool:hover { border-color: var(--primary); }
+.tool .ti { font-size: 24px; }
+.tool.wide { flex-direction: row; align-items: center; gap: 14px; width: 100%; background: var(--surface); box-shadow: var(--shadow); }
+.menu { display: grid; gap: 10px; }
+@media (min-width: 760px) { .menu { grid-template-columns: 1fr 1fr; } }
+.badges { display: grid; grid-template-columns: repeat(auto-fill, minmax(140px, 1fr)); gap: 8px; }
+.badge { display: flex; flex-direction: column; align-items: center; text-align: center; gap: 2px; padding: 10px 6px; border-radius: var(--radius); background: var(--surface-2); filter: grayscale(1); opacity: .55; font-size: 13px; }
+.badge.on { filter: none; opacity: 1; background: color-mix(in srgb, var(--warn) 12%, var(--surface-2)); }
+.badge .bi { font-size: 28px; } .badge .muted { font-size: 11px; }
+.hm { display: grid; grid-template-columns: repeat(7, 1fr); gap: 4px; max-width: 420px; }
+.hm-h { text-align: center; font-size: 11px; color: var(--muted); }
+.hm-c { aspect-ratio: 1; border-radius: 6px; background: var(--surface-3); display: flex; align-items: center; justify-content: center; font-size: 12px; cursor: pointer; font-variant-numeric: tabular-nums; }
+.verdict { padding: 12px 14px; border-radius: var(--radius); display: grid; gap: 4px; background: color-mix(in srgb, var(--pos) 12%, var(--surface)); border: 1px solid color-mix(in srgb, var(--pos) 40%, var(--border)); }
+.verdict.warn { background: color-mix(in srgb, var(--warn) 14%, var(--surface)); border-color: color-mix(in srgb, var(--warn) 45%, var(--border)); }
+.verdict.bad { background: color-mix(in srgb, var(--neg) 12%, var(--surface)); border-color: color-mix(in srgb, var(--neg) 45%, var(--border)); }
+.sug-row { display: grid; grid-template-columns: 22px 12px 1fr 90px; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
+.fl { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; font-size: 14px; }
+
   </style>
 </head>
 <body>
@@ -278,7 +320,7 @@ table.preview td, table.preview th { padding: 3px 6px; border-bottom: 1px solid 
 // ============================================================
 const DB = (() => {
   const PREFIX = 'budget-app__';
-  const STORES = ['accounts', 'envelopes', 'envelopeBudgets', 'transactions', 'recurring', 'settings'];
+  const STORES = ['accounts', 'envelopes', 'envelopeBudgets', 'transactions', 'recurring', 'goals', 'settings'];
   const TX_TYPES = ['expense', 'income', 'transfer'];
   const cache = {};
   const status = { persistent: true, ok: true, lastError: null };
@@ -362,6 +404,7 @@ const DB = (() => {
       ? { id: r.id, date: r.date, accountId: r.accountId, toAccountId: r.type === 'transfer' && isStr(r.toAccountId) ? r.toAccountId : null, envelopeId: r.type === 'expense' && isStr(r.envelopeId) ? r.envelopeId : null, type: r.type, amount: Math.abs(num(r.amount)), payee: String(r.payee || '').slice(0, 120), notes: String(r.notes || '').slice(0, 300), recurringId: isStr(r.recurringId) ? r.recurringId : null, createdAt: num(r.createdAt, Date.now()) } : null,
     recurring: (r) => isStr(r.id) && TX_TYPES.includes(r.type) && isStr(r.accountId) && RE_DATE.test(r.startDate)
       ? { id: r.id, type: r.type, accountId: r.accountId, toAccountId: isStr(r.toAccountId) ? r.toAccountId : null, envelopeId: isStr(r.envelopeId) ? r.envelopeId : null, amount: Math.abs(num(r.amount)), payee: String(r.payee || '').slice(0, 120), notes: String(r.notes || '').slice(0, 300), day: Math.min(31, Math.max(1, Math.round(num(r.day, 1)))), startDate: r.startDate, active: r.active !== false, generated: Array.isArray(r.generated) ? r.generated.filter((x) => RE_YM.test(x)) : [], createdAt: num(r.createdAt, Date.now()) } : null,
+    goals: (r) => isStr(r.id) && isStr(r.name) && Number(r.target) > 0 ? { id: r.id, name: String(r.name).slice(0, 80), emoji: String(r.emoji || '🎯').slice(0, 4), target: Math.abs(num(r.target)), saved: Math.max(0, num(r.saved)), deadline: RE_DATE.test(r.deadline) ? r.deadline : null, color: /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : '#2a78d6', createdAt: num(r.createdAt, Date.now()) } : null,
     settings: (r) => isStr(r.key) ? { key: r.key, value: r.value } : null,
   };
 
@@ -540,7 +583,7 @@ const state = {
   theme: 'auto',
   filters: { accountId: '', envelopeId: '', q: '', all: false },
   limit: 150,
-  data: { accounts: [], envelopes: [], envelopeBudgets: [], transactions: [], recurring: [] },
+  data: { accounts: [], envelopes: [], envelopeBudgets: [], transactions: [], recurring: [], goals: [] },
   version: 0,
 };
 let _calc = null;
@@ -552,13 +595,14 @@ function reloadData() {
     envelopeBudgets: DB.all('envelopeBudgets'),
     transactions: DB.all('transactions'),
     recurring: DB.all('recurring'),
+    goals: DB.all('goals'),
   };
   state.currency = DB.getSetting('currency', 'EUR') || 'EUR';
   state.theme = DB.getSetting('theme', 'auto') || 'auto';
   state.version++;
   _calc = null;
 }
-function commit() { reloadData(); render(); }
+function commit() { reloadData(); try { checkBadges(); } catch (e) { console.warn(e); } render(); }
 const money = (n) => U.fmtMoney(n, state.currency);
 
 // ------------------------------------------------------------
@@ -567,7 +611,7 @@ const money = (n) => U.fmtMoney(n, state.currency);
 function C() {
   if (_calc) return _calc;
   const d = state.data;
-  const spent = new Map(), inc = new Map(), exp = new Map(), unc = new Map(), bal = new Map(), over = new Map(), first = new Map(), payees = new Map();
+  const spent = new Map(), inc = new Map(), exp = new Map(), unc = new Map(), bal = new Map(), over = new Map(), first = new Map(), payees = new Map(), tokenVotes = new Map();
   const add = (m, k, v) => m.set(k, (m.get(k) || 0) + v);
   const touch = (envId, ym) => { if (!first.has(envId) || ym < first.get(envId)) first.set(envId, ym); };
   for (const a of d.accounts) bal.set(a.id, Number(a.openingBalance) || 0);
@@ -581,6 +625,7 @@ function C() {
       add(bal, t.accountId, -amt); add(exp, ym, amt);
       if (t.envelopeId) { add(spent, `${t.envelopeId}|${ym}`, amt); touch(t.envelopeId, ym); } else add(unc, ym, amt);
     } else { add(bal, t.accountId, -amt); if (t.toAccountId) add(bal, t.toAccountId, amt); }
+    if (t.type === 'expense' && t.envelopeId && t.payee) for (const tk of tokens(t.payee)) { if (!tokenVotes.has(tk)) tokenVotes.set(tk, new Map()); const m = tokenVotes.get(tk); m.set(t.envelopeId, (m.get(t.envelopeId) || 0) + 1); }
     if (t.payee && t.type !== 'transfer') payees.set(U.norm(t.payee), { name: t.payee, envelopeId: t.type === 'expense' ? t.envelopeId : null, type: t.type, date: t.date });
   }
   const c = {
@@ -602,6 +647,7 @@ function C() {
       const budget = c.budget(env, ym), carry = c.carry(env, ym), sp = c.spent(env.id, ym);
       return { budget, carry, spent: sp, available: U.round2(budget + carry - sp) };
     },
+    tokenVotes,
     lookupPayee: (p) => payees.get(U.norm(p)) || null,
     payeeNames: () => [...payees.values()].sort((a, b) => b.date.localeCompare(a.date)).slice(0, 150).map((x) => x.name),
   };
@@ -777,11 +823,298 @@ function seedStarter() {
 }
 
 // ============================================================
+// smart.js — « intelligence » locale (aucun envoi de données) :
+// ajout rapide en langage naturel, catégorisation apprise, conseils,
+// prévision, score, séries, badges, confettis.
+// ============================================================
+const median = (a) => { if (!a.length) return 0; const s = a.slice().sort((x, y) => x - y), m = s.length >> 1; return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; };
+const shiftDate = (iso, n) => { const [y, m, d] = iso.split('-').map(Number); return U.isoOf(new Date(y, m - 1, d + n)); };
+const funOn = () => DB.getSetting('fun', true) !== false;
+const isLiquid = (accId) => { const a = state.data.accounts.find((x) => x.id === accId); return !!a && !a.archived && a.type !== 'Épargne'; };
+
+// ---------- catégorisation ----------
+const STOP = new Set(['carte', 'prlv', 'prelevement', 'virement', 'paiement', 'achat', 'retrait', 'sepa', 'facture', 'commande', 'france', 'abonnement', 'depense', 'mois', 'chez', 'pour', 'dans', 'avec']);
+const tokens = (s) => U.norm(s).replace(/[^a-z0-9 ]/g, ' ').split(' ').filter((t) => t.length >= 4 && !STOP.has(t) && !/^\d+$/.test(t));
+
+const CATS = [
+  { env: /aliment|course|supermarch|nourriture|epicerie/, kw: ['carrefour', 'leclerc', 'lidl', 'auchan', 'intermarche', 'monoprix', 'franprix', 'aldi', 'casino', 'picard', 'biocoop', 'grand frais', 'super u', 'boulangerie', 'boucherie', 'primeur', 'marche', 'cora', 'netto', 'spar', 'drive'] },
+  { env: /transport|voiture|auto|carburant|deplacement/, kw: ['sncf', 'ratp', 'navigo', 'total', 'esso', 'shell', 'bp', 'essence', 'carburant', 'gazole', 'peage', 'vinci', 'autoroute', 'uber', 'bolt', 'blablacar', 'parking', 'keolis', 'tisseo', 'velib', 'ter'] },
+  { env: /restau|resto|sortie|cafe|bar/, kw: ['mcdo', 'mcdonald', 'burger', 'kfc', 'restaurant', 'resto', 'brasserie', 'pizza', 'sushi', 'deliveroo', 'uber eats', 'just eat', 'subway', 'quick', 'starbucks', 'cafe', 'tacos', 'kebab', 'bistrot'] },
+  { env: /abonn|streaming|telecom|forfait/, kw: ['netflix', 'spotify', 'disney', 'canal', 'prime video', 'amazon prime', 'icloud', 'youtube', 'deezer', 'adobe', 'free mobile', 'freebox', 'orange', 'sfr', 'bouygues', 'sosh', 'ovh', 'chatgpt', 'openai', 'anthropic', 'claude', 'google one', 'dropbox', 'xbox', 'playstation'] },
+  { env: /sant|pharma|medic|mutuelle/, kw: ['pharmacie', 'medecin', 'docteur', 'dentiste', 'mutuelle', 'opticien', 'kine', 'hopital', 'doctolib', 'laboratoire', 'clinique', 'cpam', 'osteo'] },
+  { env: /logement|loyer|maison|habitat|charges|domicile/, kw: ['loyer', 'edf', 'engie', 'totalenergies', 'veolia', 'syndic', 'assurance habitation', 'leroy merlin', 'castorama', 'brico', 'ikea', 'maif', 'macif'] },
+  { env: /loisir|culture|divertiss|shopping/, kw: ['cinema', 'ugc', 'pathe', 'gaumont', 'steam', 'fnac', 'cultura', 'decathlon', 'concert', 'spectacle', 'ticketmaster', 'zalando', 'vinted', 'jeux', 'musee', 'amazon'] },
+  { env: /epargne|invest/, kw: ['livret', 'epargne', 'assurance vie', 'trade republic'] },
+];
+CATS.forEach((c) => { c.res = c.kw.map((k) => { const w = U.norm(k).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); return new RegExp('(^|[^a-z0-9])' + w + (w.length <= 3 ? '([^a-z0-9]|$)' : '')); }); });
+
+function suggestEnvelope(payee) {
+  const p = (payee || '').trim(); if (!p) return null;
+  const c = C(), ok = (id) => { const e = envById(id); return !!e && !e.archived; };
+  const hit = c.lookupPayee(p);
+  if (hit && hit.envelopeId && ok(hit.envelopeId)) return { envelopeId: hit.envelopeId, source: 'habitude' };
+  const votes = new Map(); let total = 0;
+  for (const t of tokens(p)) { const m = c.tokenVotes.get(t); if (!m) continue; for (const [id, n] of m) { votes.set(id, (votes.get(id) || 0) + n); total += n; } }
+  if (total) { const [id, n] = [...votes.entries()].sort((a, b) => b[1] - a[1])[0]; if (ok(id) && n / total >= 0.6) return { envelopeId: id, source: 'appris' }; }
+  const np = U.norm(p);
+  for (const cat of CATS) if (cat.res.some((r) => r.test(np))) { const e = activeEnvelopes().find((x) => cat.env.test(U.norm(x.name))); if (e) return { envelopeId: e.id, source: 'suggestion' }; }
+  return null;
+}
+
+// ---------- ajout rapide en langage naturel ----------
+const WEEKDAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
+const INCOME_KW = /\b(salaire|paie|paye|remboursement|rembourse|prime|allocations?|apl|caf|recu|encaisse|vente)\b/;
+const EDGE_STOP = new Set(['de', 'du', 'des', 'la', 'le', 'les', 'un', 'une', 'chez', 'pour', 'a', 'au', 'aux', 'sur', 'vers', 'en', 'dans', 'par', 'depense', 'achat', 'paye', 'et', 'eur', 'euro', 'euros']);
+const looseRe = (w) => new RegExp('(^|[^\\p{L}\\d])' + [...w].map((ch) => ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[\\u0300-\\u036f]*').join('') + '(?![\\p{L}\\d])', 'iu');
+
+function parseQuick(raw) {
+  let s = ' ' + String(raw || '').trim().normalize('NFD') + ' ';
+  if (!s.trim()) return null;
+  const today = U.todayISO(); let date = today, m;
+  if ((m = s.match(/\bavant[- ]hier\b/i))) { date = shiftDate(today, -2); s = s.replace(m[0], ' '); }
+  else if ((m = s.match(/\bhier\b/i))) { date = shiftDate(today, -1); s = s.replace(m[0], ' '); }
+  else if ((m = s.match(/\b(aujourd'?hui|ajd|auj)\b/i))) { s = s.replace(m[0], ' '); }
+  else if ((m = s.match(/(^|\s)(\d{1,2})\/(\d{1,2})(?:\/(\d{2,4}))?(?![\d/])/)) && +m[3] >= 1 && +m[3] <= 12 && +m[2] >= 1 && +m[2] <= 31) {
+    let y = m[4] ? +m[4] : new Date().getFullYear(); if (y < 100) y += 2000;
+    let iso = `${y}-${U.pad(m[3])}-${U.pad(m[2])}`;
+    if (!m[4] && iso > shiftDate(today, 1)) iso = `${y - 1}-${U.pad(m[3])}-${U.pad(m[2])}`;
+    if (U.validISO(iso)) { date = iso; s = s.replace(m[0], ' '); }
+  } else if ((m = s.match(/\b(lundi|mardi|mercredi|jeudi|vendredi|samedi|dimanche)\b/i))) {
+    const target = WEEKDAYS.indexOf(m[1].toLowerCase()); let back = (new Date().getDay() - target + 7) % 7; date = shiftDate(today, -back); s = s.replace(m[0], ' ');
+  } else if ((m = s.match(/\ble (\d{1,2})\b(?!\s*[\/€])/i)) && +m[1] >= 1 && +m[1] <= 31) {
+    const ym = U.todayYM(); let iso = U.dateFor(ym, +m[1]); if (iso > today) iso = U.dateFor(U.shiftYM(ym, -1), +m[1]); date = iso; s = s.replace(m[0], ' ');
+  }
+  const am = s.match(/(^|\s)([+\-−]?\d+(?:[.,]\d{1,2})?)\s*(?:€|eur(?:os?)?\b)?/i);
+  if (!am) return { error: 'montant' };
+  const amount = Math.abs(U.parseNumber(am[2].replace('−', '-')));
+  if (!(amount > 0)) return { error: 'montant' };
+  const plus = am[2].startsWith('+');
+  s = s.replace(am[0], ' ');
+  const low = U.norm(s.normalize('NFC'));
+
+  // comptes cités
+  const mentions = [];
+  for (const a of activeAccounts()) {
+    const words = [U.norm(a.name), ...U.norm(a.name).split(' ')].filter((w) => w.length >= 4 && !['compte', 'carte'].includes(w));
+    for (const w of words) { const re = looseRe(w); const mm = s.match(re); if (mm) { mentions.push({ acc: a, idx: mm.index, text: mm[0].trim() }); break; } }
+  }
+  mentions.sort((a, b) => a.idx - b.idx);
+  const wantsTransfer = /\b(virement|vir|transfert|versement|verse)\b/.test(low) && !INCOME_KW.test(low) && (mentions.length >= 1 || /\b(vers|sur)\b/.test(low));
+  let type = wantsTransfer ? 'transfer' : (plus || INCOME_KW.test(low)) ? 'income' : 'expense';
+  for (const mt of mentions) s = s.replace(looseRe(mt.text.normalize('NFD').replace(/[̀-ͯ]/g, '')), ' ');
+  if (type === 'transfer') s = s.replace(/\b(virement|vir|transfert|versement|verse)\b/gi, ' ');
+
+  const lastId = DB.getSetting('lastAccountId', null);
+  const def = activeAccounts().find((a) => a.id === lastId) || activeAccounts()[0];
+  if (!def) return { error: 'compte' };
+  let accountId = def.id, toAccountId = null;
+  if (type === 'transfer') {
+    if (mentions.length >= 2) { accountId = mentions[0].acc.id; toAccountId = mentions[1].acc.id; }
+    else if (mentions.length === 1) { toAccountId = mentions[0].acc.id; accountId = (activeAccounts().find((a) => a.id !== toAccountId && a.id === def.id) || activeAccounts().find((a) => a.id !== toAccountId) || {}).id; }
+    else { type = 'expense'; }
+    if (!accountId || !toAccountId || accountId === toAccountId) type = 'expense';
+  } else if (mentions.length) accountId = mentions[0].acc.id;
+  if (type !== 'transfer') toAccountId = null;
+
+  let words = s.normalize('NFC').replace(/[€]/g, ' ').split(/\s+/).filter(Boolean);
+  while (words.length && EDGE_STOP.has(U.norm(words[0]))) words.shift();
+  while (words.length && EDGE_STOP.has(U.norm(words[words.length - 1]))) words.pop();
+  let payee = words.join(' '); payee = payee.charAt(0).toUpperCase() + payee.slice(1);
+  if (type === 'transfer' && !payee) payee = 'Virement';
+  const sug = type === 'expense' ? suggestEnvelope(payee) : null;
+  return { type, amount: U.round2(amount), date, payee, accountId, toAccountId, envelopeId: sug ? sug.envelopeId : null, source: sug ? sug.source : null };
+}
+
+// ---------- séries récurrentes (abonnements) ----------
+const seriesKey = (p) => tokens(p).slice(0, 2).join(' ') || U.norm(p);
+function detectSeries() {
+  const groups = new Map();
+  for (const t of state.data.transactions) {
+    if (t.type !== 'expense' || !t.payee) continue;
+    const k = seriesKey(t.payee); if (!k) continue;
+    if (!groups.has(k)) groups.set(k, []);
+    groups.get(k).push(t);
+  }
+  const out = [], recKeys = new Set(state.data.recurring.map((r) => seriesKey(r.payee || '')));
+  for (const [k, list] of groups) {
+    list.sort((a, b) => a.date.localeCompare(b.date));
+    const months = [...new Set(list.map((t) => t.date.slice(0, 7)))];
+    if (months.length < 3) continue;
+    const l3 = months.slice(-3);
+    if (U.shiftYM(l3[0], 1) !== l3[1] || U.shiftYM(l3[1], 1) !== l3[2]) continue;
+    if (list.length > months.length * 1.5) continue;
+    const days = list.slice(-3).map((t) => +t.date.slice(8, 10));
+    if (Math.max(...days) - Math.min(...days) > 6) continue;
+    const amts = list.map((t) => t.amount), last3 = amts.slice(-3);
+    if (Math.max(...last3) > Math.min(...last3) * 1.6) continue;
+    const lastT = list[list.length - 1];
+    if (lastT.date < shiftDate(U.todayISO(), -45)) continue;
+    out.push({ key: k, name: lastT.payee, amount: amts[amts.length - 1], prev: median(amts.slice(0, -1).slice(-3)), day: Math.round(median(days)), envelopeId: lastT.envelopeId, accountId: lastT.accountId, hasRec: recKeys.has(k) });
+  }
+  return out;
+}
+
+// ---------- prévision « reste à vivre » ----------
+function forecast() {
+  const c = C(), ym = U.todayYM(), today = U.todayISO();
+  const liq = activeAccounts().filter((a) => a.type !== 'Épargne');
+  const base = liq.length ? liq : activeAccounts();
+  const liquid = U.round2(base.reduce((s, a) => s + c.balance(a.id), 0));
+  let upExp = 0, upInc = 0; const items = [];
+  for (const r of state.data.recurring) {
+    if (!r.active || !r.amount || (r.generated || []).includes(ym)) continue;
+    const date = U.dateFor(ym, r.day);
+    if (date <= today || date < r.startDate) continue;
+    const fromL = isLiquid(r.accountId), toL = r.type === 'transfer' && isLiquid(r.toAccountId);
+    let d = 0;
+    if (r.type === 'expense') d = -r.amount; else if (r.type === 'income') d = r.amount; else d = (toL ? r.amount : 0) - (fromL ? r.amount : 0);
+    if (!d) continue;
+    if (d < 0) upExp += -d; else upInc += d;
+    items.push({ r, date, d });
+  }
+  const daysLeft = U.daysInMonth(ym) - Number(today.slice(8, 10)) + 1;
+  const rest = U.round2(liquid - upExp + upInc);
+  return { liquid, upExp: U.round2(upExp), upInc: U.round2(upInc), items, rest, daysLeft, perDay: rest / daysLeft };
+}
+
+// ---------- conseils ----------
+function envMonthTx(envId, ym) { return state.data.transactions.filter((t) => t.envelopeId === envId && t.type === 'expense' && t.date.slice(0, 7) === ym); }
+function avgSavings(n = 3) {
+  const c = C(), cur = U.todayYM(); const v = [];
+  for (let i = 1; i <= n; i++) { const m = U.shiftYM(cur, -i); if (c.income(m) || c.expense(m)) v.push(c.income(m) - c.expense(m)); }
+  return v.length ? v.reduce((a, b) => a + b, 0) / v.length : 0;
+}
+function computeInsights() {
+  const c = C(), ym = state.month, thisYM = U.todayYM(), isCur = ym === thisYM, today = U.todayISO();
+  const dim = U.daysInMonth(ym), day = isCur ? Number(today.slice(8, 10)) : dim;
+  const dismissed = new Set(DB.getSetting('dismissed', []));
+  const out = [];
+  const push = (o) => { o.key = `${o.id}:${ym}`; if (!dismissed.has(o.key)) out.push(o); };
+  const envs = activeEnvelopes();
+
+  for (const env of envs) {
+    const st = c.stats(env, ym), total = st.budget + st.carry;
+    if (total <= 0) continue;
+    if (st.available < -0.005) { push({ id: 'over:' + env.id, tone: 'warn', icon: '⚠️', text: `${env.name} : budget dépassé de ${money(-st.available)}.`, action: { label: 'Voir', fn: () => goEnvelope(env.id) } }); continue; }
+    if (!isCur || day < 4 || st.spent <= 0 || st.available < total * 0.03) continue;
+    const txs = envMonthTx(env.id, ym), biggest = Math.max(...txs.map((t) => t.amount));
+    if (txs.length <= 2 && biggest / st.spent > 0.6) continue;   // dépense « en bloc » (loyer…) : rythme non significatif
+    const emptyDay = day + Math.floor(st.available / (st.spent / day));
+    if (emptyDay < dim && st.spent / total > 0.25) push({ id: 'burn:' + env.id, tone: 'warn', icon: '🔥', text: `${env.name} : à ce rythme, l'enveloppe sera vide vers le ${emptyDay} (il reste ${money(st.available)}).`, action: { label: 'Voir', fn: () => goEnvelope(env.id) } });
+  }
+  // dépenses nettement au-dessus de la moyenne
+  const up = [];
+  for (const env of envs) {
+    if (isCur && day < 10) break;
+    const hist = [1, 2, 3].map((i) => c.spent(env.id, U.shiftYM(ym, -i))).filter((v) => v > 0);
+    if (hist.length < 2) continue;
+    const avg = hist.reduce((a, b) => a + b, 0) / hist.length, spent = c.spent(env.id, ym);
+    const txs = envMonthTx(env.id, ym); if (txs.length <= 2 && txs.length && Math.max(...txs.map((t) => t.amount)) / (spent || 1) > 0.6) continue;
+    const proj = isCur ? spent / day * dim : spent;
+    if (proj > avg * 1.3 && proj - avg >= 20) up.push({ env, avg, pct: Math.round((proj / avg - 1) * 100), ex: proj - avg });
+  }
+  up.sort((a, b) => b.ex - a.ex).slice(0, 2).forEach((u) => push({ id: 'avg:' + u.env.id, tone: 'info', icon: '📈', text: `${u.env.name} : environ +${u.pct} % par rapport à ta moyenne (${money(u.avg)}/mois).`, action: { label: 'Voir', fn: () => goEnvelope(u.env.id) } }));
+
+  if (isCur) {
+    // abonnements détectés / hausses de prix
+    for (const s of detectSeries()) {
+      if (!s.hasRec) push({ id: 'sub:' + s.key, tone: 'info', icon: '🔁', text: `« ${s.name} » ressemble à un abonnement mensuel (${money(s.amount)}, vers le ${s.day}).`,
+        action: { label: 'Créer la récurrence', fn: () => openRecurringModal(null, { type: 'expense', amount: s.amount, payee: s.name, accountId: s.accountId, envelopeId: s.envelopeId, day: s.day, startDate: today }) } });
+      if (s.prev > 0 && s.amount > s.prev * 1.04 && s.amount - s.prev >= 0.5) push({ id: 'price:' + s.key, tone: 'warn', icon: '💸', text: `${s.name} : le prix a augmenté (${money(s.prev)} → ${money(s.amount)}).` });
+    }
+    // doublons probables
+    const recent = state.data.transactions.filter((t) => t.type === 'expense' && t.payee && t.amount >= 10 && !t.recurringId && t.date >= shiftDate(today, -30)).sort((a, b) => a.date.localeCompare(b.date));
+    let nd = 0;
+    for (let i = 0; i < recent.length && nd < 2; i++) for (let j = i + 1; j < recent.length && nd < 2; j++) {
+      const a = recent[i], b = recent[j];
+      if (a.accountId === b.accountId && a.amount === b.amount && U.norm(a.payee) === U.norm(b.payee) && Math.abs(Date.parse(a.date) - Date.parse(b.date)) / 864e5 <= 2) {
+        push({ id: 'dup:' + a.id + b.id, tone: 'warn', icon: '👯', text: `Doublon possible : « ${a.payee} » ${money(a.amount)} le ${a.date.slice(8)}/${a.date.slice(5, 7)} et le ${b.date.slice(8)}/${b.date.slice(5, 7)}.`, action: { label: 'Vérifier', fn: () => openTxModal(b) } }); nd++;
+      }
+    }
+    // dépense inhabituelle
+    const monthStart = ym + '-01', from = shiftDate(monthStart, -90);
+    for (const t of state.data.transactions) {
+      if (t.type !== 'expense' || !t.envelopeId || t.date.slice(0, 7) !== ym || t.amount < 50) continue;
+      const hist = state.data.transactions.filter((x) => x.envelopeId === t.envelopeId && x.type === 'expense' && x.date < monthStart && x.date >= from).map((x) => x.amount);
+      if (hist.length >= 6 && t.amount > 3 * median(hist)) push({ id: 'unusual:' + t.id, tone: 'info', icon: '🧐', text: `Dépense inhabituelle : « ${t.payee || 'sans libellé'} » ${money(t.amount)} (${(envById(t.envelopeId) || {}).name}) — environ ${Math.round(t.amount / median(hist))}× ton montant habituel.`, action: { label: 'Voir', fn: () => openTxModal(t) } });
+    }
+    // aide à fixer des budgets
+    if (!envs.some((e) => c.budget(e, ym) > 0) && state.data.transactions.length >= 20 && [1, 2, 3].some((i) => c.expense(U.shiftYM(ym, -i)) > 0))
+      push({ id: 'nobudget', tone: 'info', icon: '🪄', text: "Tu n'as pas encore de budgets : je peux les calculer d'après tes 3 derniers mois.", action: { label: 'Suggérer', fn: openBudgetSuggest } });
+  }
+  const inc = c.income(ym), exp = c.expense(ym);
+  if ((!isCur || day >= 20) && inc > 0 && (inc - exp) / inc >= 0.2) push({ id: 'save', tone: 'ok', icon: '🎉', text: `Bravo : ${U.fmtPct((inc - exp) / inc)} de tes revenus épargnés ce mois-ci.` });
+  const order = { warn: 0, info: 1, ok: 2 };
+  return out.sort((a, b) => order[a.tone] - order[b.tone]).slice(0, 6);
+}
+function dismissInsight(key) { const d = DB.getSetting('dismissed', []); d.push(key); DB.setSetting('dismissed', d.slice(-200)); render(); }
+
+// ---------- score de santé, séries, badges ----------
+function streak() {
+  const days = new Set(state.data.transactions.map((t) => t.date));
+  let d = U.todayISO(); if (!days.has(d)) d = shiftDate(d, -1);
+  let n = 0; while (days.has(d)) { n++; d = shiftDate(d, -1); }
+  return n;
+}
+function healthScore(ym) {
+  const c = C(), monthTx = state.data.transactions.filter((t) => t.date.slice(0, 7) === ym);
+  if (monthTx.length < 5) return null;
+  const inc = c.income(ym), exp = c.expense(ym), rate = inc > 0 ? (inc - exp) / inc : 0;
+  const rows = activeEnvelopes().map((e) => ({ e, st: c.stats(e, ym) })).filter((r) => r.st.budget + r.st.carry > 0);
+  const okN = rows.filter((r) => r.st.available >= 0).length;
+  const days = new Set(monthTx.map((t) => t.date)).size, isCur = ym === U.todayYM();
+  const reg = Math.min(1, days / (isCur ? Math.max(3, Math.min(Number(U.todayISO().slice(8, 10)), 14) * 0.5) : 10));
+  const liquid = isCur ? forecast().rest : 1;
+  const parts = [
+    { label: 'Épargne', pts: Math.round(Math.max(0, Math.min(1, rate / 0.2)) * 40), max: 40, tip: inc <= 0 ? 'Aucun revenu saisi ce mois-ci.' : rate >= 0.2 ? `${U.fmtPct(rate)} épargnés : objectif 20 % atteint.` : `${U.fmtPct(Math.max(0, rate))} épargnés — vise 20 %.` },
+    { label: 'Budgets tenus', pts: rows.length ? Math.round(okN / rows.length * 35) : 0, max: 35, tip: rows.length ? `${okN} enveloppe(s) sur ${rows.length} dans le budget.` : 'Fixe des budgets pour gagner ces points.' },
+    { label: 'Régularité', pts: Math.round(reg * 15), max: 15, tip: 'Saisis tes opérations régulièrement.' },
+    { label: 'Marge', pts: liquid > 0 ? 10 : 0, max: 10, tip: liquid > 0 ? 'Ta trésorerie reste positive.' : 'Ta trésorerie prévue est négative.' },
+  ];
+  return { score: parts.reduce((s, p) => s + p.pts, 0), parts };
+}
+const BADGES = [
+  { id: 'first', icon: '✨', name: 'Premier pas', desc: 'Ajouter une première opération', test: () => state.data.transactions.length >= 1 },
+  { id: 'streak7', icon: '🔥', name: 'Régulier', desc: '7 jours d’affilée avec une saisie', test: () => streak() >= 7 },
+  { id: 'streak30', icon: '🏃', name: 'Marathonien', desc: '30 jours d’affilée', test: () => streak() >= 30 },
+  { id: 'budgeter', icon: '✉️', name: 'Budgeteur', desc: '5 enveloppes avec un budget', test: () => activeEnvelopes().filter((e) => C().budget(e, U.todayYM()) > 0).length >= 5 },
+  { id: 'zen', icon: '🧘', name: 'Mois zen', desc: 'Un mois entier sans enveloppe dépassée', test: () => { const c = C(); for (let i = 1; i <= 12; i++) { const m = U.shiftYM(U.todayYM(), -i); const r = activeEnvelopes().map((e) => c.stats(e, m)).filter((s) => s.budget + s.carry > 0); if (r.length >= 3 && r.every((s) => s.available >= 0) && r.filter((s) => s.spent > 0).length >= 2) return true; } return false; } },
+  { id: 'saver', icon: '💰', name: 'Fourmi', desc: 'Un mois avec 20 % de revenus épargnés', test: () => { const c = C(); for (let i = 1; i <= 12; i++) { const m = U.shiftYM(U.todayYM(), -i), inc = c.income(m); if (inc > 0 && (inc - c.expense(m)) / inc >= 0.2) return true; } return false; } },
+  { id: 'goal', icon: '🎯', name: 'Objectif atteint', desc: 'Remplir un objectif d’épargne', test: () => DB.all('goals').some((g) => g.saved >= g.target) },
+  { id: 'auto', icon: '🔁', name: 'Automatisé', desc: '3 opérations récurrentes actives', test: () => state.data.recurring.filter((r) => r.active).length >= 3 },
+  { id: 'backup', icon: '💾', name: 'Prudent', desc: 'Exporter une sauvegarde', test: () => !!DB.getSetting('lastBackup', null) },
+  { id: 'hundred', icon: '💯', name: 'Centurion', desc: '100 opérations enregistrées', test: () => state.data.transactions.length >= 100 },
+];
+function checkBadges() {
+  const stored = DB.getSetting('badges', null);
+  const earned = BADGES.filter((b) => { try { return b.test(); } catch { return false; } });
+  if (stored === null) { DB.setSetting('badges', Object.fromEntries(earned.map((b) => [b.id, U.todayISO()]))); return; }
+  const fresh = earned.filter((b) => !stored[b.id]);
+  if (!fresh.length) return;
+  const next = { ...stored }; fresh.forEach((b) => { next[b.id] = U.todayISO(); }); DB.setSetting('badges', next);
+  if (funOn()) setTimeout(() => { toast(`🏅 Badge débloqué : ${fresh[0].icon} ${fresh[0].name}`, 'success'); confetti(); }, 900);
+}
+function confetti() {
+  if (!funOn() || matchMedia('(prefers-reduced-motion: reduce)').matches) return;
+  const cv = el('canvas', { style: 'position:fixed;inset:0;width:100%;height:100%;pointer-events:none;z-index:300', 'aria-hidden': 'true' });
+  document.body.appendChild(cv);
+  const dpr = window.devicePixelRatio || 1, W = (cv.width = innerWidth * dpr), H = (cv.height = innerHeight * dpr), ctx = cv.getContext('2d');
+  const cols = ['#2a78d6', '#eb6834', '#1baf7a', '#eda100', '#e87ba4', '#6250d6'];
+  const ps = Array.from({ length: 90 }, () => ({ x: W / 2 + (Math.random() - .5) * W * .3, y: H * .6, vx: (Math.random() - .5) * 14 * dpr, vy: (-Math.random() * 16 - 6) * dpr, s: (4 + Math.random() * 5) * dpr, c: cols[Math.random() * cols.length | 0], r: Math.random() * 6, vr: (Math.random() - .5) * .4 }));
+  const t0 = performance.now();
+  (function tick(t) {
+    const k = t - t0; ctx.clearRect(0, 0, W, H);
+    for (const p of ps) { p.vy += .55 * dpr; p.x += p.vx; p.y += p.vy; p.r += p.vr; ctx.save(); ctx.translate(p.x, p.y); ctx.rotate(p.r); ctx.globalAlpha = Math.max(0, 1 - k / 2200); ctx.fillStyle = p.c; ctx.fillRect(-p.s / 2, -p.s / 4, p.s, p.s / 2); ctx.restore(); }
+    if (k < 2200) requestAnimationFrame(tick); else cv.remove();
+  })(t0);
+}
+
+// ============================================================
 // views.js — écrans
 // ============================================================
-const NAV = [['dashboard', 'Accueil', '🏠'], ['transactions', 'Opérations', '🧾'], ['envelopes', 'Enveloppes', '✉️'], ['accounts', 'Comptes', '🏦'], ['settings', 'Réglages', '⚙️']];
-const MONTH_VIEWS = ['dashboard', 'transactions', 'envelopes'];
-const tabOf = (v) => (v === 'recurring' ? 'settings' : v);
+const NAV = [['dashboard', 'Accueil', '🏠'], ['transactions', 'Opérations', '🧾'], ['envelopes', 'Enveloppes', '✉️'], ['goals', 'Objectifs', '🎯'], ['more', 'Plus', '☰']];
+const MONTH_VIEWS = ['dashboard', 'transactions', 'envelopes', 'goals', 'review'];
+const tabOf = (v) => (['accounts', 'recurring', 'settings', 'review'].includes(v) ? 'more' : v);
 
 function renderChrome() {
   const header = document.getElementById('app-header');
@@ -795,13 +1128,13 @@ function renderChrome() {
         el('span', { class: 'month-label' }, U.ymLabel(state.month)),
         el('button', { class: 'icon-btn', 'aria-label': 'Mois suivant', onclick: () => setMonth(U.shiftYM(state.month, 1)) }, '›'),
         state.month !== U.todayYM() ? el('button', { class: 'btn btn-ghost btn-sm', onclick: () => setMonth(U.todayYM()) }, "Aujourd'hui") : null)
-    : el('div', { class: 'month-nav' }, el('span', { class: 'month-label' }, NAV.find((n) => n[0] === cur)?.[1] || ''));
+    : el('div', { class: 'month-nav' }, el('span', { class: 'month-label' }, { goals: 'Objectifs', more: 'Plus', accounts: 'Comptes', recurring: 'Récurrentes', settings: 'Réglages' }[state.view] || ''));
   header.appendChild(el('div', { class: 'topbar' }, el('span', { class: 'brand' }, '💰 Budget'), nav, month));
 
   const tabbar = document.getElementById('tabbar');
   tabbar.textContent = '';
   for (const [v, label, ico] of NAV) tabbar.appendChild(el('button', { class: `tab ${cur === v ? 'active' : ''}`, onclick: () => setView(v), 'aria-label': label }, el('span', { class: 'ico' }, ico), label));
-  document.getElementById('fab').hidden = state.view === 'settings' || state.view === 'recurring';
+  document.getElementById('fab').hidden = ['settings', 'recurring', 'more', 'accounts'].includes(state.view);
 }
 
 function put(root, ...kids) { for (const k of kids.flat(Infinity)) if (k) root.appendChild(k); }
@@ -814,88 +1147,6 @@ function barFill(spent, budget) {
   const pct = budget > 0 ? Math.min(100, (spent / budget) * 100) : (spent > 0 ? 100 : 0);
   const cls = budget <= 0 ? (spent > 0 ? 'over' : '') : spent > budget ? 'over' : spent > budget * 0.9 ? 'warn' : '';
   return { pct, cls };
-}
-
-// ============================================================ Accueil
-function viewDashboard(root) {
-  const c = C(), ym = state.month;
-  const accounts = activeAccounts(), envs = activeEnvelopes();
-  const net = U.round2(accounts.reduce((s, a) => s + c.balance(a.id), 0));
-  const income = c.income(ym), expense = c.expense(ym), diff = U.round2(income - expense);
-  const rows = envs.map((env) => ({ env, ...c.stats(env, ym) }));
-  const totalBudget = rows.reduce((s, r) => s + r.budget, 0);
-  const totalAvail = rows.reduce((s, r) => s + Math.max(0, r.available), 0);
-  const nodes = [];
-
-  // --- bannières ---
-  const nTx = state.data.transactions.length;
-  const welcome = !DB.getSetting('welcomeDismissed', false) && nTx === 0 && accounts.every((a) => !a.openingBalance);
-  if (welcome) {
-    nodes.push(el('div', { class: 'banner info' }, el('div', {}, el('b', {}, 'Bienvenue ! '), "1) Ouvre un compte pour indiquer ton solde de départ  2) fixe un budget par enveloppe  3) ajoute ta première opération avec le bouton +."),
-      el('div', { class: 'actions' }, el('button', { class: 'btn btn-sm', onclick: () => setView('accounts') }, 'Régler mes comptes'), el('button', { class: 'btn btn-sm btn-ghost', onclick: () => { DB.setSetting('welcomeDismissed', true); render(); } }, 'Masquer'))));
-  }
-  const last = DB.getSetting('lastBackup', null), snooze = DB.getSetting('backupSnooze', null);
-  const daysSince = last ? (Date.now() - Date.parse(last)) / 864e5 : Infinity;
-  if (nTx >= 5 && daysSince > 30 && !(snooze && Date.now() < Date.parse(snooze))) {
-    nodes.push(el('div', { class: 'banner' }, el('div', {}, last ? `Dernière sauvegarde il y a ${Math.floor(daysSince)} jours.` : "Tu n'as encore jamais exporté de sauvegarde.", ' Tes données ne vivent que sur cet appareil.'),
-      el('div', { class: 'actions' }, el('button', { class: 'btn btn-sm btn-primary', onclick: exportJSON }, 'Sauvegarder'),
-        el('button', { class: 'btn btn-sm btn-ghost', onclick: () => { DB.setSetting('backupSnooze', new Date(Date.now() + 7 * 864e5).toISOString()); render(); } }, 'Plus tard'))));
-  }
-
-  // --- cartes ---
-  nodes.push(el('div', { class: 'cards' },
-    card('Solde total', money(net), net >= 0 ? 'pos' : 'neg'),
-    card('Revenus', money(income), 'pos'),
-    card('Dépenses', money(expense), 'neg'),
-    card('Reste du mois', U.fmtSigned(diff, state.currency), diff >= 0 ? 'pos' : 'neg', income > 0 ? `Épargne : ${U.fmtPct(diff / income)}` : '')));
-
-  // --- reste par jour (mois courant uniquement) ---
-  if (ym === U.todayYM() && totalBudget > 0) {
-    const today = Number(U.todayISO().slice(8, 10)), left = U.daysInMonth(ym) - today + 1;
-    nodes.push(el('div', { class: 'banner info' }, el('div', {}, 'Il te reste ', el('b', {}, money(totalAvail)), " dans tes enveloppes, soit environ ", el('b', {}, money(totalAvail / left)), ` par jour jusqu'à la fin du mois.`)));
-  }
-  const over = rows.filter((r) => r.budget > 0 && r.available < 0);
-  if (over.length) nodes.push(el('div', { class: 'banner err' }, el('div', {}, '⚠️ Enveloppes dépassées : ', el('span', { class: 'chips', style: 'display:inline-flex;margin-left:4px' }, over.map((r) => el('span', { class: 'chip', onclick: () => goEnvelope(r.env.id), style: 'cursor:pointer' }, `${r.env.name} ${money(r.available)}`))))));
-
-  // --- graphiques ---
-  const items = rows.filter((r) => r.spent > 0).sort((a, b) => b.spent - a.spent).map((r) => ({ name: r.env.name, color: r.env.color || '#888', value: r.spent, id: r.env.id }));
-  const unc = c.uncategorized(ym); if (unc > 0) items.push({ name: 'Hors enveloppe', color: 'var(--muted)', value: unc });
-  const archivedSpent = U.round2(expense - rows.reduce((s, r) => s + r.spent, 0) - unc);
-  if (archivedSpent > 0.004) items.push({ name: 'Enveloppes archivées', color: 'var(--muted)', value: archivedSpent });
-  const top = items.slice(0, 7), rest = items.slice(7);
-  if (rest.length) top.push({ name: 'Autres', color: 'var(--muted)', value: U.round2(rest.reduce((s, x) => s + x.value, 0)) });
-
-  const donutBox = el('section', { class: 'section viz' }, sectionHead('Où part l\'argent'),
-    top.length ? donutChart(top, expense) : el('p', { class: 'empty' }, 'Aucune dépense ce mois-ci.'));
-  const months = Array.from({ length: 6 }, (_, i) => U.shiftYM(ym, i - 5)).map((m) => ({ ym: m, inc: c.income(m), exp: c.expense(m) }));
-  const barsBox = el('section', { class: 'section viz bars' }, sectionHead('6 derniers mois'),
-    el('div', { style: 'margin-bottom:6px' }, el('span', { class: 'key' }, el('i', { style: 'background:var(--s-income)' }), 'Revenus'), el('span', { class: 'key' }, el('i', { style: 'background:var(--s-expense)' }), 'Dépenses')),
-    months.some((m) => m.inc || m.exp) ? barChart(months) : el('p', { class: 'empty' }, 'Pas encore de données.'));
-  nodes.push(el('div', { class: 'grid-2' }, donutBox, barsBox));
-
-  // --- enveloppes ---
-  const shown = rows.filter((r) => r.budget > 0 || r.spent > 0 || r.carry);
-  nodes.push(el('section', { class: 'section' }, sectionHead('Enveloppes', el('button', { class: 'btn btn-sm', onclick: () => setView('envelopes') }, 'Gérer')),
-    shown.length ? shown.map((r) => {
-      const f = barFill(r.spent, r.budget + r.carry);
-      return el('div', { class: 'eline', onclick: () => goEnvelope(r.env.id) },
-        el('span', { class: 'dot', style: `background:${r.env.color}` }), el('span', { class: 'nm' }, r.env.name),
-        el('span', { class: `am ${r.available < 0 ? 'neg' : ''}` }, el('b', {}, money(r.spent)), ` / ${money(r.budget + r.carry)}`),
-        el('div', { class: 'bar' }, el('i', { class: f.cls, style: `width:${f.pct}%` })));
-    }) : el('p', { class: 'empty' }, 'Aucun budget défini. Va dans « Enveloppes » pour en fixer.')));
-
-  // --- comptes ---
-  nodes.push(el('section', { class: 'section' }, sectionHead('Comptes', el('button', { class: 'btn btn-sm', onclick: () => openAccountModal() }, '+ Ajouter')),
-    el('div', { class: 'account-grid' }, accounts.map((a) => {
-      const b = c.balance(a.id);
-      return el('div', { class: 'account-card', onclick: () => openAccountModal(a) }, el('div', { class: 'account-name' }, a.name), el('div', { class: `account-balance ${b < 0 ? 'neg' : ''}` }, money(b)), el('div', { class: 'account-type' }, a.type || '—'));
-    })), accounts.length ? null : el('p', { class: 'empty' }, 'Aucun compte.')));
-
-  // --- récentes ---
-  const recent = state.data.transactions.slice().sort(cmpTx).slice(0, 6);
-  nodes.push(el('section', { class: 'section' }, sectionHead('Dernières opérations', el('button', { class: 'btn btn-sm', onclick: () => { state.filters = { accountId: '', envelopeId: '', q: '', all: true }; setView('transactions'); } }, 'Tout voir')),
-    recent.length ? recent.map((t) => txRow(t, true)) : el('p', { class: 'empty' }, 'Aucune opération. Appuie sur + pour commencer.')));
-  put(root, nodes);
 }
 
 const cmpTx = (a, b) => b.date.localeCompare(a.date) || (b.createdAt - a.createdAt);
@@ -1097,7 +1348,7 @@ function viewRecurring(root) {
   const recs = state.data.recurring.slice().sort((a, b) => a.day - b.day);
   const lbl = { expense: 'Dépense', income: 'Revenu', transfer: 'Virement' };
   put(root, el('div', { class: 'section-head' }, el('h2', { class: 'page-title' }, '🔁 Opérations récurrentes'), el('div', { class: 'actions' },
-      el('button', { class: 'btn btn-sm', onclick: () => setView('settings') }, '‹ Réglages'), el('button', { class: 'btn btn-primary btn-sm', onclick: () => openRecurringModal() }, '+ Nouvelle'))),
+      el('button', { class: 'btn btn-sm', onclick: () => setView('more') }, '‹ Plus'), el('button', { class: 'btn btn-primary btn-sm', onclick: () => openRecurringModal() }, '+ Nouvelle'))),
     el('p', { class: 'muted', style: 'margin-top:0' }, "Loyer, salaire, abonnements… Les opérations sont créées automatiquement à la date prévue, à l'ouverture de l'appli."),
     recs.length ? recs.map((r) => {
       const env = envById(r.envelopeId);
@@ -1116,6 +1367,7 @@ function viewSettings(root) {
   const last = DB.getSetting('lastBackup', null);
   put(root, 
     el('section', { class: 'section' }, el('h2', {}, 'Préférences'), el('div', { class: 'form', style: 'margin-top:12px' },
+      el('label', { class: 'checkrow' }, el('input', { type: 'checkbox', checked: funOn(), onchange: (e) => { DB.setSetting('fun', e.target.checked); render(); } }), el('span', {}, 'Mode ludique (confettis, badges, série de jours)')),
       el('div', { class: 'form-grid' },
         el('div', { class: 'form-row' }, el('label', {}, 'Devise'), sel(['EUR', 'USD', 'GBP', 'CHF', 'CAD', 'JPY'].map((x) => [x, x]), state.currency, (e) => { DB.setSetting('currency', e.target.value); commit(); toast('Devise mise à jour', 'success'); })),
         el('div', { class: 'form-row' }, el('label', {}, 'Thème'), sel([['auto', 'Automatique'], ['light', 'Clair'], ['dark', 'Sombre']], state.theme, (e) => { DB.setSetting('theme', e.target.value); reloadData(); applyTheme(); render(); }))))),
@@ -1133,6 +1385,275 @@ function viewSettings(root) {
     el('section', { class: 'section' }, el('h2', {}, 'À propos'),
       el('p', {}, 'Appli de budget 100 % locale : zéro serveur, zéro compte. ', el('b', {}, 'Tes données ne quittent jamais cet appareil.')),
       el('p', { class: 'muted' }, "Sur iPhone : ouvre la page dans Safari → Partager → « Sur l'écran d'accueil ». Installée ainsi, l'appli est plus à l'abri du nettoyage automatique de Safari — mais exporte quand même une sauvegarde de temps en temps (et à chaque changement de téléphone).")));
+}
+
+// ============================================================
+// views2.js — Accueil enrichi, Objectifs, Plus, Bilan
+// ============================================================
+const chip = (t) => el('span', { class: 'chip' }, t);
+const fmtLongDate = (iso) => new Date(iso + 'T12:00:00').toLocaleDateString('fr-FR', { day: 'numeric', month: 'long', year: 'numeric' });
+
+function ring(pct, size, stroke, colorVar, centerText, sub) {
+  const R = (size - stroke) / 2, CIRC = 2 * Math.PI * R, c = size / 2;
+  const s = svg('svg', { viewBox: `0 0 ${size} ${size}`, width: size, height: size, role: 'img', 'aria-label': `${Math.round(pct * 100)} %` });
+  s.appendChild(svg('circle', { cx: c, cy: c, r: R, fill: 'none', 'stroke-width': stroke, style: 'stroke:var(--bar-bg)' }));
+  s.appendChild(svg('circle', { cx: c, cy: c, r: R, fill: 'none', 'stroke-width': stroke, 'stroke-linecap': 'round', style: `stroke:${colorVar}`, 'stroke-dasharray': `${Math.max(0, Math.min(1, pct)) * CIRC} ${CIRC}`, transform: `rotate(-90 ${c} ${c})` }));
+  s.appendChild(svg('text', { x: c, y: c + (sub ? 2 : 6), 'text-anchor': 'middle', class: 'ring-t', style: `font-size:${size * 0.24}px` }, centerText));
+  if (sub) s.appendChild(svg('text', { x: c, y: c + size * 0.2, 'text-anchor': 'middle', class: 'ring-s', style: `font-size:${size * 0.11}px` }, sub));
+  return s;
+}
+
+function lineChart(points) {
+  const W = 360, H = 150, L = 6, R = 6, T = 22, B = 20, pw = W - L - R, ph = H - T - B;
+  const vals = points.map((p) => p.v), lo = Math.min(...vals, 0), hi = Math.max(...vals, 1), span = hi - lo || 1;
+  const x = (i) => L + (points.length === 1 ? pw / 2 : (pw * i) / (points.length - 1)), y = (v) => T + ph - ((v - lo) / span) * ph;
+  const s = svg('svg', { viewBox: `0 0 ${W} ${H}`, role: 'img', 'aria-label': 'Évolution du solde' });
+  if (lo < 0) s.appendChild(svg('line', { x1: L, x2: W - R, y1: y(0), y2: y(0), style: 'stroke:var(--muted);stroke-dasharray:3 3;opacity:.6' }));
+  const d = points.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)} ${y(p.v).toFixed(1)}`).join(' ');
+  s.appendChild(svg('path', { d: `${d} L${x(points.length - 1)} ${T + ph} L${x(0)} ${T + ph} Z`, style: 'fill:var(--primary);opacity:.12' }));
+  s.appendChild(svg('path', { d, fill: 'none', 'stroke-width': 2, 'stroke-linejoin': 'round', 'stroke-linecap': 'round', style: 'stroke:var(--primary)' }));
+  points.forEach((p, i) => {
+    s.appendChild(svg('circle', { cx: x(i), cy: y(p.v), r: i === points.length - 1 ? 4 : 8, style: i === points.length - 1 ? 'fill:var(--primary);stroke:var(--surface);stroke-width:2' : 'fill:transparent' }, svg('title', {}, `${U.ymLabel(p.ym)} : ${money(p.v)}`)));
+    if (i % 3 === (points.length - 1) % 3) s.appendChild(svg('text', { x: x(i), y: H - 5, 'text-anchor': i === 0 ? 'start' : 'middle' }, U.ymShort(p.ym)));
+  });
+  const lastP = points[points.length - 1];
+  s.appendChild(svg('text', { x: W - R, y: 12, 'text-anchor': 'end', style: 'fill:var(--text);font-weight:700;font-size:12px' }, money(lastP.v)));
+  return s;
+}
+function balanceSeries(endYM, n) {
+  const act = activeAccounts(), ids = new Set(act.map((a) => a.id)), delta = new Map();
+  const add = (ym, v) => delta.set(ym, (delta.get(ym) || 0) + v);
+  for (const t of state.data.transactions) {
+    const ym = t.date.slice(0, 7);
+    if (t.type === 'income' && ids.has(t.accountId)) add(ym, t.amount);
+    else if (t.type === 'expense' && ids.has(t.accountId)) add(ym, -t.amount);
+    else if (t.type === 'transfer') { if (ids.has(t.accountId)) add(ym, -t.amount); if (ids.has(t.toAccountId)) add(ym, t.amount); }
+  }
+  const open = act.reduce((s, a) => s + (Number(a.openingBalance) || 0), 0), keys = [...delta.keys()].sort();
+  return Array.from({ length: n }, (_, i) => U.shiftYM(endYM, i - n + 1)).map((ym) => ({ ym, v: U.round2(open + keys.filter((k) => k <= ym).reduce((s, k) => s + delta.get(k), 0)) }));
+}
+
+// ---------- composants ----------
+function quickBar() {
+  const input = el('input', { type: 'text', placeholder: 'Ajout rapide : « 12,50 boulangerie hier »', autocomplete: 'off', enterkeyhint: 'done', 'aria-label': 'Ajout rapide en langage naturel' });
+  const preview = el('div', { class: 'qprev' });
+  const lbl = { expense: 'Dépense', income: 'Revenu', transfer: 'Virement' };
+  let parsed = null;
+  function save() {
+    if (!parsed) return; const r = parsed;
+    DB.put('transactions', { id: DB.uid(), date: r.date, accountId: r.accountId, toAccountId: r.toAccountId, envelopeId: r.envelopeId, type: r.type, amount: r.amount, payee: r.payee, notes: '', recurringId: null, createdAt: Date.now() });
+    DB.setSetting('lastAccountId', r.accountId); commit(); toast('Ajouté : ' + (r.payee || lbl[r.type]) + ' ' + money(r.amount), 'success');
+  }
+  function upd() {
+    preview.textContent = ''; parsed = null;
+    if (!input.value.trim()) return;
+    const r = parseQuick(input.value);
+    if (!r || r.error) { preview.appendChild(el('span', { class: 'muted' }, r && r.error === 'compte' ? "Crée d'abord un compte." : 'Ajoute un montant, par exemple « 45 essence » ou « +1850 salaire ».')); return; }
+    parsed = r;
+    const env = envById(r.envelopeId), sign = r.type === 'expense' ? -1 : r.type === 'income' ? 1 : 0;
+    preview.append(el('div', { class: 'chips' },
+      el('span', { class: `chip strong ${sign < 0 ? 'neg' : sign > 0 ? 'pos' : ''}` }, sign ? U.fmtSigned(sign * r.amount, state.currency) : '⇄ ' + money(r.amount)),
+      chip(r.payee || lbl[r.type]),
+      r.type === 'expense' ? chip(env ? `✉️ ${env.name}${r.source === 'suggestion' ? ' (suggéré)' : ''}` : 'sans enveloppe') : null,
+      chip(r.type === 'transfer' ? `${accName(r.accountId)} → ${accName(r.toAccountId)}` : accName(r.accountId)),
+      r.date !== U.todayISO() ? chip('📅 ' + U.dayLabel(r.date)) : null),
+      el('div', { class: 'actions', style: 'margin-top:8px' }, el('button', { class: 'btn btn-primary btn-sm', onclick: save }, 'Ajouter'), el('button', { class: 'btn btn-sm', onclick: () => openTxModal(null, { ...r }) }, 'Modifier…')));
+  }
+  input.addEventListener('input', upd);
+  input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); save(); } });
+  return el('div', { class: 'qbar' }, el('div', { class: 'qrow' }, el('span', { class: 'qi' }, '✨'), input), preview);
+}
+
+function heroForecast() {
+  const f = forecast();
+  const up = f.items.length ? `Après ${f.items.length} opération(s) récurrente(s) à venir (${U.fmtSigned(-f.upExp + f.upInc, state.currency)})` : 'Aucune opération récurrente à venir ce mois-ci';
+  return el('div', { class: 'hero', onclick: openForecastModal, role: 'button', tabindex: '0' },
+    el('div', {}, el('div', { class: 'card-label' }, 'Reste à vivre ce mois-ci'), el('div', { class: `hero-v ${f.rest < 0 ? 'neg' : 'pos'}` }, money(f.rest)),
+      el('div', { class: 'card-sub' }, f.rest > 0 ? `≈ ${money(f.perDay)} par jour pendant ${f.daysLeft} jour(s) · ${up}` : f.rest < 0 ? `Trésorerie prévue négative · ${up}` : up)),
+    el('div', { class: 'hero-i' }, 'ⓘ'));
+}
+
+function insightsSection() {
+  const list = computeInsights();
+  if (!list.length) return null;
+  return el('section', { class: 'section' }, sectionHead('💡 Conseils'),
+    list.map((i) => el('div', { class: `insight ${i.tone}` }, el('span', { class: 'ii' }, i.icon), el('div', { class: 'it' }, i.text),
+      i.action ? el('button', { class: 'btn btn-sm act', onclick: i.action.fn }, i.action.label) : null,
+      el('button', { class: 'icon-btn x', 'aria-label': 'Masquer', onclick: () => dismissInsight(i.key) }, '×'))));
+}
+
+function miniStatus() {
+  const sc = healthScore(state.month), st = streak(), goals = state.data.goals;
+  const kids = [];
+  if (sc) {
+    const col = sc.score >= 75 ? 'var(--pos)' : sc.score >= 50 ? 'var(--warn)' : 'var(--neg)';
+    kids.push(el('div', { class: 'mini', onclick: () => setView('goals') }, ring(sc.score / 100, 64, 8, col, String(sc.score)), el('div', {}, el('b', {}, 'Santé du budget'), el('div', { class: 'muted' }, sc.score >= 75 ? 'Très bien' : sc.score >= 50 ? 'Correct, des pistes' : 'À surveiller'))));
+  }
+  if (funOn() && st >= 2) kids.push(el('div', { class: 'mini', onclick: () => setView('goals') }, el('span', { class: 'big' }, '🔥'), el('div', {}, el('b', {}, `${st} jours d'affilée`), el('div', { class: 'muted' }, 'de saisie — continue !'))));
+  const g = goals.filter((x) => x.saved < x.target)[0];
+  if (g) kids.push(el('div', { class: 'mini', onclick: () => setView('goals') }, ring(g.saved / g.target, 64, 8, g.color, `${Math.round(g.saved / g.target * 100)}%`), el('div', {}, el('b', {}, `${g.emoji} ${g.name}`), el('div', { class: 'muted' }, `${money(g.saved)} / ${money(g.target)}`))));
+  return kids.length ? el('div', { class: 'minis' }, kids) : null;
+}
+
+// ============================================================ Accueil
+function viewDashboard(root) {
+  const c = C(), ym = state.month, isCur = ym === U.todayYM();
+  const accounts = activeAccounts(), envs = activeEnvelopes();
+  const net = U.round2(accounts.reduce((s, a) => s + c.balance(a.id), 0));
+  const income = c.income(ym), expense = c.expense(ym), diff = U.round2(income - expense);
+  const rows = envs.map((env) => ({ env, ...c.stats(env, ym) }));
+  const nodes = [];
+
+  const nTx = state.data.transactions.length;
+  if (!DB.getSetting('welcomeDismissed', false) && nTx === 0 && accounts.every((a) => !a.openingBalance)) {
+    nodes.push(el('div', { class: 'banner info' }, el('div', {}, el('b', {}, 'Bienvenue ! '), "1) Ouvre un compte pour indiquer ton solde de départ  2) fixe un budget par enveloppe  3) tape une dépense dans la barre « Ajout rapide » (ex. « 12,50 boulangerie »)."),
+      el('div', { class: 'actions' }, el('button', { class: 'btn btn-sm', onclick: () => setView('accounts') }, 'Régler mes comptes'), el('button', { class: 'btn btn-sm btn-ghost', onclick: () => { DB.setSetting('welcomeDismissed', true); render(); } }, 'Masquer'))));
+  }
+  const last = DB.getSetting('lastBackup', null), snooze = DB.getSetting('backupSnooze', null), daysSince = last ? (Date.now() - Date.parse(last)) / 864e5 : Infinity;
+  if (nTx >= 5 && daysSince > 30 && !(snooze && Date.now() < Date.parse(snooze))) {
+    nodes.push(el('div', { class: 'banner' }, el('div', {}, last ? `Dernière sauvegarde il y a ${Math.floor(daysSince)} jours.` : "Tu n'as encore jamais exporté de sauvegarde.", ' Tes données ne vivent que sur cet appareil.'),
+      el('div', { class: 'actions' }, el('button', { class: 'btn btn-sm btn-primary', onclick: exportJSON }, 'Sauvegarder'), el('button', { class: 'btn btn-sm btn-ghost', onclick: () => { DB.setSetting('backupSnooze', new Date(Date.now() + 7 * 864e5).toISOString()); render(); } }, 'Plus tard'))));
+  }
+
+  nodes.push(quickBar());
+  if (isCur) nodes.push(heroForecast());
+  nodes.push(el('div', { class: 'cards' },
+    card('Solde total', money(net), net >= 0 ? 'pos' : 'neg'), card('Revenus', money(income), 'pos'), card('Dépenses', money(expense), 'neg'),
+    card('Reste du mois', U.fmtSigned(diff, state.currency), diff >= 0 ? 'pos' : 'neg', income > 0 ? `Épargne : ${U.fmtPct(diff / income)}` : '')));
+  nodes.push(miniStatus());
+  nodes.push(insightsSection());
+
+  const items = rows.filter((r) => r.spent > 0).sort((a, b) => b.spent - a.spent).map((r) => ({ name: r.env.name, color: r.env.color || '#888', value: r.spent, id: r.env.id }));
+  const unc = c.uncategorized(ym); if (unc > 0) items.push({ name: 'Hors enveloppe', color: 'var(--muted)', value: unc });
+  const arch = U.round2(expense - rows.reduce((s, r) => s + r.spent, 0) - unc); if (arch > 0.004) items.push({ name: 'Enveloppes archivées', color: 'var(--muted)', value: arch });
+  const top = items.slice(0, 7), rest = items.slice(7);
+  if (rest.length) top.push({ name: 'Autres', color: 'var(--muted)', value: U.round2(rest.reduce((s, x) => s + x.value, 0)) });
+  const months = Array.from({ length: 6 }, (_, i) => U.shiftYM(ym, i - 5)).map((m) => ({ ym: m, inc: c.income(m), exp: c.expense(m) }));
+  nodes.push(el('div', { class: 'grid-2' },
+    el('section', { class: 'section viz' }, sectionHead("Où part l'argent"), top.length ? donutChart(top, expense) : el('p', { class: 'empty' }, 'Aucune dépense ce mois-ci.')),
+    el('section', { class: 'section viz bars' }, sectionHead('6 derniers mois'),
+      el('div', { style: 'margin-bottom:6px' }, el('span', { class: 'key' }, el('i', { style: 'background:var(--s-income)' }), 'Revenus'), el('span', { class: 'key' }, el('i', { style: 'background:var(--s-expense)' }), 'Dépenses')),
+      months.some((m) => m.inc || m.exp) ? barChart(months) : el('p', { class: 'empty' }, 'Pas encore de données.'))));
+  if (nTx) nodes.push(el('section', { class: 'section viz bars' }, sectionHead('Évolution de mon solde (12 mois)', el('button', { class: 'btn btn-sm', onclick: () => setView('review') }, 'Bilan du mois')), lineChart(balanceSeries(ym, 12))));
+
+  const shown = rows.filter((r) => r.budget > 0 || r.spent > 0 || r.carry);
+  nodes.push(el('section', { class: 'section' }, sectionHead('Enveloppes', el('button', { class: 'btn btn-sm', onclick: () => setView('envelopes') }, 'Gérer')),
+    shown.length ? shown.map((r) => {
+      const f = barFill(r.spent, r.budget + r.carry);
+      return el('div', { class: 'eline', onclick: () => goEnvelope(r.env.id) }, el('span', { class: 'dot', style: `background:${r.env.color}` }), el('span', { class: 'nm' }, r.env.name),
+        el('span', { class: `am ${r.available < 0 ? 'neg' : ''}` }, el('b', {}, money(r.spent)), ` / ${money(r.budget + r.carry)}`), el('div', { class: 'bar' }, el('i', { class: f.cls, style: `width:${f.pct}%` })));
+    }) : el('p', { class: 'empty' }, 'Aucun budget défini. Va dans « Enveloppes » ou laisse-moi en suggérer.'),
+    shown.length ? null : el('button', { class: 'btn btn-block', onclick: openBudgetSuggest }, '🪄 Suggérer des budgets')));
+  nodes.push(el('section', { class: 'section' }, sectionHead('Comptes', el('button', { class: 'btn btn-sm', onclick: () => openAccountModal() }, '+ Ajouter')),
+    el('div', { class: 'account-grid' }, accounts.map((a) => { const b = c.balance(a.id); return el('div', { class: 'account-card', onclick: () => openAccountModal(a) }, el('div', { class: 'account-name' }, a.name), el('div', { class: `account-balance ${b < 0 ? 'neg' : ''}` }, money(b)), el('div', { class: 'account-type' }, a.type || '—')); })),
+    accounts.length ? null : el('p', { class: 'empty' }, 'Aucun compte.')));
+  const recent = state.data.transactions.slice().sort(cmpTx).slice(0, 6);
+  nodes.push(el('section', { class: 'section' }, sectionHead('Dernières opérations', el('button', { class: 'btn btn-sm', onclick: () => { state.filters = { accountId: '', envelopeId: '', q: '', all: true }; setView('transactions'); } }, 'Tout voir')),
+    recent.length ? recent.map((t) => txRow(t, true)) : el('p', { class: 'empty' }, 'Aucune opération. Utilise « Ajout rapide » ou le bouton +.')));
+  put(root, nodes);
+}
+
+// ============================================================ Objectifs
+function goalCard(g) {
+  const pct = Math.min(1, g.saved / g.target), rem = Math.max(0, g.target - g.saved), today = U.todayISO();
+  let hint;
+  if (rem <= 0) hint = '🎉 Objectif atteint !';
+  else if (g.deadline) {
+    if (g.deadline <= today) hint = `Échéance dépassée — il manque ${money(rem)}.`;
+    else { const months = Math.max(1, Math.ceil((Date.parse(g.deadline) - Date.parse(today)) / (864e5 * 30.44))); hint = `Pour le ${fmtLongDate(g.deadline)} : ≈ ${money(rem / months)} à mettre de côté par mois (${months} mois).`; }
+  } else { const sv = avgSavings(); hint = sv > 0 ? `Au rythme de ton épargne moyenne (${money(sv)}/mois) : ≈ ${Math.ceil(rem / sv)} mois.` : "Ajoute une échéance pour obtenir un plan d'épargne."; }
+  return el('div', { class: 'goal' },
+    ring(pct, 72, 9, g.color, `${Math.round(pct * 100)}%`),
+    el('div', { style: 'min-width:0;flex:1' }, el('div', { class: 'account-name' }, `${g.emoji} ${g.name}`), el('div', { class: 'tnum' }, el('b', {}, money(g.saved)), el('span', { class: 'muted' }, ` / ${money(g.target)}`)), el('div', { class: 'muted' }, hint),
+      el('div', { class: 'actions', style: 'margin-top:8px' }, el('button', { class: 'btn btn-sm btn-primary', onclick: () => openGoalDeposit(g) }, '+ Verser / retirer'), el('button', { class: 'btn btn-sm', onclick: () => openGoalModal(g) }, 'Modifier'))));
+}
+
+function viewGoals(root) {
+  const sc = healthScore(state.month), st = streak(), stored = DB.getSetting('badges', {}) || {};
+  const nodes = [];
+  if (sc) {
+    const col = sc.score >= 75 ? 'var(--pos)' : sc.score >= 50 ? 'var(--warn)' : 'var(--neg)';
+    nodes.push(el('section', { class: 'section' }, sectionHead(`Santé du budget — ${U.ymLabel(state.month)}`),
+      el('div', { class: 'score' }, ring(sc.score / 100, 110, 12, col, String(sc.score), '/ 100'),
+        el('div', { style: 'flex:1;min-width:200px' }, sc.parts.map((p) => el('div', { style: 'margin-bottom:8px' },
+          el('div', { style: 'display:flex;justify-content:space-between;font-size:13px' }, el('b', {}, p.label), el('span', { class: 'muted tnum' }, `${p.pts}/${p.max}`)),
+          el('div', { class: 'bar' }, el('i', { style: `width:${p.pts / p.max * 100}%;background:${col}` })), el('div', { class: 'muted' }, p.tip))))),
+      el('p', { class: 'muted', style: 'margin:8px 0 0' }, 'Calculé localement à partir de ton épargne, du respect de tes budgets, de ta régularité et de ta trésorerie.')));
+  } else nodes.push(el('section', { class: 'section' }, sectionHead('Santé du budget'), el('p', { class: 'empty' }, 'Ajoute au moins 5 opérations dans le mois pour voir ton score.')));
+
+  const goals = state.data.goals.slice().sort((a, b) => (a.saved >= a.target) - (b.saved >= b.target));
+  nodes.push(el('section', { class: 'section' }, sectionHead('🎯 Objectifs d\'épargne', el('button', { class: 'btn btn-primary btn-sm', onclick: () => openGoalModal() }, '+ Nouvel objectif')),
+    goals.length ? goals.map(goalCard) : el('p', { class: 'empty' }, 'Vacances, fonds d\'urgence, matériel… Crée un objectif et suis ta progression.')));
+
+  nodes.push(el('section', { class: 'section' }, sectionHead('Outils intelligents'),
+    el('div', { class: 'tools' },
+      el('button', { class: 'tool', onclick: () => openSimulator() }, el('span', { class: 'ti' }, '🛍️'), el('b', {}, 'Puis-je me l\'offrir ?'), el('span', { class: 'muted' }, 'Simule un achat')),
+      el('button', { class: 'tool', onclick: openBudgetSuggest }, el('span', { class: 'ti' }, '🪄'), el('b', {}, 'Budgets suggérés'), el('span', { class: 'muted' }, 'Selon tes 3 derniers mois')),
+      el('button', { class: 'tool', onclick: () => setView('review') }, el('span', { class: 'ti' }, '📋'), el('b', {}, 'Bilan du mois'), el('span', { class: 'muted' }, 'Résumé + calendrier')))));
+
+  if (funOn()) {
+    const earned = BADGES.filter((b) => stored[b.id]).length;
+    nodes.push(el('section', { class: 'section' }, sectionHead(`🏅 Badges (${earned}/${BADGES.length})`, el('span', { class: 'chip' }, `🔥 série : ${st} jour${st > 1 ? 's' : ''}`)),
+      el('div', { class: 'badges' }, BADGES.map((b) => el('div', { class: `badge ${stored[b.id] ? 'on' : ''}`, title: b.desc }, el('span', { class: 'bi' }, b.icon), el('b', {}, b.name), el('span', { class: 'muted' }, stored[b.id] ? `Obtenu le ${new Date(stored[b.id]).toLocaleDateString('fr-FR')}` : b.desc))))));
+  }
+  put(root, nodes);
+}
+
+// ============================================================ Plus
+function viewMore(root) {
+  const item = (ico, title, sub, fn) => el('button', { class: 'tool wide', onclick: fn }, el('span', { class: 'ti' }, ico), el('div', { style: 'text-align:left' }, el('b', {}, title), el('div', { class: 'muted' }, sub)));
+  put(root, el('div', { class: 'menu' },
+    item('🏦', 'Comptes', `${activeAccounts().length} compte(s) actif(s)`, () => setView('accounts')),
+    item('🔁', 'Opérations récurrentes', `${state.data.recurring.filter((r) => r.active).length} active(s)`, () => setView('recurring')),
+    item('📋', 'Bilan du mois', 'Résumé, comparaison, calendrier des dépenses', () => setView('review')),
+    item('🛍️', 'Puis-je me l\'offrir ?', 'Simule l\'impact d\'un achat', () => openSimulator()),
+    item('🪄', 'Budgets suggérés', 'Calculés depuis ton historique', openBudgetSuggest),
+    item('⚙️', 'Réglages & données', 'Devise, thème, sauvegarde, import/export', () => setView('settings'))));
+}
+
+// ============================================================ Bilan du mois
+function heatmap(ym) {
+  const [y, m] = ym.split('-').map(Number), dim = U.daysInMonth(ym), daily = new Map(), cnt = new Map();
+  for (const t of state.data.transactions) if (t.type === 'expense' && t.date.slice(0, 7) === ym) { const d = +t.date.slice(8); daily.set(d, (daily.get(d) || 0) + t.amount); cnt.set(d, (cnt.get(d) || 0) + 1); }
+  const max = Math.max(1, ...daily.values()), off = (new Date(y, m - 1, 1).getDay() + 6) % 7;
+  const g = el('div', { class: 'hm' }, ['L', 'M', 'M', 'J', 'V', 'S', 'D'].map((d) => el('div', { class: 'hm-h' }, d)), Array.from({ length: off }, () => el('div')));
+  for (let d = 1; d <= dim; d++) {
+    const v = daily.get(d) || 0;
+    g.appendChild(el('div', { class: 'hm-c', title: v ? `${d}/${m} : ${money(v)}` : '', style: v ? `background:color-mix(in srgb, var(--s-expense) ${Math.round(18 + 72 * v / max)}%, var(--surface-3))` : '',
+      onclick: () => toast(v ? `${d} ${U.ymLabel(ym).split(' ')[0]} : ${money(v)} (${cnt.get(d)} opération${cnt.get(d) > 1 ? 's' : ''})` : `${d} ${U.ymLabel(ym).split(' ')[0]} : aucune dépense`) }, String(d)));
+  }
+  return g;
+}
+function viewReview(root) {
+  const c = C(), ym = state.month, prev = U.shiftYM(ym, -1);
+  const inc = c.income(ym), exp = c.expense(ym), diff = U.round2(inc - exp), pExp = c.expense(prev), pInc = c.income(prev);
+  const envs = activeEnvelopes().map((e) => ({ e, st: c.stats(e, ym), p: c.spent(e.id, prev) }));
+  const tops = envs.filter((r) => r.st.spent > 0).sort((a, b) => b.st.spent - a.st.spent);
+  const over = envs.filter((r) => r.st.budget + r.st.carry > 0 && r.st.available < 0);
+  const bigs = state.data.transactions.filter((t) => t.type === 'expense' && t.date.slice(0, 7) === ym).sort((a, b) => b.amount - a.amount).slice(0, 5);
+  const month = U.ymLabel(ym);
+  const parts = [];
+  if (!inc && !exp) parts.push(`Aucune opération en ${month}.`);
+  else {
+    parts.push(`En ${month}, tu as encaissé ${money(inc)} et dépensé ${money(exp)} : ${diff >= 0 ? `il reste ${money(diff)}${inc > 0 ? ` (${U.fmtPct(diff / inc)} épargnés)` : ''}` : `tu as dépassé tes revenus de ${money(-diff)}`}.`);
+    if (pExp > 0) { const dp = Math.round((exp / pExp - 1) * 100); parts.push(`Tes dépenses ${Math.abs(dp) < 3 ? 'sont stables' : dp > 0 ? `ont augmenté de ${dp} %` : `ont baissé de ${-dp} %`} par rapport à ${U.ymLabel(prev)}.`); }
+    if (tops[0]) parts.push(`Premier poste : ${tops[0].e.name} (${money(tops[0].st.spent)}${exp > 0 ? `, ${U.fmtPct(tops[0].st.spent / exp)} des dépenses` : ''}).`);
+    parts.push(over.length ? `Enveloppes dépassées : ${over.map((r) => r.e.name).join(', ')}.` : envs.some((r) => r.st.budget > 0) ? 'Toutes tes enveloppes sont dans le budget 👏.' : '');
+  }
+  put(root,
+    el('div', { class: 'section-head' }, el('h2', { class: 'page-title' }, `📋 Bilan — ${month}`), el('button', { class: 'btn btn-sm', onclick: () => setView('more') }, '‹ Plus')),
+    el('section', { class: 'section' }, el('p', { style: 'margin:0;line-height:1.6' }, parts.filter(Boolean).join(' '))),
+    el('div', { class: 'cards' }, card('Revenus', money(inc), 'pos', pInc ? `${U.fmtSigned(inc - pInc, state.currency)} vs ${U.ymShort(prev)}` : ''), card('Dépenses', money(exp), 'neg', pExp ? `${U.fmtSigned(exp - pExp, state.currency)} vs ${U.ymShort(prev)}` : ''),
+      card('Épargne', U.fmtSigned(diff, state.currency), diff >= 0 ? 'pos' : 'neg'), card('Taux d\'épargne', inc > 0 ? U.fmtPct(diff / inc) : '—')),
+    el('div', { class: 'grid-2' },
+      el('section', { class: 'section' }, sectionHead('Postes de dépense'), tops.length ? tops.slice(0, 6).map((r) => {
+        const d = r.p ? Math.round((r.st.spent / r.p - 1) * 100) : null;
+        return el('div', { class: 'eline', onclick: () => goEnvelope(r.e.id) }, el('span', { class: 'dot', style: `background:${r.e.color}` }), el('span', { class: 'nm' }, r.e.name),
+          el('span', { class: 'am' }, el('b', {}, money(r.st.spent)), d !== null && Math.abs(d) >= 5 ? el('span', { class: d > 0 ? 'neg' : 'pos' }, ` ${d > 0 ? '▲' : '▼'}${Math.abs(d)}%`) : ''),
+          el('div', { class: 'bar' }, el('i', { style: `width:${r.st.spent / tops[0].st.spent * 100}%;background:${r.e.color}` })));
+      }) : el('p', { class: 'empty' }, 'Aucune dépense.')),
+      el('section', { class: 'section' }, sectionHead('Plus grosses dépenses'), bigs.length ? bigs.map((t) => txRow(t, true)) : el('p', { class: 'empty' }, 'Aucune dépense.'))),
+    el('section', { class: 'section' }, sectionHead('Calendrier des dépenses'), heatmap(ym), el('p', { class: 'muted', style: 'margin:8px 0 0' }, 'Plus la case est foncée, plus tu as dépensé ce jour-là. Touche un jour pour le détail.')));
 }
 
 // ============================================================
@@ -1175,8 +1696,9 @@ function txFields(init, { withDate = true } = {}) {
   }
   // pré-remplit l'enveloppe depuis le dernier usage du même libellé
   const suggest = () => {
-    const hit = C().lookupPayee(payee.value);
-    if (hit && !envTouched && type === 'expense' && hit.envelopeId && envById(hit.envelopeId) && !envById(hit.envelopeId).archived) envSel.value = hit.envelopeId;
+    if (envTouched || type !== 'expense') return;
+    const sg = suggestEnvelope(payee.value);
+    if (sg && envs.some((e) => e.id === sg.envelopeId)) envSel.value = sg.envelopeId;
   };
   payee.addEventListener('change', suggest); payee.addEventListener('blur', suggest);
   const seg = segmented([['expense', 'Dépense'], ['income', 'Revenu'], ['transfer', 'Virement']], type, (v) => { type = v; applyType(); });
@@ -1309,9 +1831,9 @@ function openAdjustModal(acc) {
 }
 
 // ============================================================ Récurrente
-function openRecurringModal(existing = null) {
+function openRecurringModal(existing = null, preset = {}) {
   if (!state.data.accounts.some((a) => !a.archived)) { toast("Crée d'abord un compte", 'error'); setView('accounts'); return; }
-  const isEdit = !!existing, r0 = existing || {};
+  const isEdit = !!existing, r0 = existing || preset;
   const f = txFields({ ...r0, type: r0.type || 'expense' });
   const day = el('input', { type: 'text', inputmode: 'numeric', value: r0.day || Number(U.todayISO().slice(8, 10)), autocomplete: 'off' });
   const start = el('input', { type: 'date', value: r0.startDate || U.todayISO() });
@@ -1415,8 +1937,8 @@ function openCsvImport(rows) {
   importBtn.addEventListener('click', () => {
     const c = C(); const now = Date.now();
     const txs = result.fresh.map((it, i) => {
-      const hit = it.type === 'expense' ? c.lookupPayee(it.payee) : null;
-      const env = hit && hit.envelopeId && envById(hit.envelopeId) && !envById(hit.envelopeId).archived ? hit.envelopeId : null;
+      const sg = it.type === 'expense' ? suggestEnvelope(it.payee) : null;
+      const env = sg ? sg.envelopeId : null;
       return { id: DB.uid(), date: it.date, accountId: cfg.accountId, toAccountId: null, envelopeId: env, type: it.type, amount: it.amount, payee: it.payee, notes: '', recurringId: null, createdAt: now + i };
     });
     DB.putMany('transactions', txs); closeModal(); commit();
@@ -1438,6 +1960,127 @@ function openCsvImport(rows) {
 }
 
 // ============================================================
+// modals2.js — objectifs, simulateur, budgets suggérés, détail prévision
+// ============================================================
+function openGoalModal(existing = null, preset = {}) {
+  const isEdit = !!existing, g0 = existing || preset;
+  const emoji = el('input', { type: 'text', value: g0.emoji || '🎯', maxlength: '4', style: 'text-align:center;font-size:22px', 'aria-label': 'Emoji' });
+  const name = el('input', { type: 'text', value: g0.name || '', placeholder: 'Vacances, fonds d\'urgence…' });
+  const target = el('input', { type: 'text', inputmode: 'decimal', value: g0.target ? U.fmtInput(g0.target) : '', placeholder: '1000', autocomplete: 'off' });
+  const saved = el('input', { type: 'text', inputmode: 'decimal', value: g0.saved ? U.fmtInput(g0.saved) : '', placeholder: '0', autocomplete: 'off' });
+  const deadline = el('input', { type: 'date', value: g0.deadline || '' });
+  const color = el('input', { type: 'color', value: g0.color || '#2a78d6' });
+  const form = el('form', { class: 'form', novalidate: true },
+    el('div', { class: 'form-grid', style: 'grid-template-columns:70px 1fr' }, row('Icône', emoji), row('Nom', name)),
+    el('div', { class: 'form-grid' }, row('Montant visé', target), row('Déjà mis de côté', saved)),
+    el('div', { class: 'form-grid' }, row('Échéance (optionnel)', deadline), row('Couleur', color)),
+    el('div', { class: 'modal-actions' },
+      isEdit ? el('button', { type: 'button', class: 'btn btn-ghost spacer', style: 'color:var(--neg)', onclick: async () => { if (await confirmModal(`Supprimer l'objectif « ${g0.name} » ?`, 'Supprimer')) { DB.del('goals', existing.id); closeModal(); commit(); } } }, 'Supprimer') : null,
+      el('button', { type: 'button', class: 'btn', onclick: closeModal }, 'Annuler'), el('button', { type: 'submit', class: 'btn btn-primary' }, isEdit ? 'Enregistrer' : 'Créer')));
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const n = name.value.trim(), t = U.parseNumber(target.value), sv = saved.value.trim() === '' ? 0 : U.parseNumber(saved.value);
+    if (!n) { toast('Donne un nom à l\'objectif', 'error'); name.focus(); return; }
+    if (!(t > 0)) { toast('Indique le montant visé', 'error'); target.focus(); return; }
+    if (Number.isNaN(sv) || sv < 0) { toast('Montant déjà épargné invalide', 'error'); return; }
+    if (deadline.value && !U.validISO(deadline.value)) { toast('Échéance invalide', 'error'); return; }
+    DB.put('goals', { id: isEdit ? existing.id : DB.uid(), name: n, emoji: emoji.value.trim() || '🎯', target: U.round2(t), saved: U.round2(sv), deadline: deadline.value || null, color: color.value, createdAt: isEdit ? existing.createdAt : Date.now() });
+    closeModal(); commit(); toast(isEdit ? 'Objectif modifié' : 'Objectif créé', 'success');
+    if (U.round2(sv) >= U.round2(t) && (!isEdit || existing.saved < existing.target)) confetti();
+  });
+  showModal(isEdit ? "Modifier l'objectif" : 'Nouvel objectif', form);
+  if (!isEdit) setTimeout(() => name.focus(), 60);
+}
+
+function openGoalDeposit(g) {
+  let mode = 'add';
+  const amount = el('input', { type: 'text', inputmode: 'decimal', class: 'amount-input', placeholder: '0,00', autocomplete: 'off' });
+  const form = el('form', { class: 'form', novalidate: true },
+    el('p', { class: 'muted', style: 'margin:0' }, `${g.emoji} ${g.name} : ${money(g.saved)} sur ${money(g.target)}. Il manque ${money(Math.max(0, g.target - g.saved))}.`),
+    segmented([['add', 'Verser'], ['remove', 'Retirer']], mode, (v) => { mode = v; }), row('Montant', amount),
+    el('div', { class: 'modal-actions' }, el('button', { type: 'button', class: 'btn', onclick: closeModal }, 'Annuler'), el('button', { type: 'submit', class: 'btn btn-primary' }, 'Valider')));
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const a = U.parseNumber(amount.value); if (!(a > 0)) { toast('Saisis un montant supérieur à 0', 'error'); return; }
+    const next = Math.max(0, U.round2(g.saved + (mode === 'add' ? a : -a)));
+    DB.put('goals', { ...g, saved: next });
+    closeModal(); commit();
+    if (g.saved < g.target && next >= g.target) { toast(`🎉 Objectif « ${g.name} » atteint !`, 'success'); confetti(); } else toast(mode === 'add' ? `${money(a)} mis de côté` : `${money(a)} retiré`, 'success');
+  });
+  showModal('Mettre de côté', form);
+  setTimeout(() => amount.focus(), 60);
+}
+
+// ---------- « Puis-je me l'offrir ? » ----------
+function openSimulator(preset = {}) {
+  const amount = el('input', { type: 'text', inputmode: 'decimal', class: 'amount-input', placeholder: '0,00', autocomplete: 'off', value: preset.amount ? U.fmtInput(preset.amount) : '' });
+  const envSel = el('select', {}, opt('', '(aucune enveloppe)'), activeEnvelopes().map((e) => opt(e.id, e.name)));
+  const out = el('div');
+  function update() {
+    out.textContent = '';
+    const a = U.parseNumber(amount.value); if (!(a > 0)) return;
+    const f = forecast(), after = U.round2(f.rest - a), perAfter = after / f.daysLeft;
+    let tone = 'ok', title = '✅ Tu peux te le permettre';
+    if (after < 0) { tone = 'bad'; title = '⛔ Pas ce mois-ci'; } else if (perAfter < 8) { tone = 'warn'; title = '⚠️ Possible mais serré'; }
+    const lines = [el('div', {}, 'Reste à vivre : ', el('b', {}, money(f.rest)), ' → ', el('b', { class: after < 0 ? 'neg' : '' }, money(after))),
+      el('div', {}, 'Par jour : ', el('b', {}, money(Math.max(0, f.perDay))), ' → ', el('b', {}, money(Math.max(0, perAfter))), ` (${f.daysLeft} jour${f.daysLeft > 1 ? 's' : ''} restants)`)];
+    const env = envById(envSel.value);
+    if (env) { const st = C().stats(env, U.todayYM()), av = U.round2(st.available - a); lines.push(el('div', {}, `Enveloppe ${env.name} : `, el('b', {}, money(st.available)), ' → ', el('b', { class: av < 0 ? 'neg' : '' }, money(av)), av < 0 ? ' (budget dépassé)' : '')); }
+    const sv = avgSavings();
+    if (tone !== 'ok') lines.push(el('div', { class: 'muted' }, sv > 0 ? `Avec ton épargne moyenne (${money(sv)}/mois), mets-le de côté pendant ≈ ${Math.ceil(a / sv)} mois.` : "Tu n'as pas de marge d'épargne récente : un objectif d'épargne t'aidera à l'anticiper."));
+    out.append(el('div', { class: `verdict ${tone}` }, el('b', {}, title), lines),
+      el('div', { class: 'modal-actions', style: 'margin-top:10px' },
+        el('button', { type: 'button', class: 'btn', onclick: () => { closeModal(); openGoalModal(null, { name: '', target: a }); } }, '🎯 En faire un objectif'),
+        el('button', { type: 'button', class: 'btn btn-primary', onclick: () => { closeModal(); openTxModal(null, { type: 'expense', amount: a, envelopeId: envSel.value || null }); } }, 'Enregistrer la dépense')));
+  }
+  amount.addEventListener('input', update); envSel.addEventListener('change', update);
+  showModal('Puis-je me l\'offrir ?', el('div', { class: 'form' }, el('p', { class: 'muted', style: 'margin:0' }, "Simulation sur ton reste à vivre de ce mois-ci (comptes hors épargne, récurrences à venir incluses)."), row('Prix', amount), row('Enveloppe concernée', envSel), out));
+  setTimeout(() => amount.focus(), 60); update();
+}
+
+// ---------- budgets suggérés ----------
+function openBudgetSuggest() {
+  const c = C(), cur = U.todayYM(), prev = [1, 2, 3].map((i) => U.shiftYM(cur, -i));
+  const rows = activeEnvelopes().map((env) => {
+    const vals = prev.map((m) => c.spent(env.id, m)).filter((v) => v > 0), avg = vals.length ? vals.reduce((a, b) => a + b, 0) / vals.length : 0;
+    return { env, avg, sug: avg ? Math.ceil(avg / 5) * 5 : 0 };
+  });
+  if (!rows.some((r) => r.avg > 0)) { toast("Pas encore assez d'historique (il faut des dépenses sur les mois précédents)", 'info'); return; }
+  const incAvg = prev.map((m) => c.income(m)).filter((v) => v > 0);
+  const inputs = rows.map((r) => ({ ...r, chk: el('input', { type: 'checkbox', checked: r.avg > 0 }), inp: el('input', { type: 'text', inputmode: 'decimal', class: 'input-sm', value: r.sug ? U.fmtInput(r.sug) : '', 'aria-label': `Budget ${r.env.name}` }) }));
+  const total = el('div', { class: 'muted' });
+  const recalc = () => {
+    const t = inputs.reduce((s, r) => s + (r.chk.checked ? (U.parseNumber(r.inp.value) || 0) : (Number(r.env.defaultBudget) || 0)), 0);
+    total.textContent = `Total des budgets : ${money(t)}` + (incAvg.length ? ` · revenus moyens : ${money(incAvg.reduce((a, b) => a + b, 0) / incAvg.length)}` : '');
+  };
+  inputs.forEach((r) => { r.inp.addEventListener('input', recalc); r.chk.addEventListener('change', recalc); });
+  const body = el('div', { class: 'form' },
+    el('p', { class: 'muted', style: 'margin:0' }, 'Moyenne de tes dépenses sur les 3 derniers mois, arrondie aux 5 € supérieurs. Ajuste, décoche ce que tu ne veux pas changer.'),
+    el('div', {}, inputs.map((r) => el('div', { class: 'sug-row' }, r.chk, el('span', { class: 'dot', style: `background:${r.env.color}` }), el('div', { style: 'min-width:0' }, el('div', { class: 'nm' }, r.env.name), el('div', { class: 'muted' }, r.avg ? `moy. ${money(r.avg)}${r.env.defaultBudget ? ` · actuel ${money(r.env.defaultBudget)}` : ''}` : 'pas de dépense')), r.inp))),
+    total, el('div', { class: 'modal-actions' }, el('button', { type: 'button', class: 'btn', onclick: closeModal }, 'Annuler'),
+      el('button', { type: 'button', class: 'btn btn-primary', onclick: () => {
+        const upd = inputs.filter((r) => r.chk.checked).map((r) => ({ ...r.env, defaultBudget: Math.max(0, U.round2(U.parseNumber(r.inp.value) || 0)) }));
+        DB.putMany('envelopes', upd); closeModal(); commit(); toast(`${upd.length} budget(s) mensuel(s) défini(s)`, 'success');
+      } }, 'Appliquer comme budgets par défaut')));
+  showModal('🪄 Budgets suggérés', body); recalc();
+}
+
+// ---------- détail du reste à vivre ----------
+function openForecastModal() {
+  const f = forecast(), liq = activeAccounts().filter((a) => a.type !== 'Épargne');
+  const line = (l, v, cls = '') => el('div', { class: 'fl' }, el('span', {}, l), el('b', { class: `tnum ${cls}` }, v));
+  showModal('Reste à vivre — détail', el('div', {},
+    el('p', { class: 'muted', style: 'margin-top:0' }, `Solde de tes comptes hors épargne (${liq.length ? liq.map((a) => a.name).join(', ') : 'tous les comptes'}), moins les opérations récurrentes encore à venir ce mois-ci.`),
+    line('Solde actuel', money(f.liquid)),
+    ...f.items.sort((a, b) => a.date.localeCompare(b.date)).map((i) => line(`${i.date.slice(8)}/${i.date.slice(5, 7)} · ${i.r.payee || 'Récurrente'}`, U.fmtSigned(i.d, state.currency), i.d < 0 ? 'neg' : 'pos')),
+    el('hr', { style: 'border:none;border-top:1px solid var(--border)' }),
+    line('Reste à vivre', money(f.rest), f.rest < 0 ? 'neg' : 'pos'),
+    line(`Par jour (${f.daysLeft} j)`, money(Math.max(0, f.perDay))),
+    el('p', { class: 'muted' }, 'Les dépenses variables (courses, sorties…) ne sont pas anticipées : c\'est ce que tu peux encore dépenser, pas ce que tu dépenseras.'),
+    el('div', { class: 'modal-actions' }, el('button', { class: 'btn', onclick: () => { closeModal(); openSimulator(); } }, '🛍️ Simuler un achat'), el('button', { class: 'btn btn-primary', onclick: closeModal }, 'OK'))));
+}
+
+// ============================================================
 // main.js — rendu et démarrage
 // ============================================================
 function render() {
@@ -1450,7 +2093,7 @@ function render() {
       : "⚠️ Impossible d'enregistrer (stockage plein ou bloqué). Exporte une sauvegarde dès maintenant.",
       el('div', { class: 'actions' }, el('button', { class: 'btn btn-sm', onclick: exportJSON }, 'Sauvegarder'))));
   }
-  const views = { dashboard: viewDashboard, transactions: viewTransactions, envelopes: viewEnvelopes, accounts: viewAccounts, recurring: viewRecurring, settings: viewSettings };
+  const views = { dashboard: viewDashboard, transactions: viewTransactions, envelopes: viewEnvelopes, accounts: viewAccounts, recurring: viewRecurring, settings: viewSettings, goals: viewGoals, more: viewMore, review: viewReview };
   try { (views[state.view] || viewDashboard)(root); }
   catch (e) {
     console.error(e);
@@ -1464,6 +2107,7 @@ function init() {
   else if (!DB.getSetting('seeded', false)) DB.setSetting('seeded', true);   // données d'une ancienne version
   generateRecurring();
   reloadData();
+  try { checkBadges(); } catch (e) { console.warn(e); }
   applyTheme();
   document.getElementById('fab').addEventListener('click', () => openTxModal());
   render();
@@ -1477,6 +2121,10 @@ function init() {
   // autre onglet qui modifie les données
   window.addEventListener('storage', (e) => {
     if (e.key && e.key.startsWith('budget-app__')) { DB.invalidate(); if (!document.getElementById('modal-overlay')) commit(); }
+  });
+  document.addEventListener('keydown', (e) => {   // raccourci ordinateur : N = nouvelle opération
+    const tag = (document.activeElement || {}).tagName;
+    if (e.key.toLowerCase() === 'n' && !e.ctrlKey && !e.metaKey && !e.altKey && !['INPUT', 'TEXTAREA', 'SELECT'].includes(tag) && !document.getElementById('modal-overlay')) { e.preventDefault(); openTxModal(); }
   });
   matchMedia('(prefers-color-scheme: dark)').addEventListener?.('change', applyTheme);
   try { navigator.storage && navigator.storage.persist && navigator.storage.persist(); } catch {}

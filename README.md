@@ -1,21 +1,21 @@
 # Budget
 
-Gestionnaire de budget par enveloppes, **100 % local** : aucune donnée ne quitte l'appareil.
+Gestionnaire de budget par enveloppes, **100 % local** : aucune donnée ne quitte l'appareil, aucune IA externe — toute l'« intelligence » tourne dans ton navigateur.
 
-## Fonctionnalités
-- Comptes, enveloppes (budget mensuel par défaut, report du solde au mois suivant), opérations (dépense, revenu, **virement** entre comptes)
-- Opérations **récurrentes** (loyer, salaire, abonnements) créées automatiquement
-- Mémorisation libellé → enveloppe, recherche, annuler une suppression
-- Graphiques : répartition des dépenses, revenus vs dépenses sur 6 mois, « reste par jour »
-- **Import de relevé bancaire CSV** (détection des colonnes, anti-doublons), export CSV (Excel)
-- Sauvegarde / restauration JSON, thème clair/sombre, installable sur l'écran d'accueil (PWA)
+## Pratique
+- **Ajout rapide en langage naturel** : « 12,50 boulangerie hier », « +1850 salaire », « virement 100 livret », « 45 essence vendredi »
+- Catégorisation automatique : mémoire des libellés, mots appris, dictionnaire de commerces français
+- Opérations récurrentes automatiques, virements entre comptes, import de relevé CSV bancaire (anti-doublons), export CSV
+- Report d'enveloppe, budget par défaut, annuler une suppression, recherche, thème sombre, installable (PWA)
 
-## Fichiers
-`index.html` (l'appli, fonctionne seule), `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png` (installation + mode hors ligne).
+## Intelligent
+- **Reste à vivre** : solde hors épargne − récurrences à venir, en €/jour
+- **Conseils** : enveloppe qui sera vide avant la fin du mois, abonnements détectés, hausse de prix, doublons probables, dépenses inhabituelles
+- **Budgets suggérés** d'après tes 3 derniers mois, **simulateur « puis-je me l'offrir ? »**
+- **Bilan du mois** rédigé automatiquement + calendrier des dépenses, courbe du solde sur 12 mois
 
-## Publier sur GitHub Pages
-1. Le fichier doit s'appeler `index.html` **en minuscules**.
-2. Settings → Pages → Branch `main` / racine.
-3. iPhone : Safari → Partager → « Sur l'écran d'accueil ».
+## Ludique (désactivable)
+Score de santé du budget /100, objectifs d'épargne avec plan mensuel, série de jours, 10 badges, confettis.
 
-Les données sont dans le `localStorage` du navigateur : exporte une sauvegarde de temps en temps.
+## Publier (GitHub Pages)
+`index.html` en minuscules + `manifest.webmanifest`, `sw.js`, `icon-192.png`, `icon-512.png` à la racine. iPhone : Safari → Partager → « Sur l'écran d'accueil ». Exporte une sauvegarde de temps en temps.
