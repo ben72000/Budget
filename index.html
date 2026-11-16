@@ -384,6 +384,27 @@ body[data-scope="pro"] { --primary: #7b4fd1; }
 .chip.warn { background: color-mix(in srgb, var(--warn) 18%, var(--surface-3)); color: var(--warn); }
 .scan-raw summary { cursor: pointer; color: var(--muted); margin: 6px 0; }
 
+/* ---------- lignes d'une enveloppe ---------- */
+.spent-btn { border: none; background: transparent; color: inherit; padding: 4px 6px; margin-left: -6px; border-radius: 8px; text-align: left; font: inherit; font-weight: 600; text-decoration: underline dotted var(--muted); text-underline-offset: 4px; cursor: pointer; }
+.spent-btn::after { content: ' ›'; color: var(--primary); }
+.spent-btn:hover, .spent-btn:active { background: var(--surface-3); }
+.xl-list { display: grid; gap: 8px; max-height: 46vh; overflow: auto; }
+.xl { display: grid; grid-template-columns: 1fr 92px 34px 34px; gap: 6px 6px; padding: 8px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); align-items: center; }
+.xl input, .xl select { min-width: 0; width: 100%; }
+.xl > :nth-child(1) { grid-column: 1; grid-row: 1; } .xl > :nth-child(2) { grid-column: 2; grid-row: 1; } .xl > :nth-child(3) { grid-column: 4; grid-row: 1; }
+.xl > :nth-child(6) { grid-column: 3; grid-row: 1; } .xl > :nth-child(4) { grid-column: 1; grid-row: 2; } .xl > :nth-child(5) { grid-column: 2 / 5; grid-row: 2; }
+.xl.add { border-style: dashed; margin-top: 10px; }
+.xl.add > .day-head { grid-column: 1 / 5; grid-row: 1; margin: 0; } .xl.add > :nth-child(2) { grid-column: 1; grid-row: 2; } .xl.add > :nth-child(3) { grid-column: 2 / 5; grid-row: 2; }
+.xl.add > span { display: none; } .xl.add > :nth-child(5) { grid-column: 1; grid-row: 3; } .xl.add > :nth-child(6) { grid-column: 2 / 5; grid-row: 3; } .xl.add > .btn { grid-column: 1 / 5; grid-row: 4; }
+.xl-amt { text-align: right; }
+
+/* ---------- historique & transferts ---------- */
+.ochip { background: color-mix(in srgb, var(--primary) 14%, var(--surface-3)); color: var(--text); border-radius: 99px; padding: 1px 8px; font-size: 11px; font-weight: 600; white-space: nowrap; }
+.tx-meta.wrap { flex-wrap: wrap; white-space: normal; row-gap: 3px; }
+.hist-row .tx-amount.xfer { color: var(--primary); font-weight: 700; }
+.xl-trl { display: flex; justify-content: space-between; gap: 8px; padding: 8px 4px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
+.xl-tr { margin-top: 8px; }
+
   </style>
 </head>
 <body>
@@ -398,7 +419,7 @@ body[data-scope="pro"] { --primary: #7b4fd1; }
 // ============================================================
 const DB = (() => {
   const PREFIX = 'budget-app__';
-  const STORES = ['accounts', 'envelopes', 'envelopeBudgets', 'transactions', 'recurring', 'goals', 'settings'];
+  const STORES = ['accounts', 'envelopes', 'envelopeBudgets', 'transactions', 'envelopeTransfers', 'recurring', 'goals', 'settings'];
   const TX_TYPES = ['expense', 'income', 'transfer'];
   const cache = {};
   const status = { persistent: true, ok: true, lastError: null };
@@ -477,9 +498,10 @@ const DB = (() => {
   const sanitizers = {
     accounts: (r) => isStr(r.id) && isStr(r.name) ? { id: r.id, name: String(r.name).slice(0, 80), type: String(r.type || 'Autre'), openingBalance: num(r.openingBalance), scope: r.scope === 'pro' ? 'pro' : 'perso', archived: !!r.archived, createdAt: num(r.createdAt, Date.now()) } : null,
     envelopes: (r) => isStr(r.id) && isStr(r.name) ? { id: r.id, name: String(r.name).slice(0, 80), color: /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : '#3498db', group: String(r.group || '').slice(0, 60), scope: r.scope === 'pro' ? 'pro' : 'perso', kind: ['fixed', 'variable', 'revenue'].includes(r.kind) ? r.kind : '', defaultBudget: Math.max(0, num(r.defaultBudget)), rollover: !!r.rollover, archived: !!r.archived, createdAt: num(r.createdAt, Date.now()) } : null,
-    envelopeBudgets: (r) => isStr(r.id) && isStr(r.envelopeId) && RE_YM.test(r.yearMonth) ? { id: r.id, envelopeId: r.envelopeId, yearMonth: r.yearMonth, amount: Math.max(0, num(r.amount)) } : null,
+    envelopeBudgets: (r) => isStr(r.id) && isStr(r.envelopeId) && RE_YM.test(r.yearMonth) ? { id: r.id, envelopeId: r.envelopeId, yearMonth: r.yearMonth, amount: num(r.amount) } : null,
+    envelopeTransfers: (r) => isStr(r.id) && isStr(r.fromId) && isStr(r.toId) && r.fromId !== r.toId && RE_DATE.test(r.date) && num(r.amount) > 0 ? { id: r.id, date: r.date, fromId: r.fromId, toId: r.toId, amount: Math.abs(num(r.amount)), note: String(r.note || '').slice(0, 200), createdAt: num(r.createdAt, Date.now()) } : null,
     transactions: (r) => isStr(r.id) && RE_DATE.test(r.date) && TX_TYPES.includes(r.type) && Number.isFinite(Number(r.amount)) && isStr(r.accountId)
-      ? { id: r.id, date: r.date, accountId: r.accountId, toAccountId: r.type === 'transfer' && isStr(r.toAccountId) ? r.toAccountId : null, envelopeId: r.type !== 'transfer' && isStr(r.envelopeId) ? r.envelopeId : null, type: r.type, amount: Math.abs(num(r.amount)), payee: String(r.payee || '').slice(0, 120), notes: String(r.notes || '').slice(0, 300), recurringId: isStr(r.recurringId) ? r.recurringId : null, createdAt: num(r.createdAt, Date.now()) } : null,
+      ? { id: r.id, date: r.date, accountId: r.accountId, toAccountId: r.type === 'transfer' && isStr(r.toAccountId) ? r.toAccountId : null, envelopeId: r.type !== 'transfer' && isStr(r.envelopeId) ? r.envelopeId : null, type: r.type, amount: Math.abs(num(r.amount)), payee: String(r.payee || '').slice(0, 120), notes: String(r.notes || '').slice(0, 300), recurringId: isStr(r.recurringId) ? r.recurringId : null, origin: ['manual', 'quick', 'scan', 'recurring', 'csv', 'adjust'].includes(r.origin) ? r.origin : '', createdAt: num(r.createdAt, Date.now()) } : null,
     recurring: (r) => isStr(r.id) && TX_TYPES.includes(r.type) && isStr(r.accountId) && RE_DATE.test(r.startDate)
       ? { id: r.id, type: r.type, accountId: r.accountId, toAccountId: isStr(r.toAccountId) ? r.toAccountId : null, envelopeId: isStr(r.envelopeId) ? r.envelopeId : null, amount: Math.abs(num(r.amount)), payee: String(r.payee || '').slice(0, 120), notes: String(r.notes || '').slice(0, 300), day: Math.min(31, Math.max(1, Math.round(num(r.day, 1)))), startDate: r.startDate, endDate: RE_DATE.test(r.endDate) ? r.endDate : null, active: r.active !== false, generated: Array.isArray(r.generated) ? r.generated.filter((x) => RE_YM.test(x)) : [], createdAt: num(r.createdAt, Date.now()) } : null,
     goals: (r) => isStr(r.id) && isStr(r.name) && Number(r.target) > 0 ? { id: r.id, name: String(r.name).slice(0, 80), emoji: String(r.emoji || '🎯').slice(0, 4), target: Math.abs(num(r.target)), scope: r.scope === 'pro' ? 'pro' : 'perso', saved: Math.max(0, num(r.saved)), deadline: RE_DATE.test(r.deadline) ? r.deadline : null, color: /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : '#2a78d6', createdAt: num(r.createdAt, Date.now()) } : null,
@@ -662,8 +684,8 @@ const state = {
   filters: { accountId: '', envelopeId: '', q: '', all: false },
   limit: 150,
   scope: 'all',
-  all: { accounts: [], envelopes: [], envelopeBudgets: [], transactions: [], recurring: [], goals: [] },
-  data: { accounts: [], envelopes: [], envelopeBudgets: [], transactions: [], recurring: [], goals: [] },
+  all: { accounts: [], envelopes: [], envelopeBudgets: [], envelopeTransfers: [], transactions: [], recurring: [], goals: [] },
+  data: { accounts: [], envelopes: [], envelopeBudgets: [], envelopeTransfers: [], transactions: [], recurring: [], goals: [] },
   version: 0,
 };
 let _calc = null;
@@ -673,6 +695,7 @@ function reloadData() {
     accounts: DB.all('accounts'),
     envelopes: DB.all('envelopes'),
     envelopeBudgets: DB.all('envelopeBudgets'),
+    envelopeTransfers: DB.all('envelopeTransfers'),
     transactions: DB.all('transactions'),
     recurring: DB.all('recurring'),
     goals: DB.all('goals'),
@@ -701,6 +724,8 @@ function C() {
   for (const a of d.accounts) bal.set(a.id, Number(a.openingBalance) || 0);
   for (const e of d.envelopes) touch(e.id, new Date(e.createdAt || Date.now()).toISOString().slice(0, 7));
   for (const b of d.envelopeBudgets) { over.set(b.id, Number(b.amount) || 0); touch(b.envelopeId, b.yearMonth); }
+  const net = new Map();
+  for (const tr of d.envelopeTransfers || []) { const m = tr.date.slice(0, 7), a = Math.abs(tr.amount); add(net, `${tr.toId}|${m}`, a); add(net, `${tr.fromId}|${m}`, -a); touch(tr.toId, m); touch(tr.fromId, m); }
   const txs = d.transactions.slice().sort((a, b) => a.date.localeCompare(b.date));
   for (const t of txs) {
     const ym = t.date.slice(0, 7), amt = Math.abs(t.amount);
@@ -719,7 +744,8 @@ function C() {
     uncategorized: (ym) => U.round2(unc.get(ym) || 0),
     earned: (envId, ym) => U.round2(earned.get(`${envId}|${ym}`) || 0),
     spent: (envId, ym) => U.round2(spent.get(`${envId}|${ym}`) || 0),
-    budget(env, ym) { const o = over.get(`${env.id}__${ym}`); return o !== undefined ? o : Number(env.defaultBudget) || 0; },
+    budget(env, ym) { const o = over.get(`${env.id}__${ym}`); return U.round2((o !== undefined ? o : Number(env.defaultBudget) || 0) + (net.get(`${env.id}|${ym}`) || 0)); },
+    transferNet: (envId, ym) => U.round2(net.get(`${envId}|${ym}`) || 0),
     carry(env, ym) {
       if (!env.rollover) return 0;
       let start = first.get(env.id) || ym;
@@ -812,7 +838,7 @@ function deleteTransaction(id) {
 }
 function setEnvelopeBudget(env, ym, amount) {   // pas de render : la vue Enveloppes se rafraîchit elle-même
   const id = `${env.id}__${ym}`;
-  amount = Math.max(0, U.round2(amount) || 0);
+  amount = U.round2(Math.max(0, U.round2(amount) || 0) - transferNet(env.id, ym));   // le transfert reste en plus du budget saisi
   if (amount === (Number(env.defaultBudget) || 0)) DB.del('envelopeBudgets', id);
   else DB.put('envelopeBudgets', { id, envelopeId: env.id, yearMonth: ym, amount });
   reloadData();
@@ -821,6 +847,7 @@ function deleteEnvelope(env) {
   DB.delMany('envelopeBudgets', state.all.envelopeBudgets.filter((b) => b.envelopeId === env.id).map((b) => b.id));
   DB.putMany('transactions', state.all.transactions.filter((t) => t.envelopeId === env.id).map((t) => ({ ...t, envelopeId: null })));
   DB.putMany('recurring', state.all.recurring.filter((r) => r.envelopeId === env.id).map((r) => ({ ...r, envelopeId: null })));
+  DB.delMany('envelopeTransfers', state.all.envelopeTransfers.filter((t) => t.fromId === env.id || t.toId === env.id).map((t) => t.id));
   DB.del('envelopes', env.id); commit(); toast('Enveloppe supprimée', 'success');
 }
 function deleteAccount(acc) {
@@ -845,7 +872,7 @@ function generateRecurring() {
       if (date < r.startDate) continue;
       if (date > today || (r.endDate && date > r.endDate)) break;
       created.push({ id: DB.uid(), date, accountId: r.accountId, toAccountId: r.type === 'transfer' ? r.toAccountId : null, envelopeId: r.type !== 'transfer' ? r.envelopeId : null,
-        type: r.type, amount: r.amount, payee: r.payee, notes: r.notes || '', recurringId: r.id, createdAt: Date.now() });
+        type: r.type, amount: r.amount, payee: r.payee, notes: r.notes || '', recurringId: r.id, origin: 'recurring', createdAt: Date.now() });
       gen.add(ym); changed = true;
     }
     if (changed) updated.push({ ...r, generated: [...gen] });
@@ -998,6 +1025,60 @@ async function bulkDelete() {
   toast(`${old.length} opération(s) supprimée(s)`, 'info', { label: 'Annuler', fn: () => { DB.putMany('transactions', old); commit(); } }, 7000);
 }
 
+// ----- raccourci « Dépensé » d'une enveloppe : modifier / ajouter les lignes du mois -----
+function openEnvSpend(env, ym) {
+  const isInc = env.kind === 'revenue', type = isInc ? 'income' : 'expense', sc = scopeOf(env);
+  const accs = state.all.accounts.filter((a) => scopeOf(a) === sc && !a.archived);
+  if (!accs.length) { toast("Crée d'abord un compte", 'error'); return; }
+  const last = DB.getSetting('lastAccountId', null);
+  const defAcc = (accs.find((a) => a.id === last) || accs[0]).id;
+  const defDate = ym === U.todayYM() ? U.todayISO() : `${ym}-01`;
+  const rows = () => state.all.transactions.filter((t) => t.envelopeId === env.id && t.type === type && t.date.slice(0, 7) === ym).sort(cmpTx);
+  const head = el('div', { class: 'qf-head' }), list = el('div', { class: 'xl-list' });
+  const accSelect = (v) => { const s = el('select', { 'aria-label': 'Compte' }, accs.map((a) => opt(a.id, a.name))); s.value = accs.some((a) => a.id === v) ? v : defAcc; return s; };
+  function drawHead() {
+    const rs = rows(), tot = U.round2(rs.reduce((s, t) => s + Math.abs(t.amount), 0)), st = C().stats(env, ym);
+    head.textContent = '';
+    head.append(el('b', {}, `${isInc ? 'Encaissé' : 'Dépensé'} : ${money(tot)}`), el('span', { class: 'muted tnum' }, isInc ? (st.budget ? `Objectif ${money(st.budget)}` : '') : `Disponible ${money(U.round2(st.budget + st.carry - tot))}`));
+  }
+  const persist = (id, patch) => { const cur = DB.get('transactions', id); if (!cur) return; DB.put('transactions', { ...cur, ...patch }); commit(); drawHead(); };
+  function line(t) {
+    const pay = el('input', { type: 'text', value: t.payee || '', placeholder: 'Libellé', 'aria-label': 'Libellé', onchange: (e) => persist(t.id, { payee: e.target.value.trim() }) });
+    const amt = el('input', { type: 'text', inputmode: 'decimal', class: 'xl-amt', value: U.fmtInput(Math.abs(t.amount)), 'aria-label': 'Montant', onchange: (e) => {
+      const v = U.parseNumber(e.target.value);
+      if (!(v > 0)) { toast('Montant invalide', 'error'); e.target.value = U.fmtInput(Math.abs(DB.get('transactions', t.id).amount)); return; }
+      e.target.value = U.fmtInput(U.round2(v)); persist(t.id, { amount: U.round2(v) });
+    } });
+    const dt = el('input', { type: 'date', value: t.date, 'aria-label': 'Date', onchange: (e) => { if (!U.validISO(e.target.value)) return; persist(t.id, { date: e.target.value }); if (e.target.value.slice(0, 7) !== ym) drawList(); } });
+    const acc = accSelect(t.accountId); acc.addEventListener('change', () => persist(t.id, { accountId: acc.value }));
+    return el('div', { class: 'xl' }, pay, amt,
+      el('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Supprimer la ligne', onclick: () => {
+        const old = DB.get('transactions', t.id); if (!old) return; DB.del('transactions', t.id); commit(); drawList();
+        toast('Ligne supprimée', 'info', { label: 'Annuler', fn: () => { DB.put('transactions', old); commit(); drawList(); } }, 6000);
+      } }, '×'), dt, acc,
+      el('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Tout modifier', onclick: () => { closeModal(); openTxModal(DB.get('transactions', t.id)); } }, '✎'));
+  }
+  function drawList() { drawHead(); list.textContent = ''; const rs = rows(); rs.forEach((t) => list.appendChild(line(t))); if (!rs.length) list.appendChild(el('p', { class: 'empty' }, 'Aucune ligne ce mois-ci.')); }
+  // nouvelle ligne
+  const nPay = el('input', { type: 'text', placeholder: 'Libellé (ex. Carrefour)', 'aria-label': 'Libellé', list: 'payee-list' });
+  const nAmt = el('input', { type: 'text', inputmode: 'decimal', class: 'xl-amt', placeholder: '0,00', 'aria-label': 'Montant' });
+  const nDate = el('input', { type: 'date', value: defDate, 'aria-label': 'Date' }), nAcc = accSelect(defAcc);
+  function addLine() {
+    const v = U.parseNumber(nAmt.value); if (!(v > 0)) { toast('Saisis un montant supérieur à 0', 'error'); nAmt.focus(); return; }
+    if (!U.validISO(nDate.value)) { toast('Date invalide', 'error'); return; }
+    DB.put('transactions', { id: DB.uid(), date: nDate.value, accountId: nAcc.value, toAccountId: null, envelopeId: env.id, type, amount: U.round2(v), payee: nPay.value.trim(), notes: '', recurringId: null, origin: 'manual', createdAt: Date.now() });
+    DB.setSetting('lastAccountId', nAcc.value); commit(); nPay.value = ''; nAmt.value = ''; drawList(); nPay.focus();
+  }
+  nAmt.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); addLine(); } });
+  nPay.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); nAmt.focus(); } });
+  drawList();
+  showModal(`${env.name} — ${U.ymLabel(ym)}`, el('div', { class: 'form' }, head, list,
+    el('div', { class: 'xl add' }, el('div', { class: 'day-head' }, '+ Ajouter une ligne'), nPay, nAmt, el('span'), nDate, nAcc, el('button', { type: 'button', class: 'btn btn-primary btn-sm', onclick: addLine }, 'Ajouter')),
+    (() => { const tr = envTransfersOf(env.id, ym); return tr.length ? el('div', { class: 'xl-tr' }, el('div', { class: 'day-head' }, '⇄ Transferts du mois'), tr.map((t) => el('div', { class: 'xl-trl', onclick: () => { closeModal(); openEnvTransfer(t); } }, el('span', {}, `${fmtDateFR(t.date).slice(0, 5)} · ${t.toId === env.id ? 'reçu de ' + envName(t.fromId) : 'versé à ' + envName(t.toId)}${t.note ? ' — ' + t.note : ''}`), el('b', { class: t.toId === env.id ? 'pos' : 'neg' }, U.fmtSigned(t.toId === env.id ? t.amount : -t.amount, state.currency))))) : null; })(),
+    C().payeeNames().length ? el('datalist', { id: 'payee-list' }, C().payeeNames().map((n) => el('option', { value: n }))) : null,
+    el('div', { class: 'modal-actions' }, el('button', { type: 'button', class: 'btn', onclick: () => { closeModal(); goEnvelope(env.id); } }, 'Voir dans Opérations'), el('button', { type: 'button', class: 'btn btn-primary', onclick: closeModal }, 'Terminé'))));
+}
+
 // ============================================================
 // pro.js — espaces Perso / Pro, catégories pro (fixes / variables / recettes),
 // tableau de bord pro et organigramme de santé financière
@@ -1029,7 +1110,7 @@ function scopeData(all, sc) {
   const envs = all.envelopes.filter((e) => scopeOf(e) === sc), eids = new Set(envs.map((e) => e.id));
   const mine = (x) => ids.has(x.accountId) || (x.toAccountId && ids.has(x.toAccountId));
   return { accounts: accs, envelopes: envs, envelopeBudgets: all.envelopeBudgets.filter((b) => eids.has(b.envelopeId)),
-    transactions: all.transactions.filter(mine), recurring: all.recurring.filter(mine), goals: all.goals.filter((g) => scopeOf(g) === sc) };
+    transactions: all.transactions.filter(mine), recurring: all.recurring.filter(mine), envelopeTransfers: (all.envelopeTransfers || []).filter((t) => eids.has(t.fromId) && eids.has(t.toId)), goals: all.goals.filter((g) => scopeOf(g) === sc) };
 }
 function setScope(v) {
   DB.setSetting('scope', v);
@@ -1059,7 +1140,7 @@ function proBalances() {
   return (_pc.bal = m);
 }
 const scopeBalance = (sc) => U.round2(state.all.accounts.filter((a) => scopeOf(a) === sc && !a.archived).reduce((s, a) => s + (proBalances().get(a.id) || 0), 0));
-function budgetOfEnv(e, ym) { const o = state.all.envelopeBudgets.find((b) => b.envelopeId === e.id && b.yearMonth === ym); return o ? Number(o.amount) || 0 : Number(e.defaultBudget) || 0; }
+function budgetOfEnv(e, ym) { const o = state.all.envelopeBudgets.find((b) => b.envelopeId === e.id && b.yearMonth === ym); return U.round2((o ? Number(o.amount) || 0 : Number(e.defaultBudget) || 0) + transferNet(e.id, ym)); }
 
 function flow(sc, ym) {
   const ids = new Set(state.all.accounts.filter((a) => scopeOf(a) === sc).map((a) => a.id)); let inc = 0, exp = 0;
@@ -1782,7 +1863,7 @@ function openScanReview(text) {
     const payee = (S.merchant || '').trim() || 'Ticket', now = Date.now(); let parts = [];
     if (S.split) { const m = new Map(); for (const l of used) { const k = l.envelopeId || ''; if (!m.has(k)) m.set(k, []); m.get(k).push(l); } parts = [...m.entries()].map(([k, ls]) => ({ env: k || null, amount: U.round2(ls.reduce((s, x) => s + x.amount, 0)), items: ls.map((x) => x.label).filter(Boolean) })); }
     else { const g = [...groups().entries()].sort((a, b) => b[1] - a[1])[0]; parts = [{ env: g[0] || null, amount: U.round2(used.reduce((s, x) => s + x.amount, 0)), items: used.map((x) => x.label).filter(Boolean) }]; }
-    const txs = parts.map((p, i) => ({ id: DB.uid(), date: S.date, accountId: S.accountId, toAccountId: null, envelopeId: p.env, type: 'expense', amount: p.amount, payee, notes: ('Ticket : ' + p.items.join(', ')).slice(0, 300), recurringId: null, createdAt: now + i }));
+    const txs = parts.map((p, i) => ({ id: DB.uid(), date: S.date, accountId: S.accountId, toAccountId: null, envelopeId: p.env, type: 'expense', amount: p.amount, payee, notes: ('Ticket : ' + p.items.join(', ')).slice(0, 300), recurringId: null, origin: 'scan', createdAt: now + i }));
     DB.putMany('transactions', txs); DB.setSetting('lastAccountId', S.accountId);
     // apprentissage : article → enveloppe, commerçant → espace
     const rules = { ...scanRules() }; for (const l of used) { const k = ruleKey(l.label); if (k && l.envelopeId) rules[k] = l.envelopeId; }
@@ -1802,11 +1883,139 @@ function openScanReview(text) {
 }
 
 // ============================================================
+// history.js — transferts entre enveloppes (traçables, datés) et page « Historique »
+// qui montre l'origine de chaque opération.
+// ============================================================
+const ORIGINS = { manual: ['✍️', 'Saisie'], quick: ['✨', 'Saisie rapide'], scan: ['📷', 'Scan de ticket'], recurring: ['🔁', 'Récurrence'], csv: ['🏦', 'Import de relevé'], adjust: ['⚖️', 'Ajustement de solde'] };
+const originOf = (t) => (ORIGINS[t.origin] ? t.origin : t.recurringId ? 'recurring' : /^Ticket :/.test(t.notes || '') ? 'scan' : t.payee === 'Ajustement de solde' ? 'adjust' : 'manual');
+const stampFR = (ms) => { const d = new Date(ms || 0); return `${U.pad(d.getDate())}/${U.pad(d.getMonth() + 1)} à ${U.pad(d.getHours())}:${U.pad(d.getMinutes())}`; };
+const transferNet = (envId, ym) => { let n = 0; for (const t of state.all.envelopeTransfers || []) { if (t.date.slice(0, 7) !== ym) continue; if (t.toId === envId) n += t.amount; if (t.fromId === envId) n -= t.amount; } return U.round2(n); };
+const envName = (id) => (envById(id) || { name: '(enveloppe supprimée)' }).name;
+
+// ----- fiche de transfert -----
+function openEnvTransfer(existing = null, preset = {}) {
+  const ex = existing, ym0 = U.todayYM();
+  const pool = state.data.envelopes.filter((e) => !e.archived && e.kind !== 'revenue' || (ex && (e.id === ex.fromId || e.id === ex.toId)));
+  if (pool.length < 2) { toast("Il faut au moins deux enveloppes pour transférer", 'error'); return; }
+  const fromId0 = (ex && ex.fromId) || preset.fromId || pool[0].id;
+  const sameScope = (id) => pool.filter((e) => scopeOf(e) === scopeOf(envById(id)) && e.id !== id);
+  const toId0 = (ex && ex.toId) || preset.toId || (sameScope(fromId0)[0] || {}).id || '';
+  const label = (e) => (state.scope === 'all' ? (scopeOf(e) === 'pro' ? '💼 ' : '👤 ') : '') + e.name;
+  const fromSel = el('select', { 'aria-label': 'Depuis' }, pool.map((e) => opt(e.id, label(e)))); fromSel.value = fromId0;
+  const toSel = el('select', { 'aria-label': 'Vers' });
+  const date = el('input', { type: 'date', value: (ex && ex.date) || preset.date || U.todayISO() });
+  const amount = el('input', { type: 'text', inputmode: 'decimal', class: 'amount-input', placeholder: '0,00', autocomplete: 'off', value: ex ? U.fmtInput(ex.amount) : (preset.amount ? U.fmtInput(preset.amount) : '') });
+  const note = el('input', { type: 'text', placeholder: 'Motif (optionnel) : ex. couvrir les courses', value: (ex && ex.note) || '' });
+  const info = el('div', { class: 'muted', style: 'font-size:13px' }), allBtn = el('button', { type: 'button', class: 'btn btn-sm' }, 'Tout le disponible');
+  const ymOf = () => (U.validISO(date.value) ? date.value.slice(0, 7) : ym0);
+  function availOf(envId) {
+    const env = envById(envId), ym = ymOf(); if (!env) return 0;
+    let a = C().stats(env, ym).available;
+    if (ex && ex.date.slice(0, 7) === ym) { if (ex.fromId === envId) a += ex.amount; if (ex.toId === envId) a -= ex.amount; }
+    return U.round2(a);
+  }
+  function fillTo() {
+    const keep = toSel.value; toSel.textContent = '';
+    sameScope(fromSel.value).forEach((e) => toSel.appendChild(opt(e.id, label(e))));
+    toSel.value = [...toSel.options].some((o) => o.value === keep) ? keep : (toId0 && [...toSel.options].some((o) => o.value === toId0) ? toId0 : (toSel.options[0] || {}).value || '');
+  }
+  function drawInfo() { const a = availOf(fromSel.value); info.textContent = `Disponible dans « ${envName(fromSel.value)} » (${U.ymLabel(ymOf())}) : ${money(a)}`; info.style.color = a > 0 ? '' : 'var(--warn)'; allBtn.disabled = !(a > 0); }
+  fromSel.addEventListener('change', () => { fillTo(); drawInfo(); }); date.addEventListener('change', drawInfo);
+  allBtn.addEventListener('click', () => { const a = availOf(fromSel.value); if (a > 0) amount.value = U.fmtInput(a); });
+  fillTo(); drawInfo();
+  const swap = el('button', { type: 'button', class: 'btn btn-sm', 'aria-label': 'Inverser', onclick: () => { const f = fromSel.value, t = toSel.value; if (!t || ![...fromSel.options].some((o) => o.value === t)) return; fromSel.value = t; fillTo(); toSel.value = f; drawInfo(); } }, '⇅ Inverser');
+  const form = el('form', { class: 'form', novalidate: true },
+    row('Depuis', fromSel), el('div', { style: 'text-align:center' }, swap), row('Vers', toSel),
+    row('Montant', el('div', { class: 'inline' }, amount, allBtn)), info,
+    el('div', { class: 'form-grid' }, row('Date', date)), row('Motif', note),
+    el('p', { class: 'muted', style: 'margin:0;font-size:12px' }, "Le transfert déplace du budget d'une enveloppe à l'autre pour le mois de la date choisie. Il est daté et conservé dans l'Historique."),
+    el('div', { class: 'modal-actions' },
+      ex ? el('button', { type: 'button', class: 'btn btn-ghost spacer', style: 'color:var(--neg)', onclick: () => { closeModal(); deleteEnvTransfer(ex.id); } }, 'Supprimer') : null,
+      el('button', { type: 'button', class: 'btn', onclick: closeModal }, 'Annuler'), el('button', { type: 'submit', class: 'btn btn-primary' }, ex ? 'Enregistrer' : 'Transférer')));
+  form.addEventListener('submit', (e) => {
+    e.preventDefault();
+    const v = U.parseNumber(amount.value), f = fromSel.value, t = toSel.value;
+    if (!(v > 0)) { toast('Saisis un montant supérieur à 0', 'error'); amount.focus(); return; }
+    if (!f || !t || f === t) { toast('Choisis deux enveloppes différentes', 'error'); return; }
+    if (!U.validISO(date.value)) { toast('Date invalide', 'error'); return; }
+    const av = availOf(f);
+    if (U.round2(v) > av + 0.004) { toast(`Disponible insuffisant dans « ${envName(f)} » (${money(av)})`, 'error'); return; }
+    const rec = { id: ex ? ex.id : DB.uid(), date: date.value, fromId: f, toId: t, amount: U.round2(v), note: note.value.trim(), createdAt: ex ? ex.createdAt : Date.now() };
+    DB.put('envelopeTransfers', rec); closeModal(); commit();
+    toast(`${ex ? 'Transfert modifié' : 'Transféré'} : ${money(rec.amount)} · ${envName(f)} → ${envName(t)}`, 'success', ex ? null : { label: 'Annuler', fn: () => { DB.del('envelopeTransfers', rec.id); commit(); } }, 7000);
+  });
+  showModal(ex ? 'Modifier le transfert' : '⇄ Transférer entre enveloppes', form);
+  if (!ex) setTimeout(() => amount.focus(), 80);
+}
+function deleteEnvTransfer(id) {
+  const old = DB.get('envelopeTransfers', id); if (!old) return;
+  DB.del('envelopeTransfers', id); commit();
+  toast('Transfert annulé', 'info', { label: 'Rétablir', fn: () => { DB.put('envelopeTransfers', old); commit(); } }, 7000);
+}
+
+// ----- page Historique -----
+const hist = { kind: 'all', q: '', limit: 120 };
+function viewHistory(root) {
+  const KINDS = [['all', 'Tout'], ['transfer', '⇄ Transferts entre enveloppes'], ...Object.entries(ORIGINS).map(([k, [i, l]]) => [k, `${i} ${l}`])];
+  const sel = el('select', { 'aria-label': 'Afficher', onchange: (e) => { hist.kind = e.target.value; hist.limit = 120; draw(); } }, KINDS.map(([v, l]) => opt(v, l))); sel.value = hist.kind;
+  const search = el('input', { type: 'search', placeholder: 'Rechercher (libellé, enveloppe, motif…)', value: hist.q, 'aria-label': 'Rechercher', oninput: (e) => { hist.q = e.target.value; hist.limit = 120; draw(); } });
+  const pills = el('div', { class: 'pills' }), box = el('div');
+  function entries() {
+    const q = U.norm(hist.q), out = [];
+    if (hist.kind === 'all' || hist.kind === 'transfer') for (const t of state.data.envelopeTransfers || []) {
+      if (q && !U.norm(`${envName(t.fromId)} ${envName(t.toId)} ${t.note} ${t.amount}`).includes(q)) continue;
+      out.push({ k: 'tr', date: t.date, at: t.createdAt || 0, t });
+    }
+    if (hist.kind !== 'transfer') for (const t of state.data.transactions) {
+      if (hist.kind !== 'all' && originOf(t) !== hist.kind) continue;
+      if (q && !U.norm(`${t.payee} ${t.notes} ${(envById(t.envelopeId) || {}).name || ''} ${accName(t.accountId)} ${t.amount}`).includes(q)) continue;
+      out.push({ k: 'tx', date: t.date, at: t.createdAt || 0, t });
+    }
+    return out.sort((a, b) => b.date.localeCompare(a.date) || b.at - a.at);
+  }
+  function trRow(t) {
+    return el('div', { class: 'tx-row hist-row', onclick: () => openEnvTransfer(t) }, el('span', { class: 'chk' }, '⇄'),
+      el('div', { class: 'tx-main' }, el('div', { class: 'tx-payee' }, `${envName(t.fromId)} → ${envName(t.toId)}`),
+        el('div', { class: 'tx-meta wrap' }, el('span', { class: 'ochip' }, 'Transfert entre enveloppes'), el('span', {}, `budget ${U.ymLabel(t.date.slice(0, 7))}`), t.note ? el('span', { class: 'tx-note' }, `« ${t.note} »`) : null, el('span', {}, `saisi le ${stampFR(t.createdAt)}`))),
+      el('div', { class: 'tx-amount xfer' }, money(t.amount)),
+      el('button', { class: 'icon-btn', 'aria-label': 'Annuler ce transfert', onclick: (e) => { e.stopPropagation(); deleteEnvTransfer(t.id); } }, '×'));
+  }
+  function txLine(t) {
+    const o = originOf(t), [ico, lab] = ORIGINS[o], env = envById(t.envelopeId), isX = t.type === 'transfer';
+    const sign = t.type === 'expense' ? -1 : t.type === 'income' ? 1 : 0, cls = sign < 0 ? 'neg' : sign > 0 ? 'pos' : 'xfer';
+    return el('div', { class: 'tx-row hist-row', onclick: () => openTxModal(t) }, el('span', { class: 'chk' }, isX ? '🏦' : t.type === 'income' ? '＋' : '−'),
+      el('div', { class: 'tx-main' }, el('div', { class: 'tx-payee' }, t.payee || (isX ? 'Virement entre comptes' : '(sans libellé)')),
+        el('div', { class: 'tx-meta wrap' }, el('span', { class: 'ochip' }, `${ico} ${lab}`), el('span', {}, isX ? `${accLabel(t.accountId)} → ${accLabel(t.toAccountId)}` : accLabel(t.accountId)), env ? el('span', {}, `✉️ ${env.name}`) : null,
+          t.notes ? el('span', { class: 'tx-note' }, t.notes) : null, el('span', {}, `créé le ${stampFR(t.createdAt)}`))),
+      el('div', { class: `tx-amount ${cls}` }, sign ? U.fmtSigned(sign * Math.abs(t.amount), state.currency) : money(t.amount)), el('span'));
+  }
+  function draw() {
+    const list = entries(), nTr = list.filter((x) => x.k === 'tr'), vol = U.round2(nTr.reduce((s, x) => s + x.t.amount, 0));
+    pills.textContent = ''; pills.append(el('span', { class: 'pill' }, `${list.length} entrée${list.length > 1 ? 's' : ''}`), nTr.length ? el('span', { class: 'pill' }, `⇄ ${nTr.length} transfert${nTr.length > 1 ? 's' : ''} · ${money(vol)}`) : null);
+    box.textContent = '';
+    if (!list.length) { box.appendChild(el('p', { class: 'empty' }, 'Rien à afficher.')); return; }
+    let last = '';
+    for (const x of list.slice(0, hist.limit)) {
+      if (x.date !== last) { last = x.date; box.appendChild(el('div', { class: 'day-head' }, el('span', {}, U.dayLabel(x.date)))); }
+      box.appendChild(x.k === 'tr' ? trRow(x.t) : txLine(x.t));
+    }
+    if (list.length > hist.limit) box.appendChild(el('button', { class: 'btn btn-block', style: 'margin-top:8px', onclick: () => { hist.limit += 120; draw(); } }, `Afficher plus (${list.length - hist.limit} restantes)`));
+  }
+  put(root, el('div', { class: 'section-head' }, el('h2', { class: 'page-title' }, '🕘 Historique'), el('div', { class: 'actions' }, el('button', { class: 'btn btn-sm', onclick: () => setView('more') }, '‹ Plus'), el('button', { class: 'btn btn-primary btn-sm', onclick: () => openEnvTransfer() }, '⇄ Transférer'))),
+    el('p', { class: 'muted', style: 'margin-top:0' }, "Chaque entrée indique d'où elle vient : saisie, saisie rapide, scan de ticket, récurrence, import, ajustement, ou transfert d'une enveloppe à une autre."),
+    el('div', { class: 'filters' }, el('div', { class: 'wide' }, search), sel, el('div', { class: 'filters-foot' }, pills)), box);
+  draw();
+}
+
+// ----- transferts d'une enveloppe pour un mois (utilisé par la feuille « Dépensé ») -----
+function envTransfersOf(envId, ym) { return (state.all.envelopeTransfers || []).filter((t) => t.date.slice(0, 7) === ym && (t.fromId === envId || t.toId === envId)).sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || 0) - (a.createdAt || 0)); }
+
+// ============================================================
 // views.js — écrans
 // ============================================================
 const NAV = [['dashboard', 'Accueil', '🏠'], ['transactions', 'Opérations', '🧾'], ['envelopes', 'Enveloppes', '✉️'], ['goals', 'Objectifs', '🎯'], ['more', 'Plus', '☰']];
 const MONTH_VIEWS = ['dashboard', 'transactions', 'envelopes', 'goals', 'review'];
-const tabOf = (v) => (['accounts', 'recurring', 'settings', 'review'].includes(v) ? 'more' : v);
+const tabOf = (v) => (['accounts', 'recurring', 'settings', 'review', 'history'].includes(v) ? 'more' : v);
 
 function renderChrome() {
   const header = document.getElementById('app-header');
@@ -1820,13 +2029,13 @@ function renderChrome() {
         el('span', { class: 'month-label' }, U.ymLabel(state.month)),
         el('button', { class: 'icon-btn', 'aria-label': 'Mois suivant', onclick: () => setMonth(U.shiftYM(state.month, 1)) }, '›'),
         state.month !== U.todayYM() ? el('button', { class: 'btn btn-ghost btn-sm', onclick: () => setMonth(U.todayYM()) }, "Aujourd'hui") : null)
-    : el('div', { class: 'month-nav' }, el('span', { class: 'month-label' }, { goals: 'Objectifs', more: 'Plus', accounts: 'Comptes', recurring: 'Récurrentes', settings: 'Réglages' }[state.view] || ''));
+    : el('div', { class: 'month-nav' }, el('span', { class: 'month-label' }, { goals: 'Objectifs', more: 'Plus', accounts: 'Comptes', recurring: 'Récurrentes', settings: 'Réglages', history: 'Historique' }[state.view] || ''));
   header.appendChild(el('div', { class: 'topbar' }, el('span', { class: 'brand' }, '💰 Budget', state.scope !== 'all' ? el('button', { type: 'button', class: 'scope-pill', 'aria-label': 'Changer d\'espace', onclick: () => { setView('dashboard'); } }, state.scope === 'pro' ? '💼 Pro' : '👤 Perso') : null), nav, month));
 
   const tabbar = document.getElementById('tabbar');
   tabbar.textContent = '';
   for (const [v, label, ico] of NAV) tabbar.appendChild(el('button', { class: `tab ${cur === v ? 'active' : ''}`, onclick: () => setView(v), 'aria-label': label }, el('span', { class: 'ico' }, ico), label));
-  document.getElementById('fab').hidden = ['settings', 'recurring', 'more', 'accounts'].includes(state.view);
+  document.getElementById('fab').hidden = ['settings', 'recurring', 'more', 'accounts', 'history'].includes(state.view);
 }
 
 function put(root, ...kids) { for (const k of kids.flat(Infinity)) if (k) root.appendChild(k); }
@@ -2022,7 +2231,7 @@ function viewEnvelopes(root) {
   function makeRow(env) {
     const rev = env.kind === 'revenue';
     const nameEl = el('div', { class: 'name', onclick: () => openEnvelopeModal(env) });
-    const spentEl = el('div', { class: 'spent tnum' }), availEl = el('div', { class: 'avail tnum' }), gaugeNode = el('div', { class: 'bar gauge', role: 'img' }, el('i'));
+    const spentEl = el('button', { type: 'button', class: 'spent tnum spent-btn', 'aria-label': `Voir et modifier les lignes de ${env.name}`, onclick: () => openEnvSpend(env, ym) }), availEl = el('div', { class: 'avail tnum' }), gaugeNode = el('div', { class: 'bar gauge', role: 'img' }, el('i'));
     const input = el('input', { type: 'text', inputmode: 'decimal', class: 'input-sm', placeholder: '0', 'aria-label': `Budget ${env.name}`, autocomplete: 'off',
       onfocus: (e) => e.target.select(),
       onchange: (e) => {
@@ -2035,12 +2244,13 @@ function viewEnvelopes(root) {
       el('div', { class: 'budget' }, el('span', { class: 'lbl' }, rev ? 'Objectif' : 'Budget'), input),
       el('div', { class: 'spent' }, el('span', { class: 'lbl' }, rev ? 'Encaissé' : 'Dépensé'), spentEl),
       el('div', { class: 'avail' }, el('span', { class: 'lbl' }, rev ? 'Écart' : 'Disponible'), availEl),
-      el('div', { class: 'act' }, el('button', { class: 'icon-btn', 'aria-label': 'Modifier', onclick: () => openEnvelopeModal(env) }, '✎')),
+      el('div', { class: 'act' }, rev ? null : el('button', { class: 'icon-btn', 'aria-label': `Transférer depuis ${env.name}`, title: 'Transférer vers une autre enveloppe', onclick: () => openEnvTransfer(null, { fromId: env.id }) }, '⇄'), el('button', { class: 'icon-btn', 'aria-label': 'Modifier', onclick: () => openEnvelopeModal(env) }, '✎')),
       gaugeNode);
     function refresh() {
       const st = C().stats(env, ym);
       if (rev) st.spent = C().earned(env.id, ym), st.available = U.round2(st.spent - st.budget);
       nameEl.textContent = env.name; if (env.rollover) nameEl.appendChild(el('span', { class: 'tag' }, st.carry ? `↻ report ${U.fmtSigned(st.carry, state.currency)}` : '↻ report'));
+      const tn = C().transferNet(env.id, ym); if (tn) nameEl.appendChild(el('span', { class: 'tag', title: 'Transferts du mois' }, `⇄ ${U.fmtSigned(tn, state.currency)}`));
       if (env.archived) nameEl.appendChild(el('span', { class: 'tag' }, 'archivée'));
       if (document.activeElement !== input) input.value = st.budget ? U.fmtInput(st.budget) : '';
       spentEl.textContent = money(st.spent);
@@ -2072,7 +2282,7 @@ function viewEnvelopes(root) {
   if (unc > 0) list.appendChild(el('div', { class: 'erow', style: 'grid-template-areas:\'dot name spent spent\'' }, el('span', { class: 'dot', style: 'background:var(--muted)' }), el('div', { class: 'name' }, 'Hors enveloppe'), el('div', { class: 'spent tnum' }, money(unc))));
   if (!envs.length) list.appendChild(el('p', { class: 'empty' }, 'Aucune enveloppe.'));
 
-  put(root, el('div', { class: 'section-head' }, el('h2', { class: 'page-title' }, `Enveloppes — ${U.ymLabel(ym)}`), el('button', { class: 'btn btn-primary btn-sm', onclick: () => openEnvelopeModal() }, '+ Nouvelle')),
+  put(root, el('div', { class: 'section-head' }, el('h2', { class: 'page-title' }, `Enveloppes — ${U.ymLabel(ym)}`), el('div', { class: 'actions' }, el('button', { class: 'btn btn-sm', onclick: () => openEnvTransfer() }, '⇄ Transférer'), el('button', { class: 'btn btn-sm', onclick: () => setView('history') }, '🕘'), el('button', { class: 'btn btn-primary btn-sm', onclick: () => openEnvelopeModal() }, '+ Nouvelle'))),
     summary,
     el('p', { class: 'muted', style: 'margin-top:0' }, "Le budget saisi ici ne vaut que pour ce mois. Pour le reconduire chaque mois, définis un « budget mensuel par défaut » dans la fiche de l'enveloppe (✎)."),
     list);
@@ -2135,7 +2345,7 @@ function viewSettings(root) {
     el('section', { class: 'section' }, el('h2', {}, 'Zone dangereuse'), el('p', { class: 'muted' }, 'Supprime définitivement toutes les données de ce navigateur.'),
       el('button', { class: 'btn btn-danger', onclick: async () => { if (await confirmModal('Tout supprimer ? Pense à exporter une sauvegarde avant. Cette action est irréversible.', 'Tout effacer')) { DB.wipeAll(); seedStarter(); commit(); toast('Données supprimées', 'success'); } } }, '🗑️ Tout effacer')),
     el('section', { class: 'section' }, el('h2', {}, 'À propos'),
-      el('p', { class: 'muted' }, 'Version 8 · jauges bidirectionnelles, espaces perso/pro, scan de tickets'),
+      el('p', { class: 'muted' }, 'Version 10 · transferts entre enveloppes, historique des opérations, lignes modifiables, scan de tickets'),
       el('p', {}, 'Appli de budget 100 % locale : zéro serveur, zéro compte. ', el('b', {}, 'Tes données ne quittent jamais cet appareil.')),
       el('p', { class: 'muted' }, "Sur iPhone : ouvre la page dans Safari → Partager → « Sur l'écran d'accueil ». Installée ainsi, l'appli est plus à l'abri du nettoyage automatique de Safari — mais exporte quand même une sauvegarde de temps en temps (et à chaque changement de téléphone).")));
 }
@@ -2194,7 +2404,7 @@ function quickBar() {
   let parsed = null, ov = {};
   function save() {
     if (!parsed) return; const r = parsed;
-    const tx = { id: DB.uid(), date: r.date, accountId: r.accountId, toAccountId: r.toAccountId, envelopeId: r.envelopeId, type: r.type, amount: r.amount, payee: r.payee, notes: '', recurringId: null, createdAt: Date.now() };
+    const tx = { id: DB.uid(), date: r.date, accountId: r.accountId, toAccountId: r.toAccountId, envelopeId: r.envelopeId, type: r.type, amount: r.amount, payee: r.payee, notes: '', recurringId: null, origin: 'quick', createdAt: Date.now() };
     DB.put('transactions', tx); DB.setSetting('lastAccountId', r.accountId); commit();
     const where = r.type === 'transfer' ? `${accName(r.accountId)} → ${accName(r.toAccountId)}` : [r.type === 'expense' || (r.type === 'income' && r.envelopeId) ? (envById(r.envelopeId) || { name: 'non classé' }).name : null, accLabel(r.accountId)].filter(Boolean).join(' · ');
     toast(`Ajouté : ${r.payee || lbl[r.type]} ${money(r.amount)} → ${where}`, 'success', { label: 'Corriger', fn: () => openQuickFix(tx, r.type === 'transfer' ? 'acc' : 'env') }, 9000);
@@ -2364,6 +2574,8 @@ function viewMore(root) {
   const item = (ico, title, sub, fn) => el('button', { class: 'tool wide', onclick: fn }, el('span', { class: 'ti' }, ico), el('div', { style: 'text-align:left' }, el('b', {}, title), el('div', { class: 'muted' }, sub)));
   put(root, el('div', { class: 'menu' },
     item('📷', 'Scanner un ticket', 'Répartition automatique dans les enveloppes', openScan),
+    item('🕘', 'Historique', 'Qui vient d\'où : opérations et transferts entre enveloppes', () => setView('history')),
+    item('⇄', 'Transférer entre enveloppes', 'Déplacer du budget d\'une enveloppe à une autre', () => openEnvTransfer()),
     item('🏦', 'Comptes', `${activeAccounts().length} compte(s) actif(s)`, () => setView('accounts')),
     item('🔁', 'Opérations récurrentes', `${state.data.recurring.filter((r) => r.active && !recEnded(r)).length} active(s)`, () => setView('recurring')),
     item('📋', 'Bilan du mois', 'Résumé, comparaison, calendrier des dépenses', () => setView('review')),
@@ -2510,7 +2722,7 @@ function openTxModal(existing = null, preset = {}) {
     const r = f.read();
     if (r.error) { toast(r.error, 'error'); if (r.focus) r.focus.focus(); return; }
     if (!U.validISO(date.value)) { toast('Date invalide', 'error'); return; }
-    const tx = { id: isEdit ? existing.id : DB.uid(), date: date.value, notes: notes.value.trim(), recurringId: isEdit ? (existing.recurringId || null) : null, createdAt: isEdit ? existing.createdAt : Date.now(), ...r.value };
+    const tx = { id: isEdit ? existing.id : DB.uid(), date: date.value, notes: notes.value.trim(), recurringId: isEdit ? (existing.recurringId || null) : null, origin: isEdit ? originOf(existing) : 'manual', createdAt: isEdit ? existing.createdAt : Date.now(), ...r.value };
     DB.put('transactions', tx);
     DB.setSetting('lastAccountId', tx.accountId);
     closeModal(); commit();
@@ -2600,7 +2812,7 @@ function openAdjustModal(acc) {
     const v = parseField(target.value); if (Number.isNaN(v)) { toast('Montant invalide', 'error'); return; }
     const diff = U.round2(v - cur);
     if (Math.abs(diff) < 0.005) { closeModal(); toast('Le solde est déjà correct', 'info'); return; }
-    DB.put('transactions', { id: DB.uid(), date: U.todayISO(), accountId: acc.id, toAccountId: null, envelopeId: null, type: diff > 0 ? 'income' : 'expense', amount: Math.abs(diff), payee: 'Ajustement de solde', notes: '', recurringId: null, createdAt: Date.now() });
+    DB.put('transactions', { id: DB.uid(), date: U.todayISO(), accountId: acc.id, toAccountId: null, envelopeId: null, type: diff > 0 ? 'income' : 'expense', amount: Math.abs(diff), payee: 'Ajustement de solde', origin: 'adjust', notes: '', recurringId: null, createdAt: Date.now() });
     closeModal(); commit(); toast(`Solde ajusté (${U.fmtSigned(diff, state.currency)})`, 'success');
   });
   showModal('Corriger le solde', form);
@@ -2723,7 +2935,7 @@ function openCsvImport(rows) {
     const txs = result.fresh.map((it, i) => {
       const sg = it.type === 'expense' || scopeOfAcc(cfg.accountId) === 'pro' ? suggestEnvelope(it.payee, scopeOfAcc(cfg.accountId), it.type) : null;
       const env = sg ? sg.envelopeId : null;
-      return { id: DB.uid(), date: it.date, accountId: cfg.accountId, toAccountId: null, envelopeId: env, type: it.type, amount: it.amount, payee: it.payee, notes: '', recurringId: null, createdAt: now + i };
+      return { id: DB.uid(), date: it.date, accountId: cfg.accountId, toAccountId: null, envelopeId: env, type: it.type, amount: it.amount, payee: it.payee, notes: '', recurringId: null, origin: 'csv', createdAt: now + i };
     });
     DB.putMany('transactions', txs); closeModal(); commit();
     const uncat = txs.filter((t) => t.type === 'expense' && !t.envelopeId).length;
@@ -2878,7 +3090,7 @@ function render() {
       : "⚠️ Impossible d'enregistrer (stockage plein ou bloqué). Exporte une sauvegarde dès maintenant.",
       el('div', { class: 'actions' }, el('button', { class: 'btn btn-sm', onclick: exportJSON }, 'Sauvegarder'))));
   }
-  const views = { dashboard: viewDashboard, transactions: viewTransactions, envelopes: viewEnvelopes, accounts: viewAccounts, recurring: viewRecurring, settings: viewSettings, goals: viewGoals, more: viewMore, review: viewReview };
+  const views = { dashboard: viewDashboard, transactions: viewTransactions, envelopes: viewEnvelopes, accounts: viewAccounts, recurring: viewRecurring, settings: viewSettings, goals: viewGoals, more: viewMore, review: viewReview, history: viewHistory };
   try { (views[state.view] || viewDashboard)(root); }
   catch (e) {
     console.error(e);

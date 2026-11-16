@@ -52,3 +52,13 @@ Score de santé du budget /100, objectifs d'épargne avec plan mensuel, série d
 - **Comment** : photo (ou image de la galerie) → lecture du texte sur l'appareil → écran « Vérifier le ticket » : commerçant, date, espace (👤 Perso / 💼 Pro), compte, et chaque ligne avec son enveloppe (modifiable). L'enregistrement crée une dépense par enveloppe (case à décocher pour une seule dépense) ; « Annuler » reste disponible.
 - **Intelligence** : espace détecté d'après le commerçant (Metro, Promocash, Rajapack… → pro ; cinéma, supermarché… → perso) et les articles ; factures HT : les lignes sont ramenées au total TTC ; écart avec le total signalé ; l'appli retient tes corrections (article → enveloppe, commerçant → espace).
 - **Moteur de lecture** : Tesseract.js, téléchargé depuis Internet à la première utilisation (connexion requise ce jour-là), puis exécuté localement : l'image ne quitte jamais l'appareil. Sans connexion : « Coller le texte du ticket » (iPhone : appui long sur le texte de la photo → Texte en direct → copier).
+
+## Mise à jour v9
+- **Enveloppes → « Dépensé » cliquable** (souligné, avec ›) : ouvre les lignes de l'enveloppe pour le mois affiché. Chaque ligne se modifie sur place (libellé, montant, date, compte), se supprime (× avec « Annuler ») ou s'ouvre en fiche complète (✎). Une zone « + Ajouter une ligne » en bas crée une dépense dans l'enveloppe (Entrée sur le montant pour valider). Pour une enveloppe de recettes, le raccourci s'appelle « Encaissé ».
+
+## Version 10 — Transferts entre enveloppes & Historique
+
+- **⇄ Transférer** (Enveloppes, icône ⇄ sur chaque ligne, menu Plus) : déplace du budget d'une enveloppe à une autre (même espace perso/pro), avec montant, « tout le disponible », date et motif. Bloqué si le disponible est insuffisant. Modifiable, supprimable, annulable.
+- Le transfert s'applique au budget du mois de sa date ; un tag ⇄ s'affiche sur l'enveloppe et la feuille « Dépensé » liste les transferts du mois.
+- **🕘 Historique** (Plus, ou bouton dans Enveloppes) : journal daté de toutes les opérations et transferts, avec l'origine de chacune (saisie, saisie rapide, scan, récurrence, import, ajustement) et la date/heure de création. Filtres et recherche.
+- Les opérations antérieures sont classées par origine déduite (récurrence, scan, ajustement, sinon saisie).
