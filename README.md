@@ -81,3 +81,11 @@ Refonte visuelle selon les règles du skill « apple-design-skill » (Human Inte
 - **Matériaux** : effet verre uniquement sur l'en-tête et la barre d'onglets (désactivé si « réduire la transparence »).
 - **Feuilles** : poignée, coins arrondis larges. **Mouvement** réduit si demandé ; **contraste renforcé** pris en charge ; anneau de focus visible.
 - Mode sombre sur vrai noir, couleurs adaptées.
+
+## Version 13 — Récurrences projetées sur les mois à venir
+
+- Correction : une opération récurrente n'était créée qu'à son échéance, donc les mois futurs (ex. décembre) n'affichaient rien.
+- Désormais chaque occurrence à venir (jusqu'à 24 mois, en respectant la date de fin et les récurrences en pause) est comptée en **« prévu »** : dans le « Dépensé » et le « Disponible » de l'enveloppe, dans les totaux Revenus/Dépenses du mois, et dans le tableau de bord pro.
+- La mention « dont X € prévu » s'affiche ; la feuille « Dépensé » liste les récurrentes à venir.
+- Le report d'enveloppe tient compte du prévu. Les soldes de comptes restent inchangés (réels).
+- À l'échéance, l'occurrence devient une vraie opération, sans double compte.

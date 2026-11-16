@@ -501,6 +501,8 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
   .btn { border: 1px solid var(--text); } .tx-row, .section, .card { box-shadow: 0 0 0 1px var(--text); }
 }
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
+.plan-note { display: block; font-size: 12px; font-weight: 400; color: var(--muted); text-decoration: none; }
+.spent-btn { white-space: nowrap; } .plan-note { white-space: nowrap; }
 
   </style>
 </head>
@@ -834,7 +836,30 @@ function C() {
     if (t.type !== 'transfer' && t.envelopeId && t.payee) for (const tk of tokens(t.payee)) { if (!tokenVotes.has(tk)) tokenVotes.set(tk, new Map()); const m = tokenVotes.get(tk); m.set(t.envelopeId, (m.get(t.envelopeId) || 0) + 1); }
     if (t.payee && t.type !== 'transfer') payees.set(U.norm(t.payee), { name: t.payee, envelopeId: t.type !== 'transfer' ? t.envelopeId : null, type: t.type, date: t.date });
   }
+  // occurrences récurrentes à venir (pas encore générées) : projetées sur 24 mois, comptées en « prévu »
+  const pSpent = new Map(), pEarned = new Map(), pInc = new Map(), pExp = new Map(), pItems = [];
+  { const today = U.todayISO(), ym0 = today.slice(0, 7), lastYM = U.shiftYM(ym0, 24);
+    for (const r of d.recurring) {
+      if (!r.active || !r.amount || r.type === 'transfer') continue;
+      const gen = new Set(r.generated || []);
+      for (let ym = ym0; ym <= lastYM; ym = U.shiftYM(ym, 1)) {
+        const date = U.dateFor(ym, r.day);
+        if (gen.has(ym) || date <= today || date < r.startDate) continue;
+        if (r.endDate && date > r.endDate) break;
+        const a = Math.abs(r.amount); pItems.push({ r, date, ym, amount: a });
+        if (r.type === 'income') { add(pInc, ym, a); if (r.envelopeId) add(pEarned, `${r.envelopeId}|${ym}`, a); }
+        else { add(pExp, ym, a); if (r.envelopeId) add(pSpent, `${r.envelopeId}|${ym}`, a); }
+        if (r.envelopeId) touch(r.envelopeId, ym0);
+      }
+    }
+  }
   const c = {
+    planned: (envId, ym) => U.round2(pSpent.get(`${envId}|${ym}`) || 0),
+    plannedEarned: (envId, ym) => U.round2(pEarned.get(`${envId}|${ym}`) || 0),
+    plannedIncome: (ym) => U.round2(pInc.get(ym) || 0),
+    plannedExpense: (ym) => U.round2(pExp.get(ym) || 0),
+    plannedItems: (envId, ym) => pItems.filter((x) => x.ym === ym && x.r.envelopeId === envId),
+    plannedAll: pItems,
     balance: (id) => U.round2(bal.get(id) || 0),
     income: (ym) => U.round2(inc.get(ym) || 0),
     expense: (ym) => U.round2(exp.get(ym) || 0),
@@ -848,12 +873,12 @@ function C() {
       let start = first.get(env.id) || ym;
       const floor = U.shiftYM(ym, -36); if (start < floor) start = floor;
       let carry = 0;
-      for (let m = start; m < ym; m = U.shiftYM(m, 1)) carry = U.round2(c.budget(env, m) + carry - c.spent(env.id, m));
+      for (let m = start; m < ym; m = U.shiftYM(m, 1)) carry = U.round2(c.budget(env, m) + carry - c.spent(env.id, m) - c.planned(env.id, m));
       return carry;
     },
     stats(env, ym) {
-      const budget = c.budget(env, ym), carry = c.carry(env, ym), sp = c.spent(env.id, ym);
-      return { budget, carry, spent: sp, available: U.round2(budget + carry - sp) };
+      const budget = c.budget(env, ym), carry = c.carry(env, ym), planned = c.planned(env.id, ym), sp = U.round2(c.spent(env.id, ym) + planned);
+      return { budget, carry, spent: sp, planned, available: U.round2(budget + carry - sp) };
     },
     tokenVotes,
     lookupPayee: (p) => payees.get(U.norm(p)) || null,
@@ -1171,6 +1196,7 @@ function openEnvSpend(env, ym) {
   drawList();
   showModal(`${env.name} — ${U.ymLabel(ym)}`, el('div', { class: 'form' }, head, list,
     el('div', { class: 'xl add' }, el('div', { class: 'day-head' }, '+ Ajouter une ligne'), nPay, nAmt, el('span'), nDate, nAcc, el('button', { type: 'button', class: 'btn btn-primary btn-sm', onclick: addLine }, 'Ajouter')),
+    (() => { const pl = C().plannedItems(env.id, ym).filter((x) => (x.r.type === 'income') === isInc); return pl.length ? el('div', { class: 'xl-tr' }, el('div', { class: 'day-head' }, '🔁 Prévu (récurrentes à venir)'), pl.map((x) => el('div', { class: 'xl-trl', style: 'cursor:default', title: "Se matérialise à sa date d'échéance" }, el('span', {}, `${fmtDateFR(x.date).slice(0, 5)} · ${x.r.payee || 'Récurrente'}`), el('b', { class: isInc ? 'pos' : 'neg' }, money(x.amount))))) : null; })(),
     (() => { const tr = envTransfersOf(env.id, ym); return tr.length ? el('div', { class: 'xl-tr' }, el('div', { class: 'day-head' }, '⇄ Transferts du mois'), tr.map((t) => el('div', { class: 'xl-trl', onclick: () => { closeModal(); openEnvTransfer(t); } }, el('span', {}, `${fmtDateFR(t.date).slice(0, 5)} · ${t.toId === env.id ? 'reçu de ' + envName(t.fromId) : 'versé à ' + envName(t.toId)}${t.note ? ' — ' + t.note : ''}`), el('b', { class: t.toId === env.id ? 'pos' : 'neg' }, U.fmtSigned(t.toId === env.id ? t.amount : -t.amount, state.currency))))) : null; })(),
     C().payeeNames().length ? el('datalist', { id: 'payee-list' }, C().payeeNames().map((n) => el('option', { value: n }))) : null,
     el('div', { class: 'modal-actions' }, el('button', { type: 'button', class: 'btn', onclick: () => { closeModal(); goEnvelope(env.id); } }, 'Voir dans Opérations'), el('button', { type: 'button', class: 'btn btn-primary', onclick: closeModal }, 'Terminé'))));
@@ -1260,6 +1286,11 @@ function proStats(ym) {
       if (e && (e.kind === 'fixed' || e.kind === 'variable')) s[e.kind] += a; else { s.unclassified += a; s.nUncl++; }
       add(t.envelopeId || '_none', a);
     }
+  }
+  for (const x of C().plannedAll) {
+    if (x.ym !== ym || !ids.has(x.r.accountId)) continue;
+    if (x.r.type === 'income') { s.rev += x.amount; add(x.r.envelopeId || '_none', x.amount); }
+    else { const e = envMap.get(x.r.envelopeId); if (e && (e.kind === 'fixed' || e.kind === 'variable')) s[e.kind] += x.amount; else { s.unclassified += x.amount; s.nUncl++; } add(x.r.envelopeId || '_none', x.amount); }
   }
   for (const k of ['rev', 'fixed', 'variable', 'unclassified']) s[k] = U.round2(s[k]);
   s.varTotal = U.round2(s.variable + s.unclassified);
@@ -2437,7 +2468,7 @@ function viewEnvelopes(root) {
   function drawSummary() {
     const c = C();
     const act = activeEnvelopes().filter((e) => e.kind !== 'revenue');
-    const income = c.income(ym), budget = act.reduce((s, e) => s + c.budget(e, ym), 0), spent = act.reduce((s, e) => s + c.spent(e.id, ym), 0);
+    const income = U.round2(c.income(ym) + c.plannedIncome(ym)), budget = act.reduce((s, e) => s + c.budget(e, ym), 0), spent = act.reduce((s, e) => s + c.spent(e.id, ym) + c.planned(e.id, ym), 0);
     summary.textContent = '';
     if (state.scope === 'pro' && hasProAccount()) { const s = proStats(ym); summary.append(card('Recettes', money(s.rev), 'pos'), card('Charges variables', money(s.varTotal)), card('Charges fixes', money(s.fixed)), card('Résultat', U.fmtSigned(s.result, state.currency), s.result >= 0 ? 'pos' : 'neg')); return; }
     summary.append(card('Revenus du mois', money(income), 'pos'), card('Budgété', money(budget)), card('Dépensé', money(spent), spent > budget ? 'neg' : ''),
@@ -2463,12 +2494,13 @@ function viewEnvelopes(root) {
       gaugeNode);
     function refresh() {
       const st = C().stats(env, ym);
-      if (rev) st.spent = C().earned(env.id, ym), st.available = U.round2(st.spent - st.budget);
+      if (rev) st.planned = C().plannedEarned(env.id, ym), st.spent = U.round2(C().earned(env.id, ym) + st.planned), st.available = U.round2(st.spent - st.budget);
       nameEl.textContent = env.name; if (env.rollover) nameEl.appendChild(el('span', { class: 'tag' }, st.carry ? `↻ report ${U.fmtSigned(st.carry, state.currency)}` : '↻ report'));
       const tn = C().transferNet(env.id, ym); if (tn) nameEl.appendChild(el('span', { class: 'tag', title: 'Transferts du mois' }, `⇄ ${U.fmtSigned(tn, state.currency)}`));
       if (env.archived) nameEl.appendChild(el('span', { class: 'tag' }, 'archivée'));
       if (document.activeElement !== input) input.value = st.budget ? U.fmtInput(st.budget) : '';
       spentEl.textContent = money(st.spent);
+      if (st.planned) spentEl.appendChild(el('span', { class: 'plan-note' }, `dont ${money(st.planned)} prévu`));
       availEl.textContent = money(st.available);
       const total = st.budget + st.carry;
       availEl.className = `avail tnum ${rev ? (st.available >= 0 ? 'ok' : st.budget > 0 ? 'warn' : '') : st.available < 0 ? 'neg' : total > 0 && st.available < total * 0.1 ? 'warn' : total > 0 ? 'ok' : ''}`;
@@ -2560,7 +2592,7 @@ function viewSettings(root) {
     el('section', { class: 'section' }, el('h2', {}, 'Zone dangereuse'), el('p', { class: 'muted' }, 'Supprime définitivement toutes les données de ce navigateur.'),
       el('button', { class: 'btn btn-danger', onclick: async () => { if (await confirmModal('Tout supprimer ? Pense à exporter une sauvegarde avant. Cette action est irréversible.', 'Tout effacer')) { DB.wipeAll(); seedStarter(); commit(); toast('Données supprimées', 'success'); } } }, '🗑️ Tout effacer')),
     el('section', { class: 'section' }, el('h2', {}, 'À propos'),
-      el('p', { class: 'muted' }, 'Version 12 · refonte design (Apple HIG), calendrier prévisionnel, transferts, historique'),
+      el('p', { class: 'muted' }, 'Version 13 · récurrences projetées sur les mois à venir, refonte design, calendrier, transferts'),
       el('p', {}, 'Appli de budget 100 % locale : zéro serveur, zéro compte. ', el('b', {}, 'Tes données ne quittent jamais cet appareil.')),
       el('p', { class: 'muted' }, "Sur iPhone : ouvre la page dans Safari → Partager → « Sur l'écran d'accueil ». Installée ainsi, l'appli est plus à l'abri du nettoyage automatique de Safari — mais exporte quand même une sauvegarde de temps en temps (et à chaque changement de téléphone).")));
 }
@@ -2685,7 +2717,7 @@ function viewDashboard(root) {
   const c = C(), ym = state.month, isCur = ym === U.todayYM();
   const accounts = activeAccounts(), envs = activeEnvelopes();
   const net = U.round2(accounts.reduce((s, a) => s + (proBalances().get(a.id) || 0), 0));
-  const income = c.income(ym), expense = c.expense(ym), diff = U.round2(income - expense);
+  const income = U.round2(c.income(ym) + c.plannedIncome(ym)), expense = U.round2(c.expense(ym) + c.plannedExpense(ym)), diff = U.round2(income - expense);
   const rows = envs.map((env) => ({ env, ...c.stats(env, ym) }));
   const nodes = [scopeSwitch()];
   if (state.scope === 'all') nodes.push(scopeTiles());
@@ -2704,7 +2736,7 @@ function viewDashboard(root) {
   nodes.push(quickBar());
   if (isCur) nodes.push(heroForecast());
   nodes.push(el('div', { class: 'cards' },
-    card('Solde total', money(net), net >= 0 ? 'pos' : 'neg', 'Détail par compte', () => setView('accounts')), card('Revenus', money(income), 'pos', '', () => goTx('income')), card('Dépenses', money(expense), 'neg', '', () => goTx('expense')),
+    card('Solde total', money(net), net >= 0 ? 'pos' : 'neg', 'Détail par compte', () => setView('accounts')), card('Revenus', money(income), 'pos', c.plannedIncome(ym) ? `dont ${money(c.plannedIncome(ym))} prévu` : '', () => goTx('income')), card('Dépenses', money(expense), 'neg', c.plannedExpense(ym) ? `dont ${money(c.plannedExpense(ym))} prévu` : '', () => goTx('expense')),
     card('Reste du mois', U.fmtSigned(diff, state.currency), diff >= 0 ? 'pos' : 'neg', income > 0 ? `Épargne : ${U.fmtPct(diff / income)}` : 'Revenus − dépenses', () => goTx('flow'))));
   nodes.push(miniStatus());
   nodes.push(insightsSection());
