@@ -39,3 +39,7 @@ Score de santé du budget /100, objectifs d'épargne avec plan mensuel, série d
 ## Mise à jour v5
 - **Enveloppes** : Recettes, Charges variables et Charges fixes sont repliées par défaut ; un chevron ▸/▾ les déplie.
 - **Accueil** : les cartes (Solde total / Trésorerie, Revenus / Recettes, Dépenses / Charges, Reste du mois / Résultat) sont cliquables. Le solde ouvre les comptes, les autres ouvrent la liste des opérations du mois correspondantes (filtre retirable par la pastille ×).
+
+## Mise à jour v6
+- **Date de fin de récurrence** : dans la fiche d'une récurrence, champ « Jusqu'au (optionnel) ». Vide = répétition indéfinie ; sinon la dernière occurrence est celle qui tombe au plus tard à cette date (« Sans fin » pour l'effacer). La liste affiche « sans fin », « jusqu'au … » ou « terminée le … », et les prévisions ignorent les occurrences après la date de fin.
+- **Livraison** : tout est dans un seul dossier `budget-app` (zip) — décompresse-le et garde les fichiers ensemble.

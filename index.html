@@ -362,6 +362,7 @@ body[data-scope="pro"] { --primary: #7b4fd1; }
 .grp-head .chev { width: 18px; color: var(--primary); font-size: 16px; }
 .grp-head .grp-t { flex: 1; } .grp-head .grp-n { color: var(--muted); font-weight: 500; font-size: 13px; }
 .grp[hidden] { display: none; }
+.inline { display: flex; gap: 8px; align-items: center; } .inline input { flex: 1; min-width: 0; }
 
   </style>
 </head>
@@ -460,7 +461,7 @@ const DB = (() => {
     transactions: (r) => isStr(r.id) && RE_DATE.test(r.date) && TX_TYPES.includes(r.type) && Number.isFinite(Number(r.amount)) && isStr(r.accountId)
       ? { id: r.id, date: r.date, accountId: r.accountId, toAccountId: r.type === 'transfer' && isStr(r.toAccountId) ? r.toAccountId : null, envelopeId: r.type !== 'transfer' && isStr(r.envelopeId) ? r.envelopeId : null, type: r.type, amount: Math.abs(num(r.amount)), payee: String(r.payee || '').slice(0, 120), notes: String(r.notes || '').slice(0, 300), recurringId: isStr(r.recurringId) ? r.recurringId : null, createdAt: num(r.createdAt, Date.now()) } : null,
     recurring: (r) => isStr(r.id) && TX_TYPES.includes(r.type) && isStr(r.accountId) && RE_DATE.test(r.startDate)
-      ? { id: r.id, type: r.type, accountId: r.accountId, toAccountId: isStr(r.toAccountId) ? r.toAccountId : null, envelopeId: isStr(r.envelopeId) ? r.envelopeId : null, amount: Math.abs(num(r.amount)), payee: String(r.payee || '').slice(0, 120), notes: String(r.notes || '').slice(0, 300), day: Math.min(31, Math.max(1, Math.round(num(r.day, 1)))), startDate: r.startDate, active: r.active !== false, generated: Array.isArray(r.generated) ? r.generated.filter((x) => RE_YM.test(x)) : [], createdAt: num(r.createdAt, Date.now()) } : null,
+      ? { id: r.id, type: r.type, accountId: r.accountId, toAccountId: isStr(r.toAccountId) ? r.toAccountId : null, envelopeId: isStr(r.envelopeId) ? r.envelopeId : null, amount: Math.abs(num(r.amount)), payee: String(r.payee || '').slice(0, 120), notes: String(r.notes || '').slice(0, 300), day: Math.min(31, Math.max(1, Math.round(num(r.day, 1)))), startDate: r.startDate, endDate: RE_DATE.test(r.endDate) ? r.endDate : null, active: r.active !== false, generated: Array.isArray(r.generated) ? r.generated.filter((x) => RE_YM.test(x)) : [], createdAt: num(r.createdAt, Date.now()) } : null,
     goals: (r) => isStr(r.id) && isStr(r.name) && Number(r.target) > 0 ? { id: r.id, name: String(r.name).slice(0, 80), emoji: String(r.emoji || '🎯').slice(0, 4), target: Math.abs(num(r.target)), scope: r.scope === 'pro' ? 'pro' : 'perso', saved: Math.max(0, num(r.saved)), deadline: RE_DATE.test(r.deadline) ? r.deadline : null, color: /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : '#2a78d6', createdAt: num(r.createdAt, Date.now()) } : null,
     settings: (r) => isStr(r.key) ? { key: r.key, value: r.value } : null,
   };
@@ -811,6 +812,8 @@ function deleteAccount(acc) {
 }
 
 // ----- opérations récurrentes : génération automatique des occurrences échues -----
+const recEnded = (r) => !!r.endDate && r.endDate < U.todayISO();
+const fmtDateFR = (iso) => `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
 function generateRecurring() {
   const today = U.todayISO(), endYM = today.slice(0, 7), created = [], updated = [];
   for (const r of DB.all('recurring')) {
@@ -820,7 +823,7 @@ function generateRecurring() {
       if (gen.has(ym)) continue;
       const date = U.dateFor(ym, r.day);
       if (date < r.startDate) continue;
-      if (date > today) break;
+      if (date > today || (r.endDate && date > r.endDate)) break;
       created.push({ id: DB.uid(), date, accountId: r.accountId, toAccountId: r.type === 'transfer' ? r.toAccountId : null, envelopeId: r.type !== 'transfer' ? r.envelopeId : null,
         type: r.type, amount: r.amount, payee: r.payee, notes: r.notes || '', recurringId: r.id, createdAt: Date.now() });
       gen.add(ym); changed = true;
@@ -1394,7 +1397,7 @@ function forecast() {
   for (const r of state.data.recurring) {
     if (!r.active || !r.amount || (r.generated || []).includes(ym)) continue;
     const date = U.dateFor(ym, r.day);
-    if (date <= today || date < r.startDate) continue;
+    if (date <= today || date < r.startDate || (r.endDate && date > r.endDate)) continue;
     const fromL = isLiquid(r.accountId), toL = r.type === 'transfer' && isLiquid(r.toAccountId);
     let d = 0;
     if (r.type === 'expense') d = -r.amount; else if (r.type === 'income') d = r.amount; else d = (toL ? r.amount : 0) - (fromL ? r.amount : 0);
@@ -1511,7 +1514,7 @@ const BADGES = [
   { id: 'zen', icon: '🧘', name: 'Mois zen', desc: 'Un mois entier sans enveloppe dépassée', test: () => { const c = C(); for (let i = 1; i <= 12; i++) { const m = U.shiftYM(U.todayYM(), -i); const r = activeEnvelopes().map((e) => c.stats(e, m)).filter((s) => s.budget + s.carry > 0); if (r.length >= 3 && r.every((s) => s.available >= 0) && r.filter((s) => s.spent > 0).length >= 2) return true; } return false; } },
   { id: 'saver', icon: '💰', name: 'Fourmi', desc: 'Un mois avec 20 % de revenus épargnés', test: () => { const c = C(); for (let i = 1; i <= 12; i++) { const m = U.shiftYM(U.todayYM(), -i), inc = c.income(m); if (inc > 0 && (inc - c.expense(m)) / inc >= 0.2) return true; } return false; } },
   { id: 'goal', icon: '🎯', name: 'Objectif atteint', desc: 'Remplir un objectif d’épargne', test: () => DB.all('goals').some((g) => g.saved >= g.target) },
-  { id: 'auto', icon: '🔁', name: 'Automatisé', desc: '3 opérations récurrentes actives', test: () => state.data.recurring.filter((r) => r.active).length >= 3 },
+  { id: 'auto', icon: '🔁', name: 'Automatisé', desc: '3 opérations récurrentes actives', test: () => state.data.recurring.filter((r) => r.active && !recEnded(r)).length >= 3 },
   { id: 'backup', icon: '💾', name: 'Prudent', desc: 'Exporter une sauvegarde', test: () => !!DB.getSetting('lastBackup', null) },
   { id: 'hundred', icon: '💯', name: 'Centurion', desc: '100 opérations enregistrées', test: () => state.data.transactions.length >= 100 },
 ];
@@ -1832,9 +1835,9 @@ function viewRecurring(root) {
     recs.length ? recs.map((r) => {
       const env = envById(r.envelopeId);
       const sign = r.type === 'expense' ? -1 : r.type === 'income' ? 1 : 0;
-      return el('div', { class: `rec-row ${r.active ? '' : 'off'}` },
+      return el('div', { class: `rec-row ${r.active && !recEnded(r) ? '' : 'off'}` },
         el('div', { style: 'cursor:pointer;min-width:0', onclick: () => openRecurringModal(r) }, el('div', { class: 'tx-payee' }, r.payee || lbl[r.type]),
-          el('div', { class: 'tx-meta' }, `${lbl[r.type]} · le ${r.day} de chaque mois · ${accName(r.accountId)}${r.type === 'transfer' ? ' → ' + accName(r.toAccountId) : ''}${env ? ' · ' + env.name : ''}${r.active ? '' : ' · en pause'}`)),
+          el('div', { class: 'tx-meta' }, `${lbl[r.type]} · le ${r.day} de chaque mois · ${accName(r.accountId)}${r.type === 'transfer' ? ' → ' + accName(r.toAccountId) : ''}${env ? ' · ' + env.name : ''}${recEnded(r) ? ' · terminée le ' + fmtDateFR(r.endDate) : r.endDate ? ' · jusqu\'au ' + fmtDateFR(r.endDate) : ' · sans fin'}${r.active ? '' : ' · en pause'}`)),
         el('div', { class: `tx-amount ${sign < 0 ? 'neg' : sign > 0 ? 'pos' : 'xfer'}` }, sign ? U.fmtSigned(sign * r.amount, state.currency) : money(r.amount)),
         el('button', { class: 'icon-btn', 'aria-label': 'Modifier', onclick: () => openRecurringModal(r) }, '✎'));
     }) : el('p', { class: 'empty' }, 'Aucune opération récurrente.'));
@@ -2093,7 +2096,7 @@ function viewMore(root) {
   const item = (ico, title, sub, fn) => el('button', { class: 'tool wide', onclick: fn }, el('span', { class: 'ti' }, ico), el('div', { style: 'text-align:left' }, el('b', {}, title), el('div', { class: 'muted' }, sub)));
   put(root, el('div', { class: 'menu' },
     item('🏦', 'Comptes', `${activeAccounts().length} compte(s) actif(s)`, () => setView('accounts')),
-    item('🔁', 'Opérations récurrentes', `${state.data.recurring.filter((r) => r.active).length} active(s)`, () => setView('recurring')),
+    item('🔁', 'Opérations récurrentes', `${state.data.recurring.filter((r) => r.active && !recEnded(r)).length} active(s)`, () => setView('recurring')),
     item('📋', 'Bilan du mois', 'Résumé, comparaison, calendrier des dépenses', () => setView('review')),
     item('🛍️', 'Puis-je me l\'offrir ?', 'Simule l\'impact d\'un achat', () => openSimulator()),
     item('🪄', 'Budgets suggérés', 'Calculés depuis ton historique', openBudgetSuggest),
@@ -2342,10 +2345,14 @@ function openRecurringModal(existing = null, preset = {}) {
   const f = txFields({ ...r0, type: r0.type || 'expense' });
   const day = el('input', { type: 'text', inputmode: 'numeric', value: r0.day || Number(U.todayISO().slice(8, 10)), autocomplete: 'off' });
   const start = el('input', { type: 'date', value: r0.startDate || U.todayISO() });
+  const endIn = el('input', { type: 'date', value: r0.endDate || '', 'aria-label': 'Date de fin (optionnelle)' });
+  const clearEnd = el('button', { type: 'button', class: 'btn btn-sm btn-ghost', onclick: () => { endIn.value = ''; } }, 'Sans fin');
   const active = el('input', { type: 'checkbox', checked: r0.active !== false });
   const form = el('form', { class: 'form', novalidate: true },
     f.seg, row('Montant', f.amount), row('Libellé', f.payee, f.dl), f.rowAcc, f.rowTo, f.rowEnv,
     el('div', { class: 'form-grid' }, row('Jour du mois (1-31)', day), row('À partir du', start)),
+    row("Jusqu'au (optionnel)", el('div', { class: 'inline' }, endIn, clearEnd)),
+    el('p', { class: 'muted', style: 'margin:0' }, 'Sans date de fin, l\'opération se répète indéfiniment. Avec une date, la dernière occurrence est celle qui tombe au plus tard ce jour-là.'),
     el('p', { class: 'muted', style: 'margin:0' }, "Si le jour dépasse la fin du mois (ex. 31 en février), l'opération tombe le dernier jour du mois. Une date de départ dans le passé crée les opérations manquées."),
     isEdit ? el('label', { class: 'checkrow' }, active, el('span', {}, 'Active')) : null,
     el('div', { class: 'modal-actions' },
@@ -2358,12 +2365,15 @@ function openRecurringModal(existing = null, preset = {}) {
     const d = Math.round(U.parseNumber(day.value));
     if (!(d >= 1 && d <= 31)) { toast('Jour invalide (1 à 31)', 'error'); return; }
     if (!U.validISO(start.value)) { toast('Date de départ invalide', 'error'); return; }
+    const endDate = endIn.value || null;
+    if (endDate && !U.validISO(endDate)) { toast('Date de fin invalide', 'error'); return; }
+    if (endDate && endDate < start.value) { toast('La date de fin doit suivre la date de départ', 'error'); return; }
     const nowActive = isEdit ? active.checked : true;
     let generated = isEdit ? (existing.generated || []) : [];
     // reprise après pause : on ne rattrape pas les mois passés
     if (isEdit && !existing.active && nowActive) { const today = U.todayISO(); const set = new Set(generated); for (let ym = start.value.slice(0, 7); ym <= today.slice(0, 7); ym = U.shiftYM(ym, 1)) if (U.dateFor(ym, d) <= today) set.add(ym); generated = [...set]; }
     // si le jour/la date changent, on repart d'un historique propre pour ne pas dupliquer
-    DB.put('recurring', { id: isEdit ? existing.id : DB.uid(), ...rr.value, notes: '', day: d, startDate: start.value, active: nowActive, generated, createdAt: isEdit ? existing.createdAt : Date.now() });
+    DB.put('recurring', { id: isEdit ? existing.id : DB.uid(), ...rr.value, notes: '', day: d, startDate: start.value, endDate, active: nowActive, generated, createdAt: isEdit ? existing.createdAt : Date.now() });
     const n = generateRecurring();
     closeModal(); commit(); toast(n ? `Récurrence enregistrée · ${n} opération(s) créée(s)` : 'Récurrence enregistrée', 'success');
   });
