@@ -503,6 +503,7 @@ input:focus-visible, select:focus-visible, textarea:focus-visible { outline: non
 @media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
 .plan-note { display: block; font-size: 12px; font-weight: 400; color: var(--muted); text-decoration: none; }
 .spent-btn { white-space: nowrap; } .plan-note { white-space: nowrap; }
+.tx-row.planned { background: transparent; border: 1.5px dashed var(--border); box-shadow: none; } .tx-row.planned .tx-payee, .tx-row.planned .tx-amount { font-weight: 500; }
 
   </style>
 </head>
@@ -2380,6 +2381,14 @@ function txRow(t, showDate = false, accountFilter = '') {
 }
 function mchip(label, cls, fn) { return el('button', { type: 'button', class: `mchip ${cls || ''}`, 'aria-label': `Corriger : ${label}`, onclick: (e) => { e.stopPropagation(); fn(); } }, label); }
 
+function plannedRow(x) {
+  const r = x.r, env = envById(r.envelopeId), inc = r.type === 'income', v = inc ? x.amount : -x.amount;
+  return el('div', { class: 'tx-row planned', role: 'button', tabindex: '0', title: 'Récurrente à venir : toucher pour modifier la récurrence', onclick: () => openRecurringModal(r) },
+    el('span', { class: 'dot', style: `background:${inc ? 'var(--pos)' : env ? env.color : '#98a2ad'}` }),
+    el('div', { class: 'tx-main' }, el('div', { class: 'tx-payee' }, r.payee || 'Récurrente'),
+      el('div', { class: 'tx-meta' }, el('span', { class: 'ochip' }, '🔁 Prévu'), el('span', {}, accLabel(r.accountId)), env ? el('span', {}, env.name) : null)),
+    el('div', { class: `tx-amount ${v < 0 ? 'neg' : 'pos'}` }, U.fmtSigned(v, state.currency)), el('span', { class: 'tx-del' }));
+}
 function viewTransactions(root) {
   const f = state.filters;
   const title = el('h2', { class: 'page-title' });
@@ -2421,22 +2430,32 @@ function viewTransactions(root) {
       if (q && !U.norm(`${t.payee} ${t.notes} ${(envById(t.envelopeId) || {}).name || ''} ${accName(t.accountId)} ${t.amount}`).includes(q)) return false;
       return true;
     }).sort(cmpTx);
+    // occurrences récurrentes à venir (prévues) du mois affiché
+    const plan = allMonths ? [] : C().plannedAll.filter((x) => {
+      if (x.ym !== state.month) return false;
+      if (f.accountId && x.r.accountId !== f.accountId) return false;
+      if (f.type === 'income' && x.r.type !== 'income') return false; if (f.type === 'expense' && x.r.type !== 'expense') return false;
+      if (f.envelopeId === '__none__') { if (x.r.type !== 'expense' || x.r.envelopeId) return false; } else if (f.envelopeId && x.r.envelopeId !== f.envelopeId) return false;
+      return true;
+    });
     let inc = 0, exp = 0;
     for (const t of list) { if (t.type === 'income') inc += t.amount; else if (t.type === 'expense') exp += t.amount; }
+    for (const x of plan) { if (x.r.type === 'income') inc += x.amount; else exp += x.amount; }
     visibleIds = list.map((t) => t.id); selBtn.textContent = selection.on ? '✓ Terminer' : '☑ Sélectionner'; drawBar();
     typeChip.textContent = ''; if (f.type) typeChip.appendChild(el('button', { class: 'btn btn-sm', onclick: () => { f.type = ''; fillList(); } }, `${TYPE_LBL[f.type]} ×`));
     pills.textContent = '';
     pills.append(el('span', { class: 'pill pos' }, `+ ${money(inc)}`), el('span', { class: 'pill neg' }, `− ${money(exp)}`));
     listBox.textContent = '';
-    if (!list.length) { listBox.appendChild(el('p', { class: 'empty' }, q || f.accountId || f.envelopeId ? 'Aucun résultat.' : 'Aucune opération ce mois-ci. Appuie sur + pour en ajouter.')); return; }
+    if (!list.length && !plan.length) { listBox.appendChild(el('p', { class: 'empty' }, q || f.accountId || f.envelopeId ? 'Aucun résultat.' : 'Aucune opération ce mois-ci. Appuie sur + pour en ajouter.')); return; }
     let lastDate = '';
-    for (const t of list.slice(0, state.limit)) {
-      if (t.date !== lastDate) {
-        lastDate = t.date;
-        const dayTotal = list.filter((x) => x.date === t.date && x.type !== 'transfer').reduce((s, x) => s + (x.type === 'income' ? x.amount : -x.amount), 0);
-        listBox.appendChild(el('div', { class: 'day-head' }, el('span', {}, U.dayLabel(t.date)), el('span', { class: 'tnum' }, dayTotal ? U.fmtSigned(dayTotal, state.currency) : '')));
+    const merged = [...list.slice(0, state.limit).map((t) => ({ date: t.date, t })), ...plan.map((x) => ({ date: x.date, x }))].sort((a, b) => b.date.localeCompare(a.date));
+    for (const m of merged) {
+      if (m.date !== lastDate) {
+        lastDate = m.date;
+        const dayTotal = list.filter((x) => x.date === m.date && x.type !== 'transfer').reduce((s, x) => s + (x.type === 'income' ? x.amount : -x.amount), 0) + plan.filter((x) => x.date === m.date).reduce((s, x) => s + (x.r.type === 'income' ? x.amount : -x.amount), 0);
+        listBox.appendChild(el('div', { class: 'day-head' }, el('span', {}, U.dayLabel(m.date)), el('span', { class: 'tnum' }, dayTotal ? U.fmtSigned(dayTotal, state.currency) : '')));
       }
-      listBox.appendChild(txRow(t, false, f.accountId));
+      listBox.appendChild(m.t ? txRow(m.t, false, f.accountId) : plannedRow(m.x));
     }
     if (list.length > state.limit) listBox.appendChild(el('button', { class: 'btn btn-block', style: 'margin-top:8px', onclick: () => { state.limit += 150; fillList(); } }, `Afficher plus (${list.length - state.limit} restantes)`));
   }
@@ -2592,7 +2611,7 @@ function viewSettings(root) {
     el('section', { class: 'section' }, el('h2', {}, 'Zone dangereuse'), el('p', { class: 'muted' }, 'Supprime définitivement toutes les données de ce navigateur.'),
       el('button', { class: 'btn btn-danger', onclick: async () => { if (await confirmModal('Tout supprimer ? Pense à exporter une sauvegarde avant. Cette action est irréversible.', 'Tout effacer')) { DB.wipeAll(); seedStarter(); commit(); toast('Données supprimées', 'success'); } } }, '🗑️ Tout effacer')),
     el('section', { class: 'section' }, el('h2', {}, 'À propos'),
-      el('p', { class: 'muted' }, 'Version 13 · récurrences projetées sur les mois à venir, refonte design, calendrier, transferts'),
+      el('p', { class: 'muted' }, 'Version 14 · récurrences prévues visibles dans Opérations, refonte design, calendrier, transferts'),
       el('p', {}, 'Appli de budget 100 % locale : zéro serveur, zéro compte. ', el('b', {}, 'Tes données ne quittent jamais cet appareil.')),
       el('p', { class: 'muted' }, "Sur iPhone : ouvre la page dans Safari → Partager → « Sur l'écran d'accueil ». Installée ainsi, l'appli est plus à l'abri du nettoyage automatique de Safari — mais exporte quand même une sauvegarde de temps en temps (et à chaque changement de téléphone).")));
 }

@@ -89,3 +89,9 @@ Refonte visuelle selon les règles du skill « apple-design-skill » (Human Inte
 - La mention « dont X € prévu » s'affiche ; la feuille « Dépensé » liste les récurrentes à venir.
 - Le report d'enveloppe tient compte du prévu. Les soldes de comptes restent inchangés (réels).
 - À l'échéance, l'occurrence devient une vraie opération, sans double compte.
+
+## Version 14 — Récurrences prévues visibles dans « Opérations »
+
+- Dans Opérations, les mois à venir (et le reste du mois en cours) affichent maintenant les récurrences prévues, en lignes pointillées « 🔁 Prévu ». Toucher une ligne ouvre la récurrence pour la modifier.
+- Elles respectent les filtres compte / enveloppe / type et sont comptées dans les totaux + / − et le total du jour.
+- Elles ne sont ni sélectionnables ni modifiables individuellement : ce ne sont pas encore de vraies opérations.
