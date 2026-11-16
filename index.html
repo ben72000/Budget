@@ -352,6 +352,17 @@ body[data-scope="pro"] { --primary: #7b4fd1; }
 .cp-tag { color: var(--muted); font-size: 11px; margin-left: 2px; }
 .eline .nm small { font-weight: 400; }
 
+/* ---------- cartes cliquables, groupes repliables ---------- */
+.card.clickable { cursor: pointer; position: relative; transition: transform .1s, box-shadow .1s; }
+.card.clickable:active { transform: scale(.98); }
+.card.clickable:hover { box-shadow: 0 2px 10px rgba(0,0,0,.15); }
+.card.clickable:focus-visible { outline: 2px solid var(--primary); outline-offset: 2px; }
+.card-go { position: absolute; top: 8px; right: 12px; font-size: 20px; color: var(--muted); line-height: 1; }
+.grp-head { width: 100%; display: flex; align-items: center; gap: 10px; border: none; background: var(--surface-3); color: var(--text); padding: 12px 14px; border-radius: 12px; margin: 10px 0 4px; font-size: 15px; font-weight: 700; min-height: 44px; text-align: left; }
+.grp-head .chev { width: 18px; color: var(--primary); font-size: 16px; }
+.grp-head .grp-t { flex: 1; } .grp-head .grp-n { color: var(--muted); font-weight: 500; font-size: 13px; }
+.grp[hidden] { display: none; }
+
   </style>
 </head>
 <body>
@@ -761,6 +772,7 @@ function toast(message, kind = 'info', action = null, ms = 0) {
 // ------------------------------------------------------------
 function setView(v) { state.view = v; clearSelection(); window.scrollTo(0, 0); render(); }
 function setMonth(ym) { state.month = ym; clearSelection(); render(); }
+function goTx(type) { state.filters = { accountId: '', envelopeId: '', q: '', all: false, type }; state.limit = 150; setView('transactions'); }
 function goEnvelope(id) { state.filters = { accountId: '', envelopeId: id, q: '', all: false }; state.limit = 150; setView('transactions'); }
 function applyTheme() {
   const root = document.documentElement;
@@ -1173,8 +1185,8 @@ function viewProDashboard(root) {
   }
   const s = proStats(ym), h = proHealth(s), charges = U.round2(s.fixed + s.varTotal);
   nodes.push(quickBar());
-  nodes.push(el('div', { class: 'cards' }, card('Trésorerie', money(s.cash), s.cash >= 0 ? 'pos' : 'neg'), card('Recettes', money(s.rev), 'pos'), card('Charges', money(charges), 'neg'),
-    card('Résultat', U.fmtSigned(s.result, state.currency), s.result >= 0 ? 'pos' : 'neg', s.rev > 0 ? `Marge nette : ${U.fmtPct(s.result / s.rev)}` : '')));
+  nodes.push(el('div', { class: 'cards' }, card('Trésorerie', money(s.cash), s.cash >= 0 ? 'pos' : 'neg', 'Détail par compte', () => setView('accounts')), card('Recettes', money(s.rev), 'pos', '', () => goTx('income')), card('Charges', money(charges), 'neg', `Fixes ${money(s.fixed)} · variables ${money(s.varTotal)}`, () => goTx('expense')),
+    card('Résultat', U.fmtSigned(s.result, state.currency), s.result >= 0 ? 'pos' : 'neg', s.rev > 0 ? `Marge nette : ${U.fmtPct(s.result / s.rev)}` : 'Recettes − charges', () => goTx('flow'))));
   const adv = proAdvice(s, h);
   nodes.push(el('section', { class: 'section' }, sectionHead("Santé de l'entreprise"), orgChart(s, h),
     adv.length ? el('ul', { class: 'advice' }, adv.map((a) => el('li', {}, a))) : null));
@@ -1557,8 +1569,8 @@ function renderChrome() {
 
 function put(root, ...kids) { for (const k of kids.flat(Infinity)) if (k) root.appendChild(k); }
 
-function card(label, value, kind = '', sub = '') {
-  return el('div', { class: `card ${kind}` }, el('div', { class: 'card-label' }, label), el('div', { class: 'card-value' }, value), sub ? el('div', { class: 'card-sub' }, sub) : null);
+function card(label, value, kind = '', sub = '', go = null) {
+  return el('div', { class: `card ${kind} ${go ? 'clickable' : ''}`, ...(go ? { role: 'button', tabindex: '0', 'aria-label': `${label} : voir le détail`, onclick: go, onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } } } : {}) }, el('div', { class: 'card-label' }, label), el('div', { class: 'card-value' }, value), sub ? el('div', { class: 'card-sub' }, sub) : null, go ? el('span', { class: 'card-go', 'aria-hidden': 'true' }, '›') : null);
 }
 function sectionHead(title, ...actions) { return el('div', { class: 'section-head' }, el('h2', {}, title), actions.length ? el('div', { class: 'actions' }, actions) : null); }
 function barFill(spent, budget) {
@@ -1653,7 +1665,8 @@ function viewTransactions(root) {
   envSel.value = f.envelopeId;
   const search = el('input', { type: 'search', placeholder: 'Rechercher (libellé, note, montant…)', value: f.q, 'aria-label': 'Rechercher', oninput: (e) => { f.q = e.target.value; state.limit = 150; fillList(); } });
   const allChk = el('input', { type: 'checkbox', checked: f.all, onchange: (e) => { f.all = e.target.checked; state.limit = 150; fillList(); } });
-  const pills = el('div', { class: 'pills' });
+  const pills = el('div', { class: 'pills' }), typeChip = el('span');
+  const TYPE_LBL = { income: 'Revenus uniquement', expense: 'Dépenses uniquement', flow: 'Revenus et dépenses (sans virements)' };
   const listBox = el('div');
   const bar = el('div', { class: 'selbar', hidden: true });
   let visibleIds = [];
@@ -1677,6 +1690,7 @@ function viewTransactions(root) {
     const list = state.data.transactions.filter((t) => {
       if (!allMonths && t.date.slice(0, 7) !== state.month) return false;
       if (f.accountId && t.accountId !== f.accountId && t.toAccountId !== f.accountId) return false;
+      if (f.type === 'income' || f.type === 'expense') { if (t.type !== f.type) return false; } else if (f.type === 'flow' && t.type === 'transfer') return false;
       if (f.envelopeId === '__none__') { if (t.type !== 'expense' || t.envelopeId) return false; } else if (f.envelopeId && t.envelopeId !== f.envelopeId) return false;
       if (q && !U.norm(`${t.payee} ${t.notes} ${(envById(t.envelopeId) || {}).name || ''} ${accName(t.accountId)} ${t.amount}`).includes(q)) return false;
       return true;
@@ -1684,6 +1698,7 @@ function viewTransactions(root) {
     let inc = 0, exp = 0;
     for (const t of list) { if (t.type === 'income') inc += t.amount; else if (t.type === 'expense') exp += t.amount; }
     visibleIds = list.map((t) => t.id); selBtn.textContent = selection.on ? '✓ Terminer' : '☑ Sélectionner'; drawBar();
+    typeChip.textContent = ''; if (f.type) typeChip.appendChild(el('button', { class: 'btn btn-sm', onclick: () => { f.type = ''; fillList(); } }, `${TYPE_LBL[f.type]} ×`));
     pills.textContent = '';
     pills.append(el('span', { class: 'pill pos' }, `+ ${money(inc)}`), el('span', { class: 'pill neg' }, `− ${money(exp)}`));
     listBox.textContent = '';
@@ -1706,7 +1721,7 @@ function viewTransactions(root) {
       el('button', { class: 'btn btn-sm', onclick: () => setView('recurring') }, '🔁 Récurrentes'),
       fileButton('Importer CSV', '.csv,.txt,text/csv,text/plain', importCsvFile, 'btn btn-sm'))),
     el('div', { class: 'filters' }, el('div', { class: 'wide' }, search), accSel, envSel,
-      el('div', { class: 'filters-foot' }, el('label', { class: 'check' }, allChk, 'Tous les mois'), pills)),
+      el('div', { class: 'filters-foot' }, el('label', { class: 'check' }, allChk, 'Tous les mois'), typeChip, pills)),
     listBox, bar);
   fillList();
 }
@@ -1716,6 +1731,7 @@ function fileButton(label, accept, handler, cls = 'btn') {
 }
 
 // ============================================================ Enveloppes
+const envOpen = {};
 function viewEnvelopes(root) {
   const ym = state.month;
   const envs = state.data.envelopes.slice().sort((a, b) => (a.archived ? 1 : 0) - (b.archived ? 1 : 0));
@@ -1768,11 +1784,18 @@ function viewEnvelopes(root) {
 
   drawSummary();
   list.append(el('div', { class: 'erow hdr' }, el('div'), el('div', {}, 'Nom'), el('div', {}, 'Budget'), el('div', {}, 'Dépensé'), el('div', {}, 'Disponible'), el('div')));
-  let lastKind = null;
+  let lastKind = null, grpBox = null;
   envs.sort((a, b) => (scopeOf(a) === 'pro' ? KIND_ORDER.indexOf(a.kind) : 9) - (scopeOf(b) === 'pro' ? KIND_ORDER.indexOf(b.kind) : 9)).forEach((e) => {
     const k = scopeOf(e) === 'pro' ? e.kind : 'perso';
-    if (k !== lastKind && (state.scope !== 'perso')) { lastKind = k; list.appendChild(el('div', { class: 'day-head' }, k === 'perso' ? '👤 Perso' : `💼 ${KIND_LABEL[k] || 'Pro'}`)); }
-    list.appendChild(makeRow(e));
+    if (k !== lastKind && (state.scope !== 'perso')) {
+      lastKind = k; grpBox = el('div', { class: 'grp' });
+      const open = envOpen[k] !== undefined ? envOpen[k] : k === 'perso', box = grpBox, n = envs.filter((x) => (scopeOf(x) === 'pro' ? x.kind : 'perso') === k).length;
+      const chev = el('span', { class: 'chev' }, open ? '▾' : '▸');
+      const head = el('button', { type: 'button', class: 'grp-head', 'aria-expanded': String(open), onclick: () => { const o = box.hidden; box.hidden = !o; envOpen[k] = o; chev.textContent = o ? '▾' : '▸'; head.setAttribute('aria-expanded', String(o)); } },
+        chev, el('span', { class: 'grp-t' }, k === 'perso' ? '👤 Perso' : `💼 ${KIND_LABEL[k] || 'Pro'}`), el('span', { class: 'grp-n' }, `${n}`));
+      box.hidden = !open; list.append(head, box);
+    }
+    (grpBox || list).appendChild(makeRow(e));
   });
   const unc = C().uncategorized(ym);
   if (unc > 0) list.appendChild(el('div', { class: 'erow', style: 'grid-template-areas:\'dot name spent spent\'' }, el('span', { class: 'dot', style: 'background:var(--muted)' }), el('div', { class: 'name' }, 'Hors enveloppe'), el('div', { class: 'spent tnum' }, money(unc))));
@@ -1984,8 +2007,8 @@ function viewDashboard(root) {
   nodes.push(quickBar());
   if (isCur) nodes.push(heroForecast());
   nodes.push(el('div', { class: 'cards' },
-    card('Solde total', money(net), net >= 0 ? 'pos' : 'neg'), card('Revenus', money(income), 'pos'), card('Dépenses', money(expense), 'neg'),
-    card('Reste du mois', U.fmtSigned(diff, state.currency), diff >= 0 ? 'pos' : 'neg', income > 0 ? `Épargne : ${U.fmtPct(diff / income)}` : '')));
+    card('Solde total', money(net), net >= 0 ? 'pos' : 'neg', 'Détail par compte', () => setView('accounts')), card('Revenus', money(income), 'pos', '', () => goTx('income')), card('Dépenses', money(expense), 'neg', '', () => goTx('expense')),
+    card('Reste du mois', U.fmtSigned(diff, state.currency), diff >= 0 ? 'pos' : 'neg', income > 0 ? `Épargne : ${U.fmtPct(diff / income)}` : 'Revenus − dépenses', () => goTx('flow'))));
   nodes.push(miniStatus());
   nodes.push(insightsSection());
 

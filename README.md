@@ -35,3 +35,7 @@ Score de santé du budget /100, objectifs d'épargne avec plan mensuel, série d
 - **Tableau de bord pro** : trésorerie, recettes, charges, résultat ; **organigramme de santé** (Santé → Résultat → Marge brute → Recettes / Charges variables, Charges fixes ; Trésorerie et autonomie) avec voyants ✅ ⚠️ ⛔, point mort, détail par catégorie et 6 derniers mois.
 - Saisie rapide pro : « +250 marché samedi », « 45 emballage boîtes », « 120 assurance pro » rangent automatiquement dans la bonne catégorie.
 - Déplacer une opération d'un compte perso vers un compte pro (pastille compte) propose directement la bonne catégorie.
+
+## Mise à jour v5
+- **Enveloppes** : Recettes, Charges variables et Charges fixes sont repliées par défaut ; un chevron ▸/▾ les déplie.
+- **Accueil** : les cartes (Solde total / Trésorerie, Revenus / Recettes, Dépenses / Charges, Reste du mois / Résultat) sont cliquables. Le solde ouvre les comptes, les autres ouvrent la liste des opérations du mois correspondantes (filtre retirable par la pastille ×).
