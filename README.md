@@ -46,3 +46,9 @@ Score de santé du budget /100, objectifs d'épargne avec plan mensuel, série d
 
 ## Mise à jour v7
 - **Jauges d'enveloppe bidirectionnelles** (Enveloppes, accueil, catégories pro) : le zéro est au milieu. Le vert part vers la droite quand il reste de l'argent, le rouge vers la gauche en cas de dépassement ; une enveloppe à zéro reste sans couleur. Pleine jauge = tout le budget disponible (vert) ou 100 % du budget dépassé (rouge).
+
+## Mise à jour v8 — Scan de tickets et factures
+- **Où** : bouton 📷 dans la barre d'ajout rapide, bouton « 📷 Scanner » dans Opérations, entrée « Scanner un ticket » dans Plus.
+- **Comment** : photo (ou image de la galerie) → lecture du texte sur l'appareil → écran « Vérifier le ticket » : commerçant, date, espace (👤 Perso / 💼 Pro), compte, et chaque ligne avec son enveloppe (modifiable). L'enregistrement crée une dépense par enveloppe (case à décocher pour une seule dépense) ; « Annuler » reste disponible.
+- **Intelligence** : espace détecté d'après le commerçant (Metro, Promocash, Rajapack… → pro ; cinéma, supermarché… → perso) et les articles ; factures HT : les lignes sont ramenées au total TTC ; écart avec le total signalé ; l'appli retient tes corrections (article → enveloppe, commerçant → espace).
+- **Moteur de lecture** : Tesseract.js, téléchargé depuis Internet à la première utilisation (connexion requise ce jour-là), puis exécuté localement : l'image ne quitte jamais l'appareil. Sans connexion : « Coller le texte du ticket » (iPhone : appui long sur le texte de la photo → Texte en direct → copier).

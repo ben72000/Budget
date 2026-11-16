@@ -371,6 +371,19 @@ body[data-scope="pro"] { --primary: #7b4fd1; }
 .bar.gauge > i.pos { left: 50%; background: var(--pos); border-radius: 0 99px 99px 0; }
 .bar.gauge > i.neg { right: 50%; background: var(--neg); border-radius: 99px 0 0 99px; }
 
+/* ---------- scan de ticket ---------- */
+.qscan { border: none; background: color-mix(in srgb, var(--primary) 14%, var(--surface)); border-radius: 12px; width: 44px; height: 40px; font-size: 20px; flex-shrink: 0; }
+.scan-ta { width: 100%; font-family: ui-monospace, monospace; font-size: 13px; }
+.scan-lines { display: grid; gap: 8px; }
+.sl { display: grid; grid-template-columns: 96px 1fr 36px; gap: 6px 8px; padding: 8px; border: 1px solid var(--border); border-radius: 12px; background: var(--surface); align-items: center; }
+.sl-lab { grid-column: 1 / 3; grid-row: 1; } .sl > .icon-btn { grid-column: 3; grid-row: 1; }
+.sl-amt { grid-column: 1; grid-row: 2; text-align: right; width: 100%; } .sl-env { grid-column: 2 / 4; grid-row: 2; min-width: 0; width: 100%; }
+.scan-sum { display: grid; gap: 8px; }
+.scan-tot { display: flex; justify-content: space-between; font-size: 15px; }
+.warn-t { color: var(--warn); }
+.chip.warn { background: color-mix(in srgb, var(--warn) 18%, var(--surface-3)); color: var(--warn); }
+.scan-raw summary { cursor: pointer; color: var(--muted); margin: 6px 0; }
+
   </style>
 </head>
 <body>
@@ -1548,6 +1561,247 @@ function confetti() {
 }
 
 // ============================================================
+// scan.js — scan d'un ticket de caisse / d'une facture :
+// lecture du texte (OCR local dans le navigateur), analyse, choix automatique
+// de l'espace (perso/pro), du compte et de l'enveloppe de chaque ligne.
+// ============================================================
+const MERCH_NAMES = ['carrefour', 'leclerc', 'lidl', 'auchan', 'intermarche', 'monoprix', 'franprix', 'aldi', 'casino', 'picard', 'biocoop', 'grand frais', 'super u', 'cora', 'netto',
+  'metro', 'promocash', 'rajapack', 'packhelp', 'vistaprint', 'matfer', 'meilleur du chef', 'patisdecor', 'scrapcooking', 'ovh', 'o2switch', 'canva', 'sumup', 'qonto', 'urssaf',
+  'ugc', 'pathe', 'gaumont', 'kinepolis', 'cinema', 'fnac', 'cultura', 'decathlon', 'leroy merlin', 'castorama', 'bricomarche', 'brico depot', 'mr bricolage', 'ikea', 'darty', 'boulanger', 'action', 'gifi',
+  'mcdonald', 'burger king', 'kfc', 'starbucks', 'quick', 'subway', 'sncf', 'esso', 'total', 'vinci', 'uber', 'la poste', 'colissimo', 'chronopost', 'mondial relay',
+  'edf', 'engie', 'orange', 'sfr', 'bouygues', 'amazon', 'zara', 'kiabi', 'primark', 'sephora', 'botanic', 'jardiland', 'pharmacie', 'boulangerie', 'tabac'];
+const PRO_MERCHANTS = ['metro', 'promocash', 'rajapack', 'packhelp', 'vistaprint', 'matfer', 'meilleur du chef', 'patisdecor', 'scrapcooking', 'ovh', 'o2switch', 'canva', 'sumup', 'qonto', 'urssaf', 'sendcloud', 'boxtal', 'cash and carry', 'grossiste'];
+const NON_ITEM = /\b(total|sous total|sous-total|tva|t\.v\.a|ttc|ht|cb|carte|espece|especes|rendu|monnaie|paye|payee|reglement|net a payer|a payer|montant|acompte|points?|fidelite|cagnotte|siret|siren|tel|telephone|mastercard|visa|contactless|sans contact|euros?|eur|bancaire|remise|reduction|solde|arrondi|nb articles|nombre|article\(s\)|date|heure|caisse|caissier|hotesse|code|n°)\b/;
+const AMT = /(?<![\d.,])(-?\d{1,4}(?:[ \u00a0]\d{3})*[.,]\d{2})(?![\d]|[.,]\d)/g;
+const BLANK = (l) => l.replace(/\d{1,2}[\/.\-]\d{1,2}[\/.\-]\d{2,4}/g, (m) => ' '.repeat(m.length)).replace(/\d{1,2}\s?[:hH]\s?\d{2}/g, (m) => ' '.repeat(m.length));
+const toNum = (s) => Number(String(s).replace(/[  ]/g, '').replace(',', '.'));
+const titleCase = (s) => { const t = s.trim(); return t === t.toUpperCase() ? t.charAt(0) + t.slice(1).toLowerCase() : t; };
+
+function _normLine(s) { return U.norm(s).replace(/[^a-z0-9.,%€ -]/g, ' ').replace(/\s+/g, ' ').trim(); }
+function _amounts(line) { const out = []; let m; AMT.lastIndex = 0; const L = BLANK(line); while ((m = AMT.exec(L))) out.push({ v: toNum(m[1]), i: m.index, raw: m[1] }); return out; }
+
+function parseReceipt(text) {
+  const raw = String(text || '').replace(/\r/g, '').split('\n').map((l) => l.replace(/[|_~]+/g, ' ').trim()).filter(Boolean);
+  const res = { merchant: '', date: U.todayISO(), items: [], total: null, ht: null, known: false };
+  // ---- date
+  for (const l of raw) {
+    const m = l.match(/(?<!\d)(\d{1,2})[\/.\-](\d{1,2})[\/.\-](\d{4}|\d{2})(?!\d)/);
+    if (!m) continue; let y = +m[3]; if (y < 100) y += 2000;
+    const iso = `${y}-${U.pad(+m[2])}-${U.pad(+m[1])}`;
+    if (+m[2] >= 1 && +m[2] <= 12 && U.validISO(iso) && iso <= shiftDate(U.todayISO(), 2) && iso >= shiftDate(U.todayISO(), -800)) { res.date = iso; break; }
+  }
+  // ---- commerçant
+  const head = raw.slice(0, 12).map(_normLine).join(' \n ');
+  let best = null;
+  for (const n of MERCH_NAMES) { const re = new RegExp('(^|[^a-z0-9])' + n.replace(/[.*+?^${}()|[\]\\ ]/g, '\\s*') + '([^a-z0-9]|$)'); const m = head.match(re); if (m && (best === null || m.index < best.i)) best = { n, i: m.index }; }
+  if (best) { res.merchant = best.n.replace(/\b\w/g, (c) => c.toUpperCase()); res.known = true; }
+  else {
+    const cand = raw.slice(0, 8).find((l) => /\p{L}{3,}/u.test(l) && !/\d{4,}/.test(l) && !/(ticket|facture|client|tel|www|http|siret|date|merci)/i.test(l));
+    res.merchant = cand ? titleCase(cand.replace(/[^\p{L}\d &'.-]/gu, ' ').replace(/\s+/g, ' ').slice(0, 40)) : '';
+  }
+  // ---- total / HT
+  const cands = [];
+  raw.forEach((l, idx) => {
+    const n = _normLine(l), am = _amounts(l); if (!am.length) return;
+    const v = am[am.length - 1].v;
+    if (/(total|net a payer|a payer|montant)/.test(n) && /\bht\b|hors taxe/.test(n) && !/ttc/.test(n)) { res.ht = v; return; }
+    if (/(net a payer|a payer|total ttc|montant ttc|total a regler|total general)/.test(n)) cands.push({ p: 3, v });
+    else if (/\btotal\b/.test(n) && !/sous|tva|remise|ht\b/.test(n)) cands.push({ p: 2, v });
+    else if (/\b(cb|carte bancaire|visa|mastercard)\b/.test(n)) cands.push({ p: 1, v });
+  });
+  if (cands.length) { const top = Math.max(...cands.map((c) => c.p)); res.total = cands.filter((c) => c.p === top).pop().v; }
+  // ---- articles
+  for (const l of raw) {
+    const am = _amounts(l); if (!am.length) continue;
+    const n = _normLine(l); if (NON_ITEM.test(n)) continue;
+    const last = am[am.length - 1]; if (!(last.v > 0)) continue;
+    let label = l.slice(0, am[0].i).replace(/^\s*\d+\s*[x×*]\s*/i, '').replace(/\b\d{6,}\b/g, ' ').replace(/[^\p{L}\d &'’.\/()+-]/gu, ' ').replace(/\s+/g, ' ').trim();
+    if ((label.match(/\p{L}/gu) || []).length < 2) continue;
+    res.items.push({ label: titleCase(label.slice(0, 60)), amount: U.round2(last.v) });
+  }
+  if (res.total === null && res.items.length) res.total = U.round2(res.items.reduce((s, x) => s + x.amount, 0));
+  if (res.total === null) { const all = raw.flatMap((l) => _amounts(l).map((a) => a.v)); if (all.length) res.total = Math.max(...all); }
+  // ---- rapprochement articles ↔ total
+  if (res.total !== null) {
+    const sum = U.round2(res.items.reduce((s, x) => s + x.amount, 0)), tot = U.round2(res.total);
+    if (!res.items.length) res.items.push({ label: res.merchant || 'Achat', amount: tot });
+    else if (Math.abs(sum - tot) > 0.02) {
+      if (res.ht && Math.abs(sum - res.ht) <= 0.05 && tot > res.ht) _scale(res.items, tot);
+      else if (sum < tot) res.items.push({ label: 'Autres / non lu', amount: U.round2(tot - sum), rest: true });
+      else _scale(res.items, tot);
+    }
+  }
+  return res;
+}
+function _scale(items, target) {
+  const sum = items.reduce((s, x) => s + x.amount, 0); if (!(sum > 0)) return;
+  items.forEach((x) => { x.amount = U.round2(x.amount * target / sum); });
+  const diff = U.round2(target - items.reduce((s, x) => s + x.amount, 0)); if (diff) { const big = items.reduce((a, b) => (b.amount > a.amount ? b : a)); big.amount = U.round2(big.amount + diff); }
+}
+
+// ---------- mémoire locale (apprentissage) ----------
+const scanRules = () => DB.getSetting('scanRules', {}) || {};
+const scanMerch = () => DB.getSetting('scanMerchants', {}) || {};
+const ruleKey = (label) => tokens(label)[0] || '';
+
+const PRO_ONLY = () => PRO_CATS.filter((c) => /ingredient|chocolat|colorant|emballage|etiquette|cotisation|comptable|logiciel|paiement/.test(c.env.source));
+function detectScope(text, merchant, items, known) {
+  const hasPro = hasProAccount(), hasPerso = state.all.accounts.some((a) => scopeOf(a) === 'perso' && !a.archived);
+  if (!hasPro) return 'perso'; if (!hasPerso) return 'pro';
+  const mm = scanMerch()[U.norm(merchant)]; if (mm) return mm;
+  const nm = U.norm(merchant + ' ' + String(text).slice(0, 300));
+  if (PRO_MERCHANTS.some((k) => new RegExp('(^|[^a-z0-9])' + k.replace(/ /g, '\\s*') + '([^a-z0-9]|$)').test(nm))) return 'pro';
+  if (known) return 'perso';
+  const po = PRO_ONLY(); let pro = 0, perso = 0;
+  for (const it of items) { const p = U.norm(it.label); if (po.some((c) => c.res.some((r) => r.test(p)))) pro++; else if (CATS.some((c) => c.res.some((r) => r.test(p)))) perso++; }
+  return pro > perso ? 'pro' : 'perso';
+}
+function accountForScope(sc, text) {
+  const list = state.all.accounts.filter((a) => scopeOf(a) === sc && !a.archived);
+  if (/\b(especes?|espèces?)\b/i.test(text)) { const c = list.find((a) => a.type === 'Espèces'); if (c) return c.id; }
+  const last = DB.getSetting('lastAccountId', null);
+  return (list.find((a) => a.id === last) || list.find((a) => a.type !== 'Épargne') || list[0] || {}).id || '';
+}
+function lineEnvelope(label, merchant, sc) {
+  const rules = scanRules(), k = ruleKey(label);
+  if (k && rules[k]) { const e = envById(rules[k]); if (e && !e.archived && scopeOf(e) === sc && e.kind !== 'revenue') return e.id; }
+  const own = suggestEnvelope(label, sc, 'expense'); if (own) return own.envelopeId;
+  const mer = suggestEnvelope(merchant, sc, 'expense'); return mer ? mer.envelopeId : null;
+}
+
+// ---------- OCR (exécuté sur l'appareil) ----------
+let _tessP = null;
+function loadTesseract() {
+  if (window.Tesseract) return Promise.resolve(window.Tesseract);
+  if (_tessP) return _tessP;
+  _tessP = new Promise((res, rej) => {
+    const s = document.createElement('script'); s.src = 'https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js';
+    const t = setTimeout(() => { _tessP = null; rej(new Error('timeout')); }, 25000);
+    s.onload = () => { clearTimeout(t); window.Tesseract ? res(window.Tesseract) : (_tessP = null, rej(new Error('absent'))); };
+    s.onerror = () => { clearTimeout(t); _tessP = null; rej(new Error('offline')); };
+    document.head.appendChild(s);
+  });
+  return _tessP;
+}
+async function prepImage(file) {
+  let bmp; try { bmp = await createImageBitmap(file, { imageOrientation: 'from-image' }); } catch { bmp = await new Promise((res, rej) => { const im = new Image(); im.onload = () => res(im); im.onerror = rej; im.src = URL.createObjectURL(file); }); }
+  const w0 = bmp.width, h0 = bmp.height, k = Math.min(1, 2000 / Math.max(w0, h0)) * (Math.max(w0, h0) < 1000 ? 1.5 : 1);
+  const c = document.createElement('canvas'); c.width = Math.round(w0 * k); c.height = Math.round(h0 * k);
+  const g = c.getContext('2d'); g.drawImage(bmp, 0, 0, c.width, c.height);
+  try { const d = g.getImageData(0, 0, c.width, c.height), a = d.data; for (let i = 0; i < a.length; i += 4) { let y = 0.3 * a[i] + 0.59 * a[i + 1] + 0.11 * a[i + 2]; y = Math.max(0, Math.min(255, (y - 128) * 1.35 + 128)); a[i] = a[i + 1] = a[i + 2] = y; } g.putImageData(d, 0, 0); } catch {}
+  return c;
+}
+async function ocrImage(file, onProgress) {
+  const canvas = await prepImage(file), T = await loadTesseract();
+  const r = await T.recognize(canvas, 'fra', { logger: (m) => { if (m && typeof m.progress === 'number') onProgress && onProgress(m.status, m.progress); } });
+  return (r && r.data && r.data.text) || '';
+}
+
+// ---------- écrans ----------
+function openScan() {
+  if (!state.all.accounts.some((a) => !a.archived)) { toast("Crée d'abord un compte", 'error'); setView('accounts'); return; }
+  const pick = (cap) => el('input', { type: 'file', accept: 'image/*', ...(cap ? { capture: 'environment' } : {}), onchange: (e) => { const f = e.target.files[0]; e.target.value = ''; if (f) runScan(f); } });
+  showModal('📷 Scanner un ticket ou une facture', el('div', { class: 'form' },
+    el('p', { class: 'muted', style: 'margin:0' }, "Prends le ticket en photo : l'appli lit le texte sur ton appareil, choisit l'espace (perso / pro), le compte et répartit chaque ligne dans la bonne enveloppe. Tu vérifies avant d'enregistrer."),
+    el('label', { class: 'btn btn-primary btn-block' }, '📷 Prendre une photo', pick(true)),
+    el('label', { class: 'btn btn-block' }, '🖼️ Choisir une image', pick(false)),
+    el('button', { type: 'button', class: 'btn btn-block', onclick: () => openScanPaste('') }, '📋 Coller le texte du ticket'),
+    el('p', { class: 'muted', style: 'margin:0;font-size:12px' }, "L'image ne quitte jamais ton téléphone. Le moteur de lecture (Tesseract) est téléchargé à la première utilisation : connexion nécessaire ce jour-là. Sans connexion, sur iPhone, ouvre la photo, appuie longuement sur le texte (Texte en direct), copie-le puis colle-le ici.")));
+}
+function openScanPaste(prefill, msg) {
+  const ta = el('textarea', { rows: 10, placeholder: 'Colle ici le texte du ticket…', class: 'scan-ta' }); ta.value = prefill || '';
+  showModal('📋 Texte du ticket', el('div', { class: 'form' }, msg ? el('p', { class: 'muted', style: 'margin:0' }, msg) : null, ta,
+    el('div', { class: 'modal-actions' }, el('button', { type: 'button', class: 'btn', onclick: closeModal }, 'Annuler'),
+      el('button', { type: 'button', class: 'btn btn-primary', onclick: () => { if (!ta.value.trim()) { toast('Colle d\'abord du texte', 'error'); return; } openScanReview(ta.value); } }, 'Analyser'))));
+}
+async function runScan(file) {
+  const bar = el('div', { class: 'bar' }, el('i', { style: 'width:5%' })), lbl = el('p', { class: 'muted', style: 'margin:0' }, 'Préparation de l\'image…');
+  showModal('Lecture du ticket…', el('div', { class: 'form' }, lbl, bar));
+  try {
+    const text = await ocrImage(file, (st, p) => { lbl.textContent = st === 'recognizing text' ? 'Lecture du texte…' : 'Chargement du moteur de lecture…'; bar.firstChild.style.width = Math.max(5, Math.round(p * 100)) + '%'; });
+    if (!String(text).trim()) { openScanPaste('', "Je n'ai rien pu lire sur l'image. Reprends la photo plus nette (à plat, bien éclairée) ou colle le texte."); return; }
+    openScanReview(text);
+  } catch (e) {
+    openScanPaste('', "La lecture automatique n'est pas disponible (hors connexion ?). Copie le texte de la photo (iPhone : Texte en direct) et colle-le ici.");
+  }
+}
+
+function openScanReview(text) {
+  const P = parseReceipt(text);
+  const S = { text, merchant: P.merchant, date: P.date, scope: 'perso', accountId: '', lines: [], split: true, total: P.total };
+  S.scope = detectScope(text, P.merchant, P.items, P.known);
+  let lid = 0; S.lines = P.items.map((it) => ({ id: ++lid, label: it.label, amount: it.amount, envelopeId: null, manual: false }));
+  const assign = () => { S.lines.forEach((l) => { if (!l.manual) l.envelopeId = lineEnvelope(l.label, S.merchant, S.scope); }); };
+  S.accountId = accountForScope(S.scope, text); assign();
+
+  const merch = el('input', { type: 'text', value: S.merchant, placeholder: 'Commerçant', oninput: (e) => { S.merchant = e.target.value; } });
+  merch.addEventListener('change', () => { assign(); drawLines(); });
+  const date = el('input', { type: 'date', value: S.date, onchange: (e) => { if (U.validISO(e.target.value)) S.date = e.target.value; } });
+  const accSel = el('select', { onchange: (e) => { S.accountId = e.target.value; } });
+  const fillAcc = () => { accSel.textContent = ''; state.all.accounts.filter((a) => scopeOf(a) === S.scope && !a.archived).forEach((a) => accSel.appendChild(opt(a.id, a.name))); accSel.value = S.accountId; };
+  const scopeSeg = segmented([['perso', '👤 Perso'], ['pro', '💼 Pro']], S.scope, (v) => {
+    S.scope = v; S.accountId = accountForScope(v, S.text); fillAcc(); assign(); drawLines();
+  });
+  const linesBox = el('div', { class: 'scan-lines' }), sumBox = el('div', { class: 'scan-sum' });
+  const raw = el('textarea', { rows: 6, class: 'scan-ta' }); raw.value = text;
+
+  function envSelect(l) {
+    const s = el('select', { class: 'sl-env', 'aria-label': 'Enveloppe' }, opt('', S.scope === 'pro' ? '(non classé)' : '(sans enveloppe)'));
+    const list = state.all.envelopes.filter((e) => !e.archived && scopeOf(e) === S.scope && e.kind !== 'revenue');
+    if (S.scope === 'pro') for (const k of ['variable', 'fixed']) { const g = list.filter((e) => e.kind === k); if (g.length) s.appendChild(el('optgroup', { label: KIND_LABEL[k] }, g.map((e) => opt(e.id, e.name)))); }
+    else list.forEach((e) => s.appendChild(opt(e.id, e.name)));
+    s.value = l.envelopeId || ''; s.addEventListener('change', () => { l.envelopeId = s.value || null; l.manual = true; drawSum(); });
+    return s;
+  }
+  function groups() { const m = new Map(); for (const l of S.lines) { if (!(l.amount > 0)) continue; m.set(l.envelopeId || '', U.round2((m.get(l.envelopeId || '') || 0) + l.amount)); } return m; }
+  function drawSum() {
+    sumBox.textContent = '';
+    const g = groups(), tot = U.round2(S.lines.reduce((s, l) => s + (l.amount > 0 ? l.amount : 0), 0));
+    const chips = [...g.entries()].sort((a, b) => b[1] - a[1]).map(([k, v]) => el('span', { class: `chip ${k ? '' : 'warn'}` }, `${k ? envById(k).name : 'Non classé'} · ${money(v)}`));
+    const nOut = S.split ? g.size : 1;
+    sumBox.append(el('div', { class: 'chips' }, chips),
+      el('div', { class: 'scan-tot' }, el('span', {}, 'Total des lignes'), el('b', { class: 'tnum' }, money(tot))),
+      S.total !== null && Math.abs(tot - S.total) > 0.02 ? el('div', { class: 'muted warn-t' }, `⚠️ Le ticket indique ${money(S.total)} (écart ${U.fmtSigned(U.round2(tot - S.total), state.currency)}).`) : null,
+      el('label', { class: 'checkrow' }, el('input', { type: 'checkbox', checked: S.split, onchange: (e) => { S.split = e.target.checked; drawSum(); } }), el('span', {}, 'Répartir par enveloppe (une dépense par enveloppe)')));
+    saveBtn.textContent = tot > 0 ? `Enregistrer ${nOut} dépense${nOut > 1 ? 's' : ''} · ${money(tot)}` : 'Enregistrer'; saveBtn.disabled = !(tot > 0);
+  }
+  function drawLines() {
+    linesBox.textContent = '';
+    S.lines.forEach((l) => {
+      const lab = el('input', { type: 'text', class: 'sl-lab', value: l.label, 'aria-label': 'Article', onchange: (e) => { l.label = e.target.value; if (!l.manual) { l.envelopeId = lineEnvelope(l.label, S.merchant, S.scope); drawLines(); } } });
+      const amt = el('input', { type: 'text', inputmode: 'decimal', class: 'sl-amt', value: U.fmtInput(l.amount), 'aria-label': 'Montant', onchange: (e) => { const v = U.parseNumber(e.target.value); l.amount = Number.isFinite(v) && v >= 0 ? U.round2(v) : 0; e.target.value = U.fmtInput(l.amount); drawSum(); } });
+      linesBox.appendChild(el('div', { class: 'sl' }, lab, el('button', { type: 'button', class: 'icon-btn', 'aria-label': 'Retirer la ligne', onclick: () => { S.lines = S.lines.filter((x) => x !== l); drawLines(); } }, '×'), amt, envSelect(l)));
+    });
+    linesBox.appendChild(el('button', { type: 'button', class: 'btn btn-sm', onclick: () => { S.lines.push({ id: ++lid, label: '', amount: 0, envelopeId: null, manual: false }); drawLines(); } }, '+ Ajouter une ligne'));
+    drawSum();
+  }
+  const saveBtn = el('button', { type: 'button', class: 'btn btn-primary', onclick: save });
+  function save() {
+    if (!S.accountId) { toast('Choisis un compte', 'error'); return; }
+    const used = S.lines.filter((l) => l.amount > 0); if (!used.length) { toast('Aucun montant', 'error'); return; }
+    const payee = (S.merchant || '').trim() || 'Ticket', now = Date.now(); let parts = [];
+    if (S.split) { const m = new Map(); for (const l of used) { const k = l.envelopeId || ''; if (!m.has(k)) m.set(k, []); m.get(k).push(l); } parts = [...m.entries()].map(([k, ls]) => ({ env: k || null, amount: U.round2(ls.reduce((s, x) => s + x.amount, 0)), items: ls.map((x) => x.label).filter(Boolean) })); }
+    else { const g = [...groups().entries()].sort((a, b) => b[1] - a[1])[0]; parts = [{ env: g[0] || null, amount: U.round2(used.reduce((s, x) => s + x.amount, 0)), items: used.map((x) => x.label).filter(Boolean) }]; }
+    const txs = parts.map((p, i) => ({ id: DB.uid(), date: S.date, accountId: S.accountId, toAccountId: null, envelopeId: p.env, type: 'expense', amount: p.amount, payee, notes: ('Ticket : ' + p.items.join(', ')).slice(0, 300), recurringId: null, createdAt: now + i }));
+    DB.putMany('transactions', txs); DB.setSetting('lastAccountId', S.accountId);
+    // apprentissage : article → enveloppe, commerçant → espace
+    const rules = { ...scanRules() }; for (const l of used) { const k = ruleKey(l.label); if (k && l.envelopeId) rules[k] = l.envelopeId; }
+    const keys = Object.keys(rules); if (keys.length > 400) keys.slice(0, keys.length - 400).forEach((k) => delete rules[k]);
+    DB.setSetting('scanRules', rules);
+    if (S.merchant.trim() && hasProAccount()) DB.setSetting('scanMerchants', { ...scanMerch(), [U.norm(S.merchant)]: S.scope });
+    closeModal(); commit();
+    toast(`Ticket enregistré : ${txs.length} dépense${txs.length > 1 ? 's' : ''} · ${money(U.round2(txs.reduce((s, t) => s + t.amount, 0)))}`, 'success', { label: 'Annuler', fn: () => { DB.delMany('transactions', txs.map((t) => t.id)); commit(); } }, 8000);
+  }
+  fillAcc(); drawLines();
+  showModal('Vérifier le ticket', el('div', { class: 'form' },
+    row('Commerçant', merch), el('div', { class: 'form-grid' }, row('Date', date), row('Compte', accSel)),
+    hasProAccount() ? row('Espace', scopeSeg) : null, linesBox, sumBox,
+    el('details', { class: 'scan-raw' }, el('summary', {}, 'Texte lu (corriger et relire)'), raw,
+      el('button', { type: 'button', class: 'btn btn-sm', onclick: () => { closeModal(); openScanReview(raw.value); } }, 'Relire ce texte')),
+    el('div', { class: 'modal-actions' }, el('button', { type: 'button', class: 'btn', onclick: closeModal }, 'Annuler'), saveBtn)));
+}
+
+// ============================================================
 // views.js — écrans
 // ============================================================
 const NAV = [['dashboard', 'Accueil', '🏠'], ['transactions', 'Opérations', '🧾'], ['envelopes', 'Enveloppes', '✉️'], ['goals', 'Objectifs', '🎯'], ['more', 'Plus', '☰']];
@@ -1734,7 +1988,7 @@ function viewTransactions(root) {
 
   put(root, 
     el('div', { class: 'section-head' }, title, el('div', { class: 'actions' },
-      selBtn,
+      el('button', { class: 'btn btn-sm', onclick: openScan }, '📷 Scanner'), selBtn,
       el('button', { class: 'btn btn-sm', onclick: () => setView('recurring') }, '🔁 Récurrentes'),
       fileButton('Importer CSV', '.csv,.txt,text/csv,text/plain', importCsvFile, 'btn btn-sm'))),
     el('div', { class: 'filters' }, el('div', { class: 'wide' }, search), accSel, envSel,
@@ -1881,6 +2135,7 @@ function viewSettings(root) {
     el('section', { class: 'section' }, el('h2', {}, 'Zone dangereuse'), el('p', { class: 'muted' }, 'Supprime définitivement toutes les données de ce navigateur.'),
       el('button', { class: 'btn btn-danger', onclick: async () => { if (await confirmModal('Tout supprimer ? Pense à exporter une sauvegarde avant. Cette action est irréversible.', 'Tout effacer')) { DB.wipeAll(); seedStarter(); commit(); toast('Données supprimées', 'success'); } } }, '🗑️ Tout effacer')),
     el('section', { class: 'section' }, el('h2', {}, 'À propos'),
+      el('p', { class: 'muted' }, 'Version 8 · jauges bidirectionnelles, espaces perso/pro, scan de tickets'),
       el('p', {}, 'Appli de budget 100 % locale : zéro serveur, zéro compte. ', el('b', {}, 'Tes données ne quittent jamais cet appareil.')),
       el('p', { class: 'muted' }, "Sur iPhone : ouvre la page dans Safari → Partager → « Sur l'écran d'accueil ». Installée ainsi, l'appli est plus à l'abri du nettoyage automatique de Safari — mais exporte quand même une sauvegarde de temps en temps (et à chaque changement de téléphone).")));
 }
@@ -1965,7 +2220,7 @@ function quickBar() {
   }
   input.addEventListener('input', () => { ov = {}; upd(); });
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); save(); } });
-  return el('div', { class: 'qbar' }, el('div', { class: 'qrow' }, el('span', { class: 'qi' }, '✨'), input), preview);
+  return el('div', { class: 'qbar' }, el('div', { class: 'qrow' }, el('span', { class: 'qi' }, '✨'), input, el('button', { type: 'button', class: 'qscan', 'aria-label': 'Scanner un ticket', title: 'Scanner un ticket ou une facture', onclick: openScan }, '📷')), preview);
 }
 
 function heroForecast() {
@@ -2108,6 +2363,7 @@ function viewGoals(root) {
 function viewMore(root) {
   const item = (ico, title, sub, fn) => el('button', { class: 'tool wide', onclick: fn }, el('span', { class: 'ti' }, ico), el('div', { style: 'text-align:left' }, el('b', {}, title), el('div', { class: 'muted' }, sub)));
   put(root, el('div', { class: 'menu' },
+    item('📷', 'Scanner un ticket', 'Répartition automatique dans les enveloppes', openScan),
     item('🏦', 'Comptes', `${activeAccounts().length} compte(s) actif(s)`, () => setView('accounts')),
     item('🔁', 'Opérations récurrentes', `${state.data.recurring.filter((r) => r.active && !recEnded(r)).length} active(s)`, () => setView('recurring')),
     item('📋', 'Bilan du mois', 'Résumé, comparaison, calendrier des dépenses', () => setView('review')),
