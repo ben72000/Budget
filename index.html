@@ -13,54 +13,50 @@
   <link rel="apple-touch-icon" href="icon-192.png" />
   <link rel="icon" href="icon-192.png" />
   <style>
+/* =====================================================================
+   Design system — inspiré des Human Interface Guidelines d'Apple
+   Jetons : 6 couleurs nommées (clair / sombre, contraste ≥ 4,5:1 sur surface)
+   ink #1C1C1E 17,0 · muted #5F5F66 6,3 · accent framboise #B3154B 6,7
+   pos #1B7A3D 5,4 · neg #C4261E 5,8 · warn #8F5A00 5,8   (sombre : tous ≥ 6,7)
+   Une couleur = un sens : accent = action, vert = entrée/disponible,
+   rouge = sortie/dépassement, ambre = vigilance.
+   ===================================================================== */
 :root {
   color-scheme: light;
-  --bg: #f4f5f8;
-  --surface: #ffffff;
-  --surface-2: #f7f8fa;
-  --surface-3: #eef0f3;
-  --text: #1f2933;
-  --muted: #6b7680;
-  --border: #e1e4e8;
-  --primary: #2a78d6;
-  --primary-dark: #2263b0;
-  --pos: #0f8a4f;
-  --neg: #d63c3c;
-  --warn: #c77c00;
-  --s-income: #2a78d6;
-  --s-expense: #eb6834;
-  --shadow: 0 1px 3px rgba(0,0,0,.06), 0 1px 2px rgba(0,0,0,.04);
-  --radius: 10px;
-  --gap: 14px;
-  --bar-bg: #e6e9ed;
-  --overlay: rgba(10,15,25,.45);
+  --bg: #F2F2F7; --surface: #FFFFFF; --surface-2: #F6F6FA; --surface-3: #EAEAF0;
+  --text: #1C1C1E; --muted: #5F5F66; --border: #E1E1E8;
+  --primary: #B3154B; --primary-dark: #8F1039; --on-accent: #FFFFFF;
+  --pos: #1B7A3D; --neg: #C4261E; --warn: #8F5A00;
+  --s-income: #2a78d6; --s-expense: #eb6834;
+  --shadow: 0 0 0 .5px rgba(60,60,67,.12);
+  --radius: 16px; --gap: 14px;
+  --bar-bg: #E3E3EA; --overlay: rgba(0,0,0,.35);
+  --glass: rgba(255,255,255,.78);
 }
 @media (prefers-color-scheme: dark) {
   :root:where(:not([data-theme="light"])) {
     color-scheme: dark;
-    --bg: #111418; --surface: #1b1f25; --surface-2: #20252c; --surface-3: #282e36;
-    --text: #e9ecef; --muted: #98a2ad; --border: #2d343c;
-    --primary: #4a93ec; --primary-dark: #3987e5;
-    --pos: #3ccf86; --neg: #ff6b6b; --warn: #f0a93a;
-    --s-income: #3987e5; --s-expense: #d95926;
-    --shadow: 0 1px 3px rgba(0,0,0,.4);
-    --bar-bg: #2d343c; --overlay: rgba(0,0,0,.6);
+    --bg: #000000; --surface: #1C1C1E; --surface-2: #26262A; --surface-3: #323237;
+    --text: #F5F5F7; --muted: #A3A3AA; --border: #38383D;
+    --primary: #FF7AA2; --primary-dark: #FF5C8D; --on-accent: #1C1C1E;
+    --pos: #4FD17F; --neg: #FF8078; --warn: #F2B24C;
+    --shadow: 0 0 0 .5px rgba(255,255,255,.08);
+    --bar-bg: #38383D; --overlay: rgba(0,0,0,.6); --glass: rgba(28,28,30,.78);
   }
 }
 :root[data-theme="dark"] {
   color-scheme: dark;
-  --bg: #111418; --surface: #1b1f25; --surface-2: #20252c; --surface-3: #282e36;
-  --text: #e9ecef; --muted: #98a2ad; --border: #2d343c;
-  --primary: #4a93ec; --primary-dark: #3987e5;
-  --pos: #3ccf86; --neg: #ff6b6b; --warn: #f0a93a;
-  --s-income: #3987e5; --s-expense: #d95926;
-  --shadow: 0 1px 3px rgba(0,0,0,.4);
-  --bar-bg: #2d343c; --overlay: rgba(0,0,0,.6);
+  --bg: #000000; --surface: #1C1C1E; --surface-2: #26262A; --surface-3: #323237;
+  --text: #F5F5F7; --muted: #A3A3AA; --border: #38383D;
+  --primary: #FF7AA2; --primary-dark: #FF5C8D; --on-accent: #1C1C1E;
+  --pos: #4FD17F; --neg: #FF8078; --warn: #F2B24C;
+  --shadow: 0 0 0 .5px rgba(255,255,255,.08);
+  --bar-bg: #38383D; --overlay: rgba(0,0,0,.6); --glass: rgba(28,28,30,.78);
 }
 
 * { box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
 html, body { margin: 0; padding: 0; background: var(--bg); color: var(--text);
-  font: 15px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  font: 17px/1.4 -apple-system, BlinkMacSystemFont, "SF Pro Text", system-ui, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   -webkit-font-smoothing: antialiased; }
 body { min-height: 100vh; display: flex; flex-direction: column; }
 body.modal-open { overflow: hidden; }
@@ -93,7 +89,7 @@ button { cursor: pointer; }
 #app-main { flex: 1; width: 100%; max-width: 1100px; margin: 0 auto; padding: 14px 12px calc(150px + env(safe-area-inset-bottom)); }
 
 .fab { position: fixed; right: 16px; bottom: calc(72px + env(safe-area-inset-bottom)); z-index: 25; width: 56px; height: 56px; border-radius: 50%;
-  border: none; background: var(--primary); color: #fff; font-size: 30px; line-height: 1; box-shadow: 0 4px 14px rgba(0,0,0,.28); }
+  border: none; background: var(--primary); color: var(--on-accent); font-size: 30px; line-height: 1; box-shadow: 0 4px 14px rgba(0,0,0,.28); }
 .fab:active { transform: scale(.95); }
 
 @media (min-width: 860px) {
@@ -107,7 +103,7 @@ button { cursor: pointer; }
 .btn { background: var(--surface); border: 1px solid var(--border); padding: 8px 14px; border-radius: 8px; display: inline-flex; align-items: center; gap: 6px; font-size: 14px; color: var(--text); }
 .btn:hover { background: var(--surface-2); }
 .btn:active { transform: translateY(1px); }
-.btn-primary { background: var(--primary); border-color: var(--primary); color: #fff; }
+.btn-primary { background: var(--primary); border-color: var(--primary); color: var(--on-accent); }
 .btn-primary:hover { background: var(--primary-dark); }
 .btn-danger { background: var(--neg); border-color: var(--neg); color: #fff; }
 .btn-danger:hover { filter: brightness(.92); background: var(--neg); }
@@ -325,7 +321,9 @@ table.preview td, table.preview th { padding: 3px 6px; border-bottom: 1px solid 
 @media (min-width: 860px) { .selbar { bottom: 20px; left: 50%; right: auto; transform: translateX(-50%); min-width: 520px; } }
 
 /* ---------- espaces perso / pro ---------- */
-body[data-scope="pro"] { --primary: #7b4fd1; }
+body[data-scope="pro"] { --primary: #6A3FC4; --primary-dark: #53309C; }
+@media (prefers-color-scheme: dark) { :root:where(:not([data-theme="light"])) body[data-scope="pro"] { --primary: #B79BFF; --primary-dark: #A184F5; } }
+:root[data-theme="dark"] body[data-scope="pro"] { --primary: #B79BFF; --primary-dark: #A184F5; }
 .scope-switch { display: flex; gap: 4px; padding: 4px; background: var(--surface-3); border-radius: 14px; margin-bottom: 12px; }
 .scope-btn { flex: 1; border: none; background: transparent; color: var(--muted); padding: 10px 6px; border-radius: 10px; font-size: 15px; font-weight: 600; min-height: 44px; }
 .scope-btn.on { background: var(--surface); color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,.18); }
@@ -423,6 +421,86 @@ body[data-scope="pro"] { --primary: #7b4fd1; }
 .cal-cell .dots { display: flex; gap: 2px; height: 6px; } .dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--neg); } .dots i.p { background: var(--pos); } .dots i.x { opacity: .25; } .dots i.s { outline: 1px solid var(--primary); outline-offset: 1px; }
 .cal-ev { display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: center; padding: 8px 4px; border-bottom: 1px solid var(--border); } .cal-ev.off { opacity: .45; } .cal-ev.off .tx-payee { text-decoration: line-through; }
 .cal-day { margin: 8px 0; }
+
+
+/* =====================================================================
+   Refonte — hiérarchie, cibles tactiles, matériaux, mouvement
+   ===================================================================== */
+.muted { font-size: 15px; }
+h2, h3 { letter-spacing: -.01em; }
+.page-title { font-size: 28px !important; font-weight: 800; letter-spacing: -.02em; line-height: 1.15; }
+.section h2 { font-size: 20px; font-weight: 700; }
+.section, .card, .hero, .mini, .qbar, .filters { box-shadow: var(--shadow); }
+.section { border-radius: var(--radius); padding: 16px; }
+
+/* matériau fonctionnel (barres flottantes uniquement) */
+#app-header, #tabbar { background: var(--glass); -webkit-backdrop-filter: saturate(180%) blur(20px); backdrop-filter: saturate(180%) blur(20px); border-color: color-mix(in srgb, var(--border) 70%, transparent); }
+@media (prefers-reduced-transparency: reduce) { #app-header, #tabbar { background: var(--surface); -webkit-backdrop-filter: none; backdrop-filter: none; } }
+.brand { font-size: 17px; font-weight: 700; }
+.month-label { font-size: 17px; }
+.tab { min-height: 49px; font-size: 12px; justify-content: center; }
+.tab .ico { font-size: 22px; }
+.nav-btn { min-height: 44px; font-size: 16px; }
+
+/* contrôles : cibles ≥ 44 px (28 px minimum pour les actions secondaires) */
+.btn { min-height: 44px; padding: 10px 16px; border-radius: 12px; font-size: 16px; font-weight: 500; border-color: transparent; background: var(--surface-3); }
+.btn:hover { background: color-mix(in srgb, var(--surface-3) 80%, var(--text) 8%); }
+.btn-primary { font-weight: 600; background: var(--primary); } .btn-primary:hover { background: var(--primary-dark); }
+.btn-ghost { background: transparent; color: var(--primary); }
+.btn-sm { min-height: 36px; padding: 6px 12px; font-size: 15px; }
+.icon-btn { width: 44px; height: 44px; font-size: 20px; }
+.seg button, .cp, .mchip { min-height: 44px; }
+.mchip { padding: 2px 12px; font-size: 13px; min-height: 28px; }
+.seg { border-radius: 12px; } .seg button { font-size: 16px; border-radius: 10px; }
+.scope-switch { border-radius: 12px; } .scope-btn { font-size: 16px; border-radius: 9px; }
+.scope-btn.on { box-shadow: 0 1px 3px rgba(0,0,0,.2), 0 0 0 .5px rgba(0,0,0,.04); color: var(--text); }
+input[type=text], input[type=search], input[type=date], input[type=number], select, textarea { min-height: 44px; padding: 10px 12px; border-radius: 12px; border-color: transparent; background: var(--surface-3); font-size: 17px; }
+input[type=checkbox] { width: 22px; height: 22px; }
+.input-sm { min-height: 36px; }
+.form-row > label { font-size: 13px; font-weight: 600; letter-spacing: .01em; }
+.checkrow { font-size: 16px; min-height: 44px; }
+input:focus, select:focus, textarea:focus { border-color: var(--primary); background: var(--surface); }
+:focus-visible { outline: 3px solid color-mix(in srgb, var(--primary) 60%, transparent); outline-offset: 2px; }
+input:focus-visible, select:focus-visible, textarea:focus-visible { outline: none; }
+
+/* listes : lignes lisibles, jamais sous 12 px */
+.tx-row { min-height: 56px; border-radius: 14px; margin-bottom: 6px; padding: 10px 14px; }
+.tx-payee { font-size: 17px; font-weight: 600; }
+.tx-meta { font-size: 13px; }
+.tx-amount { font-size: 17px; }
+.day-head { font-size: 13px; padding: 16px 6px 6px; text-transform: capitalize; letter-spacing: 0; }
+.erow { border-radius: 14px; padding: 12px 14px; }
+.erow .name { font-size: 17px; }
+.erow .lbl { font-size: 12px; } .tag, .cp-tag, .badge .muted, .hm-h { font-size: 12px; }
+.card-label { font-size: 12px; text-transform: none; letter-spacing: 0; }
+.card-value { font-size: 24px; }
+.card-sub { font-size: 13px; }
+.card { border-left: none; border-radius: 16px; padding: 14px 16px; position: relative; }
+.hero { border-radius: 20px; padding: 18px 18px; background: linear-gradient(140deg, color-mix(in srgb, var(--primary) 14%, var(--surface)), var(--surface) 70%); border-color: transparent; }
+.hero-v { font-size: 36px; letter-spacing: -.02em; }
+.grp-head { font-size: 17px; min-height: 48px; border-radius: 14px; }
+.bar { height: 10px; border-radius: 99px; } .bar > i { border-radius: 99px; }
+.bar.gauge { height: 12px; }
+.bar.gauge::after { width: 2px; top: -2px; bottom: -2px; background: var(--text); opacity: .45; }
+.cal-cell .cn { font-size: 11px; }
+
+/* feuilles modales : poignée, coins larges, sortie claire */
+.modal { border-radius: 20px; box-shadow: 0 20px 60px rgba(0,0,0,.3); }
+.modal-header { padding: 16px 20px; border-bottom: .5px solid var(--border); } .modal-header h2 { font-size: 20px; font-weight: 700; }
+.modal-body { padding: 16px 20px; }
+@media (max-width: 640px) { .modal { border-radius: 20px 20px 0 0; position: relative; } .modal::before { content: ''; position: absolute; top: 6px; left: 50%; width: 36px; height: 5px; margin-left: -18px; border-radius: 3px; background: var(--border); } .modal-header { padding-top: 20px; } }
+.toast { border-radius: 16px; font-size: 16px; padding: 12px 18px; background: rgba(40,40,44,.96); }
+.toast-success { background: #176B37; } .toast-error { background: #B3221B; }
+.toast button { min-height: 28px; }
+.banner, .verdict, .insight { border-radius: 14px; }
+.empty { font-size: 16px; padding: 28px 12px; }
+
+/* préférences d'accessibilité système */
+@media (prefers-contrast: more) {
+  :root { --border: #8E8E93; --muted: var(--text); }
+  .btn { border: 1px solid var(--text); } .tx-row, .section, .card { box-shadow: 0 0 0 1px var(--text); }
+}
+@media (prefers-reduced-motion: reduce) { *, *::before, *::after { animation-duration: .01ms !important; animation-iteration-count: 1 !important; transition-duration: .01ms !important; scroll-behavior: auto !important; } }
 
   </style>
 </head>
@@ -2362,7 +2440,7 @@ function viewEnvelopes(root) {
     const income = c.income(ym), budget = act.reduce((s, e) => s + c.budget(e, ym), 0), spent = act.reduce((s, e) => s + c.spent(e.id, ym), 0);
     summary.textContent = '';
     if (state.scope === 'pro' && hasProAccount()) { const s = proStats(ym); summary.append(card('Recettes', money(s.rev), 'pos'), card('Charges variables', money(s.varTotal)), card('Charges fixes', money(s.fixed)), card('Résultat', U.fmtSigned(s.result, state.currency), s.result >= 0 ? 'pos' : 'neg')); return; }
-    summary.append(card('Revenus du mois', money(income), 'pos'), card('Budgété', money(budget)), card('Dépensé', money(spent), spent <= budget ? 'pos' : 'neg'),
+    summary.append(card('Revenus du mois', money(income), 'pos'), card('Budgété', money(budget)), card('Dépensé', money(spent), spent > budget ? 'neg' : ''),
       card('Reste à répartir', U.fmtSigned(U.round2(income - budget), state.currency), income - budget >= 0 ? 'pos' : 'neg', 'revenus − budgets'));
   }
   function makeRow(env) {
@@ -2482,7 +2560,7 @@ function viewSettings(root) {
     el('section', { class: 'section' }, el('h2', {}, 'Zone dangereuse'), el('p', { class: 'muted' }, 'Supprime définitivement toutes les données de ce navigateur.'),
       el('button', { class: 'btn btn-danger', onclick: async () => { if (await confirmModal('Tout supprimer ? Pense à exporter une sauvegarde avant. Cette action est irréversible.', 'Tout effacer')) { DB.wipeAll(); seedStarter(); commit(); toast('Données supprimées', 'success'); } } }, '🗑️ Tout effacer')),
     el('section', { class: 'section' }, el('h2', {}, 'À propos'),
-      el('p', { class: 'muted' }, 'Version 11 · calendrier prévisionnel, transferts entre enveloppes, historique, scan de tickets'),
+      el('p', { class: 'muted' }, 'Version 12 · refonte design (Apple HIG), calendrier prévisionnel, transferts, historique'),
       el('p', {}, 'Appli de budget 100 % locale : zéro serveur, zéro compte. ', el('b', {}, 'Tes données ne quittent jamais cet appareil.')),
       el('p', { class: 'muted' }, "Sur iPhone : ouvre la page dans Safari → Partager → « Sur l'écran d'accueil ». Installée ainsi, l'appli est plus à l'abri du nettoyage automatique de Safari — mais exporte quand même une sauvegarde de temps en temps (et à chaque changement de téléphone).")));
 }

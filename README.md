@@ -71,3 +71,13 @@ Score de santé du budget /100, objectifs d'épargne avec plan mensuel, série d
 - Chaque jour est coloré (vert = entrée, rouge = sortie) avec le net du jour ; toucher un jour affiche son détail.
 - Simulation : décocher une récurrence pour voir le solde sans elle, ou ajouter un événement fictif (🧪) — rien n'est écrit dans tes vrais comptes. « Réinitialiser » remet tout à zéro.
 - Le solde porte sur les comptes courants (hors épargne) de l'espace choisi.
+
+## Version 12 — Refonte design (principes Apple HIG)
+
+Refonte visuelle selon les règles du skill « apple-design-skill » (Human Interface Guidelines) ; aucune fonctionnalité modifiée.
+- **Couleurs** : 6 jetons nommés clair/sombre, tous ≥ 4,5:1 (texte 17:1, accent framboise 6,7:1). Une couleur = un sens : framboise = action, vert = entrée/disponible, rouge = sortie/dépassement, ambre = vigilance. Espace pro : accent violet.
+- **Typographie** : texte 17 px, titres de page 28 px, aucun texte sous 12 px.
+- **Cibles tactiles** : 44 px par défaut (36 px minimum pour les actions secondaires).
+- **Matériaux** : effet verre uniquement sur l'en-tête et la barre d'onglets (désactivé si « réduire la transparence »).
+- **Feuilles** : poignée, coins arrondis larges. **Mouvement** réduit si demandé ; **contraste renforcé** pris en charge ; anneau de focus visible.
+- Mode sombre sur vrai noir, couleurs adaptées.
