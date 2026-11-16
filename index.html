@@ -364,6 +364,13 @@ body[data-scope="pro"] { --primary: #7b4fd1; }
 .grp[hidden] { display: none; }
 .inline { display: flex; gap: 8px; align-items: center; } .inline input { flex: 1; min-width: 0; }
 
+/* ---------- jauge bidirectionnelle (0 au centre) ---------- */
+.bar.gauge { position: relative; height: 10px; border-radius: 99px; }
+.bar.gauge::after { content: ''; position: absolute; left: 50%; top: -1px; bottom: -1px; width: 2px; margin-left: -1px; background: var(--muted); opacity: .7; z-index: 2; }
+.bar.gauge > i { position: absolute; top: 0; bottom: 0; height: auto; border-radius: 0; transition: width .25s; }
+.bar.gauge > i.pos { left: 50%; background: var(--pos); border-radius: 0 99px 99px 0; }
+.bar.gauge > i.neg { right: 50%; background: var(--neg); border-radius: 99px 0 0 99px; }
+
   </style>
 </head>
 <body>
@@ -1133,10 +1140,8 @@ function openProSetup() {
 
 function proLine(env, s, ym, kind) {
   const v = s.byEnv.get(env.id) || 0, budget = budgetOfEnv(env, ym), share = s.rev > 0 && kind !== 'revenue' ? ` · ${U.fmtPct(v / s.rev)} du CA` : '';
-  const pct = budget > 0 ? Math.min(100, (v / budget) * 100) : 0;
-  const cls = kind === 'revenue' ? '' : budget > 0 && v > budget ? 'over' : budget > 0 && v > budget * 0.9 ? 'warn' : '';
   return el('div', { class: 'eline', onclick: () => goEnvelope(env.id) }, el('span', { class: 'dot', style: `background:${env.color}` }), el('span', { class: 'nm' }, env.name, share ? el('small', { class: 'muted' }, share) : null),
-    el('span', { class: 'am' }, el('b', {}, money(v)), budget > 0 ? ` / ${money(budget)}` : ''), budget > 0 ? el('div', { class: 'bar' }, el('i', { class: cls, style: `width:${pct}%` })) : null);
+    el('span', { class: 'am' }, el('b', {}, money(v)), budget > 0 ? ` / ${money(budget)}` : ''), budget > 0 ? gauge(kind === 'revenue' ? v - budget : budget - v, budget) : null);
 }
 function proSection(kind, s, ym, id) {
   const list = s.envs.filter((e) => e.kind === kind && (!e.archived || (s.byEnv.get(e.id) || 0) > 0));
@@ -1576,6 +1581,15 @@ function card(label, value, kind = '', sub = '', go = null) {
   return el('div', { class: `card ${kind} ${go ? 'clickable' : ''}`, ...(go ? { role: 'button', tabindex: '0', 'aria-label': `${label} : voir le détail`, onclick: go, onkeydown: (e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); go(); } } } : {}) }, el('div', { class: 'card-label' }, label), el('div', { class: 'card-value' }, value), sub ? el('div', { class: 'card-sub' }, sub) : null, go ? el('span', { class: 'card-go', 'aria-hidden': 'true' }, '›') : null);
 }
 function sectionHead(title, ...actions) { return el('div', { class: 'section-head' }, el('h2', {}, title), actions.length ? el('div', { class: 'actions' }, actions) : null); }
+// Jauge bidirectionnelle : 0 au centre, vert vers la droite (reste positif), rouge vers la gauche (dépassement)
+function gaugeFill(node, available, scale) {
+  const s = scale > 0 ? scale : Math.max(Math.abs(available), 1), pct = Math.min(1, Math.abs(available) / s) * 50, i = node.firstChild;
+  i.className = available < 0 ? 'neg' : 'pos'; i.style.width = (available === 0 ? 0 : pct) + '%';
+  node.setAttribute('aria-label', available < 0 ? `Dépassement de ${money(-available)}` : `Reste ${money(available)}`);
+  node.title = available < 0 ? `Dépassement : ${money(-available)}` : `Disponible : ${money(available)}`;
+  return node;
+}
+const gauge = (available, scale) => gaugeFill(el('div', { class: 'bar gauge', role: 'img' }, el('i')), available, scale);
 function barFill(spent, budget) {
   const pct = budget > 0 ? Math.min(100, (spent / budget) * 100) : (spent > 0 ? 100 : 0);
   const cls = budget <= 0 ? (spent > 0 ? 'over' : '') : spent > budget ? 'over' : spent > budget * 0.9 ? 'warn' : '';
@@ -1754,7 +1768,7 @@ function viewEnvelopes(root) {
   function makeRow(env) {
     const rev = env.kind === 'revenue';
     const nameEl = el('div', { class: 'name', onclick: () => openEnvelopeModal(env) });
-    const spentEl = el('div', { class: 'spent tnum' }), availEl = el('div', { class: 'avail tnum' }), fill = el('i');
+    const spentEl = el('div', { class: 'spent tnum' }), availEl = el('div', { class: 'avail tnum' }), gaugeNode = el('div', { class: 'bar gauge', role: 'img' }, el('i'));
     const input = el('input', { type: 'text', inputmode: 'decimal', class: 'input-sm', placeholder: '0', 'aria-label': `Budget ${env.name}`, autocomplete: 'off',
       onfocus: (e) => e.target.select(),
       onchange: (e) => {
@@ -1768,7 +1782,7 @@ function viewEnvelopes(root) {
       el('div', { class: 'spent' }, el('span', { class: 'lbl' }, rev ? 'Encaissé' : 'Dépensé'), spentEl),
       el('div', { class: 'avail' }, el('span', { class: 'lbl' }, rev ? 'Écart' : 'Disponible'), availEl),
       el('div', { class: 'act' }, el('button', { class: 'icon-btn', 'aria-label': 'Modifier', onclick: () => openEnvelopeModal(env) }, '✎')),
-      el('div', { class: 'bar' }, fill));
+      gaugeNode);
     function refresh() {
       const st = C().stats(env, ym);
       if (rev) st.spent = C().earned(env.id, ym), st.available = U.round2(st.spent - st.budget);
@@ -1779,7 +1793,7 @@ function viewEnvelopes(root) {
       availEl.textContent = money(st.available);
       const total = st.budget + st.carry;
       availEl.className = `avail tnum ${rev ? (st.available >= 0 ? 'ok' : st.budget > 0 ? 'warn' : '') : st.available < 0 ? 'neg' : total > 0 && st.available < total * 0.1 ? 'warn' : total > 0 ? 'ok' : ''}`;
-      const f = barFill(st.spent, total); fill.className = rev ? '' : f.cls; fill.style.width = (rev ? (total > 0 ? Math.min(100, st.spent / total * 100) : 0) : f.pct) + '%';
+      gaugeFill(gaugeNode, st.available, total);
     }
     refreshers.push(refresh); refresh();
     return node;
@@ -2031,9 +2045,8 @@ function viewDashboard(root) {
   const shown = rows.filter((r) => r.budget > 0 || r.spent > 0 || r.carry);
   nodes.push(el('section', { class: 'section' }, sectionHead('Enveloppes', el('button', { class: 'btn btn-sm', onclick: () => setView('envelopes') }, 'Gérer')),
     shown.length ? shown.map((r) => {
-      const f = barFill(r.spent, r.budget + r.carry);
       return el('div', { class: 'eline', onclick: () => goEnvelope(r.env.id) }, el('span', { class: 'dot', style: `background:${r.env.color}` }), el('span', { class: 'nm' }, r.env.name),
-        el('span', { class: `am ${r.available < 0 ? 'neg' : ''}` }, el('b', {}, money(r.spent)), ` / ${money(r.budget + r.carry)}`), el('div', { class: 'bar' }, el('i', { class: f.cls, style: `width:${f.pct}%` })));
+        el('span', { class: `am ${r.available < 0 ? 'neg' : ''}` }, el('b', {}, money(r.spent)), ` / ${money(r.budget + r.carry)}`), gauge(r.available, r.budget + r.carry));
     }) : el('p', { class: 'empty' }, 'Aucun budget défini. Va dans « Enveloppes » ou laisse-moi en suggérer.'),
     shown.length ? null : el('button', { class: 'btn btn-block', onclick: openBudgetSuggest }, '🪄 Suggérer des budgets')));
   nodes.push(el('section', { class: 'section' }, sectionHead('Comptes', el('button', { class: 'btn btn-sm', onclick: () => openAccountModal() }, '+ Ajouter')),

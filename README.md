@@ -43,3 +43,6 @@ Score de santé du budget /100, objectifs d'épargne avec plan mensuel, série d
 ## Mise à jour v6
 - **Date de fin de récurrence** : dans la fiche d'une récurrence, champ « Jusqu'au (optionnel) ». Vide = répétition indéfinie ; sinon la dernière occurrence est celle qui tombe au plus tard à cette date (« Sans fin » pour l'effacer). La liste affiche « sans fin », « jusqu'au … » ou « terminée le … », et les prévisions ignorent les occurrences après la date de fin.
 - **Livraison** : tout est dans un seul dossier `budget-app` (zip) — décompresse-le et garde les fichiers ensemble.
+
+## Mise à jour v7
+- **Jauges d'enveloppe bidirectionnelles** (Enveloppes, accueil, catégories pro) : le zéro est au milieu. Le vert part vers la droite quand il reste de l'argent, le rouge vers la gauche en cas de dépassement ; une enveloppe à zéro reste sans couleur. Pleine jauge = tout le budget disponible (vert) ou 100 % du budget dépassé (rouge).
