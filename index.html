@@ -405,6 +405,25 @@ body[data-scope="pro"] { --primary: #7b4fd1; }
 .xl-trl { display: flex; justify-content: space-between; gap: 8px; padding: 8px 4px; font-size: 13px; cursor: pointer; border-bottom: 1px solid var(--border); }
 .xl-tr { margin-top: 8px; }
 
+/* ---------- calendrier prévisionnel ---------- */
+.cal-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin: 10px 0; }
+.cal-tile { background: var(--surface); border-radius: 10px; padding: 10px 12px; box-shadow: var(--shadow); font-size: 12px; }
+.cal-tile b { display: block; font-size: 16px; font-variant-numeric: tabular-nums; margin-top: 2px; } .cal-tile b.pos { color: var(--pos); } .cal-tile b.neg { color: var(--neg); }
+.cal-alert { background: color-mix(in srgb, var(--neg) 14%, transparent); border-radius: 8px; padding: 8px 12px; font-size: 13px; margin-bottom: 10px; }
+.cal-chart { width: 100%; height: auto; display: block; }
+.cc-zero { stroke: var(--border); stroke-width: 1; stroke-dasharray: 3 3; } .cc-line { fill: none; stroke: var(--primary); stroke-width: 2; stroke-linejoin: round; } .cc-line.neg { stroke: var(--neg); }
+.cc-low { fill: var(--primary); stroke: var(--surface); stroke-width: 2; } .cc-low.neg { fill: var(--neg); }
+.cal-grid { display: grid; grid-template-columns: repeat(7, 1fr); gap: 3px; margin-top: 8px; }
+.cal-dow { text-align: center; font-size: 11px; color: var(--muted, #888); font-weight: 600; }
+.cal-cell { aspect-ratio: 1 / 1.05; min-width: 0; border: 1px solid transparent; border-radius: 8px; background: var(--surface-2); color: var(--text); display: flex; flex-direction: column; align-items: center; justify-content: space-between; padding: 3px 1px; font: inherit; font-size: 12px; cursor: pointer; }
+.cal-cell.void { background: transparent; cursor: default; } .cal-cell.past { opacity: .5; }
+.cal-cell.today { border-color: var(--primary); font-weight: 700; } .cal-cell.sel { outline: 2px solid var(--primary); }
+.cal-cell.in { background: color-mix(in srgb, var(--pos) 18%, var(--surface-2)); } .cal-cell.out { background: color-mix(in srgb, var(--neg) 16%, var(--surface-2)); } .cal-cell.mix { background: color-mix(in srgb, var(--primary) 14%, var(--surface-2)); }
+.cal-cell .cn { font-size: 10px; font-weight: 700; font-variant-numeric: tabular-nums; line-height: 1; }
+.cal-cell .dots { display: flex; gap: 2px; height: 6px; } .dots i { width: 5px; height: 5px; border-radius: 50%; background: var(--neg); } .dots i.p { background: var(--pos); } .dots i.x { opacity: .25; } .dots i.s { outline: 1px solid var(--primary); outline-offset: 1px; }
+.cal-ev { display: grid; grid-template-columns: 24px 1fr auto; gap: 10px; align-items: center; padding: 8px 4px; border-bottom: 1px solid var(--border); } .cal-ev.off { opacity: .45; } .cal-ev.off .tx-payee { text-decoration: line-through; }
+.cal-day { margin: 8px 0; }
+
   </style>
 </head>
 <body>
@@ -2011,11 +2030,129 @@ function viewHistory(root) {
 function envTransfersOf(envId, ym) { return (state.all.envelopeTransfers || []).filter((t) => t.date.slice(0, 7) === ym && (t.fromId === envId || t.toId === envId)).sort((a, b) => b.date.localeCompare(a.date) || (b.createdAt || 0) - (a.createdAt || 0)); }
 
 // ============================================================
+// calendar.js — calendrier prévisionnel : récurrences + opérations futures + événements simulés
+// ============================================================
+const cal = { scope: null, months: 3, sel: null };
+const calSim = () => { const s = DB.getSetting('calSim', null) || {}; return { off: Array.isArray(s.off) ? s.off : [], extra: Array.isArray(s.extra) ? s.extra : [] }; };
+const calSave = (s) => { DB.setSetting('calSim', s); render(); };
+
+function calModel() {
+  const all = state.all, today = U.todayISO(), ym0 = today.slice(0, 7);
+  if (!cal.scope) cal.scope = state.scope;
+  const inScope = (accId) => cal.scope === 'all' || scopeOfAcc(accId) === cal.scope;
+  const accs = all.accounts.filter((a) => !a.archived && inScope(a.id));
+  const liq = accs.filter((a) => a.type !== 'Épargne'), base = liq.length ? liq : accs, ids = new Set(base.map((a) => a.id));
+  const endYM = U.shiftYM(ym0, cal.months), end = U.dateFor(endYM, Number(today.slice(8, 10)));
+  let start = base.reduce((s, a) => s + (Number(a.openingBalance) || 0), 0);
+  const ev = [], sim = calSim(), off = new Set(sim.off);
+  const delta = (type, from, to, amt) => (type === 'expense' ? (ids.has(from) ? -amt : 0) : type === 'income' ? (ids.has(from) ? amt : 0) : (ids.has(to) ? amt : 0) - (ids.has(from) ? amt : 0));
+  for (const t of all.transactions) {
+    const d = delta(t.type, t.accountId, t.toAccountId, Math.abs(t.amount)); if (!d) continue;
+    if (t.date <= today) start += d; else if (t.date <= end) ev.push({ date: t.date, label: t.payee || 'Opération planifiée', d, kind: 'tx', id: t.id, scope: scopeOfAcc(t.accountId) });
+  }
+  for (const r of all.recurring) {
+    if (!r.active || !r.amount || !inScope(r.accountId) && !(r.type === 'transfer' && inScope(r.toAccountId))) continue;
+    const gen = new Set(r.generated || []);
+    for (let ym = ym0; ym <= endYM; ym = U.shiftYM(ym, 1)) {
+      const date = U.dateFor(ym, r.day);
+      if (gen.has(ym) || date <= today || date > end || date < r.startDate || (r.endDate && date > r.endDate)) continue;
+      const d = delta(r.type, r.accountId, r.toAccountId, r.amount); if (!d) continue;
+      ev.push({ date, label: r.payee || 'Récurrente', d, kind: 'rec', id: r.id, scope: scopeOfAcc(r.accountId), off: off.has(r.id) });
+    }
+  }
+  for (const x of sim.extra) if (x.date > today && x.date <= end) ev.push({ date: x.date, label: x.label || 'Simulation', d: x.amount, kind: 'sim', id: x.id, scope: cal.scope === 'all' ? 'perso' : cal.scope });
+  ev.sort((a, b) => a.date.localeCompare(b.date) || a.d - b.d);
+  let run = start, low = { v: start, date: today }, inc = 0, exp = 0; const days = new Map();
+  for (const e of ev) {
+    if (!e.off) { run += e.d; if (e.d > 0) inc += e.d; else exp -= e.d; if (run < low.v) low = { v: run, date: e.date }; }
+    e.after = U.round2(run); if (!days.has(e.date)) days.set(e.date, []); days.get(e.date).push(e);
+  }
+  return { today, end, start: U.round2(start), final: U.round2(run), low: { v: U.round2(low.v), date: low.date }, inc: U.round2(inc), exp: U.round2(exp), ev, days, ym0, endYM, hasAcc: base.length > 0 };
+}
+
+function calChart(m) {
+  const W = 340, H = 120, pad = 6, pts = [[m.today, m.start]]; for (const e of m.ev) if (!e.off) pts.push([e.date, e.after]); pts.push([m.end, m.final]);
+  const t0 = new Date(m.today + 'T12:00').getTime(), t1 = new Date(m.end + 'T12:00').getTime() || t0 + 1;
+  const vs = pts.map((p) => p[1]), lo = Math.min(0, ...vs), hi = Math.max(0, ...vs), span = hi - lo || 1;
+  const X = (d) => pad + ((new Date(d + 'T12:00').getTime() - t0) / (t1 - t0 || 1)) * (W - 2 * pad), Y = (v) => pad + (1 - (v - lo) / span) * (H - 2 * pad);
+  let dd = `M${X(pts[0][0]).toFixed(1)},${Y(pts[0][1]).toFixed(1)}`;
+  for (let i = 1; i < pts.length; i++) dd += ` H${X(pts[i][0]).toFixed(1)} V${Y(pts[i][1]).toFixed(1)}`;
+  const s = U.svg('svg', { viewBox: `0 0 ${W} ${H}`, class: 'cal-chart', role: 'img', 'aria-label': `Solde projeté de ${money(m.start)} à ${money(m.final)}` },
+    U.svg('line', { x1: pad, x2: W - pad, y1: Y(0), y2: Y(0), class: 'cc-zero' }),
+    U.svg('path', { d: dd, class: `cc-line ${m.low.v < 0 ? 'neg' : ''}` }));
+  if (m.low.v < m.start) { const cx = X(m.low.date), cy = Y(m.low.v); s.appendChild(U.svg('circle', { cx, cy, r: 4, class: `cc-low ${m.low.v < 0 ? 'neg' : ''}` })); }
+  return s;
+}
+
+function openSimModal() {
+  const date = el('input', { type: 'date', value: (() => { const d = new Date(); d.setDate(d.getDate() + 7); return `${d.getFullYear()}-${U.pad(d.getMonth() + 1)}-${U.pad(d.getDate())}`; })() });
+  const label = el('input', { type: 'text', placeholder: 'Ex. voyage, achat matériel, prime…' });
+  const kind = el('select', {}, opt('-1', 'Dépense'), opt('1', 'Revenu')), amount = el('input', { type: 'text', inputmode: 'decimal', class: 'amount-input', placeholder: '0,00', autocomplete: 'off' });
+  const form = el('form', { class: 'form', novalidate: true }, el('p', { class: 'muted', style: 'margin:0' }, "Événement fictif pour simuler : il n'apparaît que dans le calendrier prévisionnel, jamais dans tes vrais comptes."),
+    row('Libellé', label), el('div', { class: 'form-grid' }, row('Type', kind), row('Montant', amount)), row('Date', date),
+    el('div', { class: 'modal-actions' }, el('button', { type: 'button', class: 'btn', onclick: closeModal }, 'Annuler'), el('button', { type: 'submit', class: 'btn btn-primary' }, 'Ajouter à la simulation')));
+  form.addEventListener('submit', (e) => {
+    e.preventDefault(); const v = U.parseNumber(amount.value);
+    if (!(v > 0)) { toast('Saisis un montant supérieur à 0', 'error'); return; }
+    if (!U.validISO(date.value) || date.value <= U.todayISO()) { toast('Choisis une date future', 'error'); return; }
+    const s = calSim(); s.extra.push({ id: DB.uid(), date: date.value, label: label.value.trim(), amount: U.round2(v * Number(kind.value)) }); closeModal(); calSave(s);
+  });
+  showModal('🧪 Événement simulé', form); setTimeout(() => label.focus(), 80);
+}
+
+function viewCalendar(root) {
+  const m = calModel(), sim = calSim();
+  const seg = (v, l) => el('button', { type: 'button', class: `scope-btn ${cal.scope === v ? 'on' : ''}`, 'aria-pressed': String(cal.scope === v), onclick: () => { cal.scope = v; cal.sel = null; render(); } }, l);
+  const hz = (n, l) => el('button', { type: 'button', class: `scope-btn ${cal.months === n ? 'on' : ''}`, 'aria-pressed': String(cal.months === n), onclick: () => { cal.months = n; cal.sel = null; render(); } }, l);
+  const tile = (lab, val, cls = '', sub = '') => el('div', { class: 'cal-tile' }, el('div', { class: 'muted' }, lab), el('b', { class: cls }, val), sub ? el('div', { class: 'muted', style: 'font-size:11px' }, sub) : null);
+  const nodes = [el('div', { class: 'section-head' }, el('h2', { class: 'page-title' }, '📅 Prévisionnel'), el('div', { class: 'actions' }, el('button', { class: 'btn btn-sm', onclick: () => setView('recurring') }, '🔁 Récurrentes'), el('button', { class: 'btn btn-sm', onclick: () => setView('more') }, '‹ Plus'))),
+    el('div', { class: 'scope-switch', role: 'group', 'aria-label': 'Espace' }, seg('perso', '👤 Perso'), seg('pro', '💼 Pro'), seg('all', 'Perso + Pro')),
+    el('div', { class: 'scope-switch', role: 'group', 'aria-label': 'Horizon', style: 'margin-top:6px' }, hz(1, '1 mois'), hz(3, '3 mois'), hz(6, '6 mois'))];
+  if (!m.hasAcc) { put(root, ...nodes, el('p', { class: 'empty' }, 'Aucun compte dans cet espace.')); return; }
+  nodes.push(el('div', { class: 'cal-tiles' }, tile("Aujourd'hui", money(m.start)), tile(`Au ${fmtDateFR(m.end).slice(0, 5)}`, money(m.final), m.final < 0 ? 'neg' : m.final >= m.start ? 'pos' : '', `${U.fmtSigned(m.final - m.start, state.currency)}`),
+    tile('Point bas', money(m.low.v), m.low.v < 0 ? 'neg' : '', m.low.v < m.start ? fmtDateFR(m.low.date).slice(0, 5) : 'aujourd\'hui'), tile('Prévu', `+${money(m.inc)} / −${money(m.exp)}`)));
+  if (m.low.v < 0) nodes.push(el('div', { class: 'cal-alert' }, `⚠️ Le solde passerait à ${money(m.low.v)} le ${fmtDateFR(m.low.date)}.`));
+  nodes.push(el('div', { class: 'card' }, calChart(m), el('div', { class: 'muted', style: 'font-size:11px;text-align:center' }, 'Évolution du solde (comptes courants de l\'espace choisi)')));
+  // grilles mensuelles
+  const sel = cal.sel && m.days.get(cal.sel);
+  for (let ym = m.ym0; ym <= m.endYM; ym = U.shiftYM(ym, 1)) {
+    const first = (new Date(`${ym}-01T12:00:00`).getDay() + 6) % 7, dim = U.daysInMonth(ym), grid = el('div', { class: 'cal-grid' });
+    ['L', 'M', 'M', 'J', 'V', 'S', 'D'].forEach((d, i) => grid.appendChild(el('div', { class: 'cal-dow' }, ['L', 'M', 'M', 'J', 'V', 'S', 'D'][i])));
+    for (let i = 0; i < first; i++) grid.appendChild(el('div', { class: 'cal-cell void' }));
+    for (let d = 1; d <= dim; d++) {
+      const date = `${ym}-${U.pad(d)}`, es = (m.days.get(date) || []).filter((e) => !e.off), net = U.round2(es.reduce((s, e) => s + e.d, 0)), any = (m.days.get(date) || []).length;
+      const c = el('button', { type: 'button', class: `cal-cell ${date === m.today ? 'today' : ''} ${date <= m.today || date > m.end ? 'past' : ''} ${any ? (net > 0 ? 'in' : net < 0 ? 'out' : 'mix') : ''} ${cal.sel === date ? 'sel' : ''}`, 'aria-label': `${fmtDateFR(date)}${any ? ' : ' + es.length + ' opération(s), ' + money(net) : ''}`, onclick: () => { cal.sel = cal.sel === date ? null : date; render(); } },
+        el('span', { class: 'cd' }, String(d)), any ? el('span', { class: 'cn' }, `${net > 0 ? '+' : ''}${Math.round(net)}`) : null,
+        any ? el('span', { class: 'dots' }, (m.days.get(date)).slice(0, 4).map((e) => el('i', { class: `${e.d > 0 ? 'p' : 'n'} ${e.off ? 'x' : ''} ${e.kind === 'sim' ? 's' : ''}` }))) : null);
+      grid.appendChild(c);
+    }
+    nodes.push(el('section', { class: 'section cal-month' }, el('h3', {}, U.ymLabel(ym)), grid));
+    if (sel && cal.sel.slice(0, 7) === ym) nodes.push(calDay(cal.sel, m.days.get(cal.sel), sim));
+  }
+  // liste chronologique
+  nodes.push(el('section', { class: 'section' }, el('div', { class: 'section-head' }, el('h3', { style: 'margin:0' }, 'Événements prévus'), el('div', { class: 'actions' },
+      (sim.off.length || sim.extra.length) ? el('button', { class: 'btn btn-sm', onclick: () => calSave({ off: [], extra: [] }) }, 'Réinitialiser') : null, el('button', { class: 'btn btn-primary btn-sm', onclick: openSimModal }, '🧪 Simuler'))),
+    el('p', { class: 'muted', style: 'margin-top:0;font-size:12px' }, 'Décoche une opération pour simuler son absence ; ajoute un événement fictif pour tester un achat ou une rentrée.'),
+    m.ev.length ? m.ev.map((e) => calEvRow(e, sim, cal.scope === 'all')) : el('p', { class: 'empty' }, 'Aucune opération planifiée sur cette période.')));
+  put(root, ...nodes);
+}
+function calEvRow(e, sim, showScope) {
+  const tog = e.kind === 'sim' ? el('button', { class: 'icon-btn', 'aria-label': 'Retirer', onclick: () => { const s = calSim(); s.extra = s.extra.filter((x) => x.id !== e.id); calSave(s); } }, '×')
+    : e.kind === 'rec' ? el('input', { type: 'checkbox', checked: !e.off, 'aria-label': `Inclure ${e.label}`, onchange: (ev) => { const s = calSim(), set = new Set(s.off); ev.target.checked ? set.delete(e.id) : set.add(e.id); s.off = [...set]; calSave(s); } }) : el('span');
+  return el('div', { class: `cal-ev ${e.off ? 'off' : ''}` }, tog,
+    el('div', { class: 'tx-main' }, el('div', { class: 'tx-payee' }, `${showScope ? (e.scope === 'pro' ? '💼 ' : '👤 ') : ''}${e.kind === 'sim' ? '🧪 ' : e.kind === 'rec' ? '🔁 ' : ''}${e.label}`), el('div', { class: 'tx-meta' }, `${fmtDateFR(e.date).slice(0, 5)} · solde ${e.off ? '—' : money(e.after)}`)),
+    el('div', { class: `tx-amount ${e.d < 0 ? 'neg' : 'pos'}` }, U.fmtSigned(e.d, state.currency)));
+}
+function calDay(date, list, sim) {
+  return el('div', { class: 'card cal-day' }, el('div', { class: 'day-head' }, el('span', {}, U.dayLabel(date))), list.map((e) => calEvRow(e, sim, cal.scope === 'all')));
+}
+
+// ============================================================
 // views.js — écrans
 // ============================================================
 const NAV = [['dashboard', 'Accueil', '🏠'], ['transactions', 'Opérations', '🧾'], ['envelopes', 'Enveloppes', '✉️'], ['goals', 'Objectifs', '🎯'], ['more', 'Plus', '☰']];
 const MONTH_VIEWS = ['dashboard', 'transactions', 'envelopes', 'goals', 'review'];
-const tabOf = (v) => (['accounts', 'recurring', 'settings', 'review', 'history'].includes(v) ? 'more' : v);
+const tabOf = (v) => (['accounts', 'recurring', 'settings', 'review', 'history', 'calendar'].includes(v) ? 'more' : v);
 
 function renderChrome() {
   const header = document.getElementById('app-header');
@@ -2029,13 +2166,13 @@ function renderChrome() {
         el('span', { class: 'month-label' }, U.ymLabel(state.month)),
         el('button', { class: 'icon-btn', 'aria-label': 'Mois suivant', onclick: () => setMonth(U.shiftYM(state.month, 1)) }, '›'),
         state.month !== U.todayYM() ? el('button', { class: 'btn btn-ghost btn-sm', onclick: () => setMonth(U.todayYM()) }, "Aujourd'hui") : null)
-    : el('div', { class: 'month-nav' }, el('span', { class: 'month-label' }, { goals: 'Objectifs', more: 'Plus', accounts: 'Comptes', recurring: 'Récurrentes', settings: 'Réglages', history: 'Historique' }[state.view] || ''));
+    : el('div', { class: 'month-nav' }, el('span', { class: 'month-label' }, { goals: 'Objectifs', more: 'Plus', accounts: 'Comptes', recurring: 'Récurrentes', settings: 'Réglages', history: 'Historique', calendar: 'Prévisionnel' }[state.view] || ''));
   header.appendChild(el('div', { class: 'topbar' }, el('span', { class: 'brand' }, '💰 Budget', state.scope !== 'all' ? el('button', { type: 'button', class: 'scope-pill', 'aria-label': 'Changer d\'espace', onclick: () => { setView('dashboard'); } }, state.scope === 'pro' ? '💼 Pro' : '👤 Perso') : null), nav, month));
 
   const tabbar = document.getElementById('tabbar');
   tabbar.textContent = '';
   for (const [v, label, ico] of NAV) tabbar.appendChild(el('button', { class: `tab ${cur === v ? 'active' : ''}`, onclick: () => setView(v), 'aria-label': label }, el('span', { class: 'ico' }, ico), label));
-  document.getElementById('fab').hidden = ['settings', 'recurring', 'more', 'accounts', 'history'].includes(state.view);
+  document.getElementById('fab').hidden = ['settings', 'recurring', 'more', 'accounts', 'history', 'calendar'].includes(state.view);
 }
 
 function put(root, ...kids) { for (const k of kids.flat(Infinity)) if (k) root.appendChild(k); }
@@ -2308,7 +2445,7 @@ function viewRecurring(root) {
   const recs = state.data.recurring.slice().sort((a, b) => a.day - b.day);
   const lbl = { expense: 'Dépense', income: 'Revenu', transfer: 'Virement' };
   put(root, el('div', { class: 'section-head' }, el('h2', { class: 'page-title' }, '🔁 Opérations récurrentes'), el('div', { class: 'actions' },
-      el('button', { class: 'btn btn-sm', onclick: () => setView('more') }, '‹ Plus'), el('button', { class: 'btn btn-primary btn-sm', onclick: () => openRecurringModal() }, '+ Nouvelle'))),
+      el('button', { class: 'btn btn-sm', onclick: () => setView('more') }, '‹ Plus'), el('button', { class: 'btn btn-sm', onclick: () => setView('calendar') }, '📅 Calendrier'), el('button', { class: 'btn btn-primary btn-sm', onclick: () => openRecurringModal() }, '+ Nouvelle'))),
     el('p', { class: 'muted', style: 'margin-top:0' }, "Loyer, salaire, abonnements… Les opérations sont créées automatiquement à la date prévue, à l'ouverture de l'appli."),
     recs.length ? recs.map((r) => {
       const env = envById(r.envelopeId);
@@ -2345,7 +2482,7 @@ function viewSettings(root) {
     el('section', { class: 'section' }, el('h2', {}, 'Zone dangereuse'), el('p', { class: 'muted' }, 'Supprime définitivement toutes les données de ce navigateur.'),
       el('button', { class: 'btn btn-danger', onclick: async () => { if (await confirmModal('Tout supprimer ? Pense à exporter une sauvegarde avant. Cette action est irréversible.', 'Tout effacer')) { DB.wipeAll(); seedStarter(); commit(); toast('Données supprimées', 'success'); } } }, '🗑️ Tout effacer')),
     el('section', { class: 'section' }, el('h2', {}, 'À propos'),
-      el('p', { class: 'muted' }, 'Version 10 · transferts entre enveloppes, historique des opérations, lignes modifiables, scan de tickets'),
+      el('p', { class: 'muted' }, 'Version 11 · calendrier prévisionnel, transferts entre enveloppes, historique, scan de tickets'),
       el('p', {}, 'Appli de budget 100 % locale : zéro serveur, zéro compte. ', el('b', {}, 'Tes données ne quittent jamais cet appareil.')),
       el('p', { class: 'muted' }, "Sur iPhone : ouvre la page dans Safari → Partager → « Sur l'écran d'accueil ». Installée ainsi, l'appli est plus à l'abri du nettoyage automatique de Safari — mais exporte quand même une sauvegarde de temps en temps (et à chaque changement de téléphone).")));
 }
@@ -2574,6 +2711,7 @@ function viewMore(root) {
   const item = (ico, title, sub, fn) => el('button', { class: 'tool wide', onclick: fn }, el('span', { class: 'ti' }, ico), el('div', { style: 'text-align:left' }, el('b', {}, title), el('div', { class: 'muted' }, sub)));
   put(root, el('div', { class: 'menu' },
     item('📷', 'Scanner un ticket', 'Répartition automatique dans les enveloppes', openScan),
+    item('📅', 'Calendrier prévisionnel', 'Récurrences en vue calendrier, simulation à 1, 3 ou 6 mois', () => setView('calendar')),
     item('🕘', 'Historique', 'Qui vient d\'où : opérations et transferts entre enveloppes', () => setView('history')),
     item('⇄', 'Transférer entre enveloppes', 'Déplacer du budget d\'une enveloppe à une autre', () => openEnvTransfer()),
     item('🏦', 'Comptes', `${activeAccounts().length} compte(s) actif(s)`, () => setView('accounts')),
@@ -3090,7 +3228,7 @@ function render() {
       : "⚠️ Impossible d'enregistrer (stockage plein ou bloqué). Exporte une sauvegarde dès maintenant.",
       el('div', { class: 'actions' }, el('button', { class: 'btn btn-sm', onclick: exportJSON }, 'Sauvegarder'))));
   }
-  const views = { dashboard: viewDashboard, transactions: viewTransactions, envelopes: viewEnvelopes, accounts: viewAccounts, recurring: viewRecurring, settings: viewSettings, goals: viewGoals, more: viewMore, review: viewReview, history: viewHistory };
+  const views = { dashboard: viewDashboard, transactions: viewTransactions, envelopes: viewEnvelopes, accounts: viewAccounts, recurring: viewRecurring, settings: viewSettings, goals: viewGoals, more: viewMore, review: viewReview, history: viewHistory, calendar: viewCalendar };
   try { (views[state.view] || viewDashboard)(root); }
   catch (e) {
     console.error(e);

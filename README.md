@@ -62,3 +62,12 @@ Score de santé du budget /100, objectifs d'épargne avec plan mensuel, série d
 - Le transfert s'applique au budget du mois de sa date ; un tag ⇄ s'affiche sur l'enveloppe et la feuille « Dépensé » liste les transferts du mois.
 - **🕘 Historique** (Plus, ou bouton dans Enveloppes) : journal daté de toutes les opérations et transferts, avec l'origine de chacune (saisie, saisie rapide, scan, récurrence, import, ajustement) et la date/heure de création. Filtres et recherche.
 - Les opérations antérieures sont classées par origine déduite (récurrence, scan, ajustement, sinon saisie).
+
+## Version 11 — Calendrier prévisionnel
+
+- **📅 Prévisionnel** (menu Plus, ou bouton dans Récurrentes) : calendrier visuel des opérations récurrentes et des opérations datées dans le futur.
+- Espace au choix : 👤 Perso, 💼 Pro ou Perso + Pro combinés. Horizon : 1, 3 ou 6 mois.
+- Synthèse : solde d'aujourd'hui, solde projeté, point bas (alerte s'il passe sous 0), total des revenus et dépenses prévus, courbe d'évolution du solde.
+- Chaque jour est coloré (vert = entrée, rouge = sortie) avec le net du jour ; toucher un jour affiche son détail.
+- Simulation : décocher une récurrence pour voir le solde sans elle, ou ajouter un événement fictif (🧪) — rien n'est écrit dans tes vrais comptes. « Réinitialiser » remet tout à zéro.
+- Le solde porte sur les comptes courants (hors épargne) de l'espace choisi.
