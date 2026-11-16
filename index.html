@@ -192,16 +192,17 @@ label.btn input[type=file] { display: none; }
 @media (min-width: 760px) { .filters { grid-template-columns: 2fr 1fr 1fr; } .filters .wide { grid-column: auto; } }
 .check { display: inline-flex; gap: 6px; align-items: center; font-size: 13px; color: var(--muted); }
 .day-head { display: flex; justify-content: space-between; padding: 12px 6px 4px; font-size: 12px; color: var(--muted); text-transform: capitalize; font-weight: 600; letter-spacing: .3px; }
-.tx-row { display: grid; grid-template-columns: 12px 1fr auto 30px; gap: 10px; padding: 10px 12px; background: var(--surface); border-radius: 8px; align-items: center; cursor: pointer; margin-bottom: 3px; box-shadow: var(--shadow); }
+.tx-row { display: grid; grid-template-columns: 18px 1fr auto 30px; gap: 10px; padding: 10px 12px; background: var(--surface); border-radius: 8px; align-items: center; cursor: pointer; margin-bottom: 3px; box-shadow: var(--shadow); }
 .tx-row:hover { background: var(--surface-2); }
 .tx-main { min-width: 0; }
 .tx-payee { font-weight: 500; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-.tx-meta { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tx-meta { font-size: 12px; color: var(--muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: flex; gap: 6px; align-items: center; }
+.tx-note { overflow: hidden; text-overflow: ellipsis; min-width: 0; }
 .tx-amount { font-weight: 600; font-variant-numeric: tabular-nums; text-align: right; white-space: nowrap; }
 .tx-amount.xfer { color: var(--muted); }
 .tx-del { visibility: hidden; }
 .tx-row:hover .tx-del { visibility: visible; }
-@media (hover: none) { .tx-del { display: none; } .tx-row { grid-template-columns: 12px 1fr auto; } }
+@media (hover: none) { .tx-del { display: none; } .tx-row { grid-template-columns: 18px 1fr auto; } }
 
 /* ---------- charts ---------- */
 .viz { --viz-income: var(--s-income); --viz-expense: var(--s-expense); }
@@ -306,6 +307,51 @@ table.preview td, table.preview th { padding: 3px 6px; border-bottom: 1px solid 
 .sug-row { display: grid; grid-template-columns: 22px 12px 1fr 90px; gap: 10px; align-items: center; padding: 6px 0; border-bottom: 1px solid var(--border); }
 .fl { display: flex; justify-content: space-between; gap: 10px; padding: 4px 0; font-size: 14px; }
 
+/* ---------- correction rapide ---------- */
+.mchip { border: none; background: var(--surface-3); color: var(--muted); border-radius: 99px; padding: 2px 9px; font-size: 12px; min-height: 24px; max-width: 48%; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; flex-shrink: 1; }
+.mchip:hover, .mchip:active { background: color-mix(in srgb, var(--primary) 18%, var(--surface-3)); color: var(--text); }
+.mchip.warn { background: color-mix(in srgb, var(--warn) 18%, var(--surface-3)); color: var(--warn); font-weight: 600; }
+.cpick { display: flex; flex-wrap: wrap; gap: 8px; }
+.cp { display: inline-flex; align-items: center; gap: 7px; padding: 9px 14px; border-radius: 99px; border: 1px solid var(--border); background: var(--surface); font-size: 14px; min-height: 40px; }
+.cp:hover { border-color: var(--primary); }
+.cp.on { background: color-mix(in srgb, var(--primary) 16%, var(--surface)); border-color: var(--primary); font-weight: 600; }
+.cpick.big .cp { flex: 1 1 45%; justify-content: flex-start; border-radius: 12px; }
+.qf-head { display: flex; justify-content: space-between; gap: 10px; align-items: baseline; }
+.tx-row.selected { background: color-mix(in srgb, var(--primary) 12%, var(--surface)); outline: 1.5px solid var(--primary); }
+.chk { font-size: 17px; line-height: 1; color: var(--primary); }
+.selbar { position: fixed; left: 8px; right: 8px; bottom: calc(66px + env(safe-area-inset-bottom)); z-index: 28; display: flex; gap: 6px; align-items: center; flex-wrap: wrap; padding: 8px 10px; background: var(--surface); border: 1px solid var(--primary); border-radius: 12px; box-shadow: 0 6px 20px rgba(0,0,0,.25); }
+.selbar .sn { font-weight: 600; margin-right: auto; font-size: 14px; }
+.btn:disabled { opacity: .45; pointer-events: none; }
+@media (min-width: 860px) { .selbar { bottom: 20px; left: 50%; right: auto; transform: translateX(-50%); min-width: 520px; } }
+
+/* ---------- espaces perso / pro ---------- */
+body[data-scope="pro"] { --primary: #7b4fd1; }
+.scope-switch { display: flex; gap: 4px; padding: 4px; background: var(--surface-3); border-radius: 14px; margin-bottom: 12px; }
+.scope-btn { flex: 1; border: none; background: transparent; color: var(--muted); padding: 10px 6px; border-radius: 10px; font-size: 15px; font-weight: 600; min-height: 44px; }
+.scope-btn.on { background: var(--surface); color: var(--primary); box-shadow: 0 1px 4px rgba(0,0,0,.18); }
+.scope-pill { border: none; margin-left: 8px; padding: 2px 10px; border-radius: 99px; background: color-mix(in srgb, var(--primary) 18%, var(--surface)); color: var(--primary); font-size: 12px; font-weight: 700; }
+.scope-tiles { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 12px; }
+.scope-tile { text-align: left; border: 1px solid var(--border); border-left: 5px solid var(--muted); background: var(--surface); border-radius: 14px; padding: 12px; color: var(--text); }
+.scope-tile.st-good { border-left-color: var(--pos); } .scope-tile.st-warn { border-left-color: var(--warn); } .scope-tile.st-bad { border-left-color: var(--neg); }
+.st-h { font-weight: 700; font-size: 14px; } .st-v { font-size: 20px; font-weight: 700; margin: 4px 0 2px; } .st-s { font-size: 12px; color: var(--muted); }
+.pro-setup { text-align: center; }
+/* organigramme */
+.org, .org ul { list-style: none; margin: 0; padding: 0; }
+.org ul { margin-left: 10px; padding-left: 14px; }
+.org li { position: relative; margin: 8px 0; }
+.org ul > li::before { content: ''; position: absolute; left: -14px; top: 0; width: 14px; height: 28px; border-left: 2px solid var(--border); border-bottom: 2px solid var(--border); border-bottom-left-radius: 10px; }
+.org ul > li:not(:last-child)::after { content: ''; position: absolute; left: -14px; top: 28px; bottom: -8px; border-left: 2px solid var(--border); }
+.org-node { --st: var(--muted); width: 100%; display: grid; grid-template-columns: auto 1fr auto; gap: 2px 10px; align-items: center; text-align: left; padding: 10px 12px; border-radius: 12px; border: 1px solid var(--border); border-left: 5px solid var(--st); background: var(--surface); color: var(--text); }
+.org-node.st-good { --st: var(--pos); } .org-node.st-warn { --st: var(--warn); } .org-node.st-bad { --st: var(--neg); }
+.org-ico { font-size: 20px; grid-row: span 2; }
+.org-txt { display: flex; flex-direction: column; min-width: 0; } .org-txt small { color: var(--muted); font-size: 12px; }
+.org-val { font-weight: 700; text-align: right; }
+.org-st { grid-column: 2 / 4; font-size: 12px; font-weight: 600; color: var(--st); text-align: right; }
+.advice { margin: 12px 0 0; padding-left: 18px; } .advice li { margin: 4px 0; }
+.bar.big { height: 12px; }
+.cp-tag { color: var(--muted); font-size: 11px; margin-left: 2px; }
+.eline .nm small { font-weight: 400; }
+
   </style>
 </head>
 <body>
@@ -397,14 +443,14 @@ const DB = (() => {
   const num = (x, d = 0) => { const n = Number(x); return Number.isFinite(n) ? n : d; };
   const RE_DATE = /^\d{4}-\d{2}-\d{2}$/, RE_YM = /^\d{4}-\d{2}$/;
   const sanitizers = {
-    accounts: (r) => isStr(r.id) && isStr(r.name) ? { id: r.id, name: String(r.name).slice(0, 80), type: String(r.type || 'Autre'), openingBalance: num(r.openingBalance), archived: !!r.archived, createdAt: num(r.createdAt, Date.now()) } : null,
-    envelopes: (r) => isStr(r.id) && isStr(r.name) ? { id: r.id, name: String(r.name).slice(0, 80), color: /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : '#3498db', group: String(r.group || '').slice(0, 60), defaultBudget: Math.max(0, num(r.defaultBudget)), rollover: !!r.rollover, archived: !!r.archived, createdAt: num(r.createdAt, Date.now()) } : null,
+    accounts: (r) => isStr(r.id) && isStr(r.name) ? { id: r.id, name: String(r.name).slice(0, 80), type: String(r.type || 'Autre'), openingBalance: num(r.openingBalance), scope: r.scope === 'pro' ? 'pro' : 'perso', archived: !!r.archived, createdAt: num(r.createdAt, Date.now()) } : null,
+    envelopes: (r) => isStr(r.id) && isStr(r.name) ? { id: r.id, name: String(r.name).slice(0, 80), color: /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : '#3498db', group: String(r.group || '').slice(0, 60), scope: r.scope === 'pro' ? 'pro' : 'perso', kind: ['fixed', 'variable', 'revenue'].includes(r.kind) ? r.kind : '', defaultBudget: Math.max(0, num(r.defaultBudget)), rollover: !!r.rollover, archived: !!r.archived, createdAt: num(r.createdAt, Date.now()) } : null,
     envelopeBudgets: (r) => isStr(r.id) && isStr(r.envelopeId) && RE_YM.test(r.yearMonth) ? { id: r.id, envelopeId: r.envelopeId, yearMonth: r.yearMonth, amount: Math.max(0, num(r.amount)) } : null,
     transactions: (r) => isStr(r.id) && RE_DATE.test(r.date) && TX_TYPES.includes(r.type) && Number.isFinite(Number(r.amount)) && isStr(r.accountId)
-      ? { id: r.id, date: r.date, accountId: r.accountId, toAccountId: r.type === 'transfer' && isStr(r.toAccountId) ? r.toAccountId : null, envelopeId: r.type === 'expense' && isStr(r.envelopeId) ? r.envelopeId : null, type: r.type, amount: Math.abs(num(r.amount)), payee: String(r.payee || '').slice(0, 120), notes: String(r.notes || '').slice(0, 300), recurringId: isStr(r.recurringId) ? r.recurringId : null, createdAt: num(r.createdAt, Date.now()) } : null,
+      ? { id: r.id, date: r.date, accountId: r.accountId, toAccountId: r.type === 'transfer' && isStr(r.toAccountId) ? r.toAccountId : null, envelopeId: r.type !== 'transfer' && isStr(r.envelopeId) ? r.envelopeId : null, type: r.type, amount: Math.abs(num(r.amount)), payee: String(r.payee || '').slice(0, 120), notes: String(r.notes || '').slice(0, 300), recurringId: isStr(r.recurringId) ? r.recurringId : null, createdAt: num(r.createdAt, Date.now()) } : null,
     recurring: (r) => isStr(r.id) && TX_TYPES.includes(r.type) && isStr(r.accountId) && RE_DATE.test(r.startDate)
       ? { id: r.id, type: r.type, accountId: r.accountId, toAccountId: isStr(r.toAccountId) ? r.toAccountId : null, envelopeId: isStr(r.envelopeId) ? r.envelopeId : null, amount: Math.abs(num(r.amount)), payee: String(r.payee || '').slice(0, 120), notes: String(r.notes || '').slice(0, 300), day: Math.min(31, Math.max(1, Math.round(num(r.day, 1)))), startDate: r.startDate, active: r.active !== false, generated: Array.isArray(r.generated) ? r.generated.filter((x) => RE_YM.test(x)) : [], createdAt: num(r.createdAt, Date.now()) } : null,
-    goals: (r) => isStr(r.id) && isStr(r.name) && Number(r.target) > 0 ? { id: r.id, name: String(r.name).slice(0, 80), emoji: String(r.emoji || '🎯').slice(0, 4), target: Math.abs(num(r.target)), saved: Math.max(0, num(r.saved)), deadline: RE_DATE.test(r.deadline) ? r.deadline : null, color: /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : '#2a78d6', createdAt: num(r.createdAt, Date.now()) } : null,
+    goals: (r) => isStr(r.id) && isStr(r.name) && Number(r.target) > 0 ? { id: r.id, name: String(r.name).slice(0, 80), emoji: String(r.emoji || '🎯').slice(0, 4), target: Math.abs(num(r.target)), scope: r.scope === 'pro' ? 'pro' : 'perso', saved: Math.max(0, num(r.saved)), deadline: RE_DATE.test(r.deadline) ? r.deadline : null, color: /^#[0-9a-f]{6}$/i.test(r.color) ? r.color : '#2a78d6', createdAt: num(r.createdAt, Date.now()) } : null,
     settings: (r) => isStr(r.key) ? { key: r.key, value: r.value } : null,
   };
 
@@ -583,13 +629,15 @@ const state = {
   theme: 'auto',
   filters: { accountId: '', envelopeId: '', q: '', all: false },
   limit: 150,
+  scope: 'all',
+  all: { accounts: [], envelopes: [], envelopeBudgets: [], transactions: [], recurring: [], goals: [] },
   data: { accounts: [], envelopes: [], envelopeBudgets: [], transactions: [], recurring: [], goals: [] },
   version: 0,
 };
 let _calc = null;
 
 function reloadData() {
-  state.data = {
+  const all = {
     accounts: DB.all('accounts'),
     envelopes: DB.all('envelopes'),
     envelopeBudgets: DB.all('envelopeBudgets'),
@@ -597,6 +645,10 @@ function reloadData() {
     recurring: DB.all('recurring'),
     goals: DB.all('goals'),
   };
+  const sc = DB.getSetting('scope', 'all');
+  state.scope = sc === 'pro' || sc === 'perso' ? sc : 'all';
+  state.all = all;
+  state.data = state.scope === 'all' ? all : scopeData(all, state.scope);
   state.currency = DB.getSetting('currency', 'EUR') || 'EUR';
   state.theme = DB.getSetting('theme', 'auto') || 'auto';
   state.version++;
@@ -611,7 +663,7 @@ const money = (n) => U.fmtMoney(n, state.currency);
 function C() {
   if (_calc) return _calc;
   const d = state.data;
-  const spent = new Map(), inc = new Map(), exp = new Map(), unc = new Map(), bal = new Map(), over = new Map(), first = new Map(), payees = new Map(), tokenVotes = new Map();
+  const earned = new Map(), spent = new Map(), inc = new Map(), exp = new Map(), unc = new Map(), bal = new Map(), over = new Map(), first = new Map(), payees = new Map(), tokenVotes = new Map();
   const add = (m, k, v) => m.set(k, (m.get(k) || 0) + v);
   const touch = (envId, ym) => { if (!first.has(envId) || ym < first.get(envId)) first.set(envId, ym); };
   for (const a of d.accounts) bal.set(a.id, Number(a.openingBalance) || 0);
@@ -620,19 +672,20 @@ function C() {
   const txs = d.transactions.slice().sort((a, b) => a.date.localeCompare(b.date));
   for (const t of txs) {
     const ym = t.date.slice(0, 7), amt = Math.abs(t.amount);
-    if (t.type === 'income') { add(bal, t.accountId, amt); add(inc, ym, amt); }
+    if (t.type === 'income') { add(bal, t.accountId, amt); add(inc, ym, amt); if (t.envelopeId) { add(earned, `${t.envelopeId}|${ym}`, amt); touch(t.envelopeId, ym); } }
     else if (t.type === 'expense') {
       add(bal, t.accountId, -amt); add(exp, ym, amt);
       if (t.envelopeId) { add(spent, `${t.envelopeId}|${ym}`, amt); touch(t.envelopeId, ym); } else add(unc, ym, amt);
     } else { add(bal, t.accountId, -amt); if (t.toAccountId) add(bal, t.toAccountId, amt); }
-    if (t.type === 'expense' && t.envelopeId && t.payee) for (const tk of tokens(t.payee)) { if (!tokenVotes.has(tk)) tokenVotes.set(tk, new Map()); const m = tokenVotes.get(tk); m.set(t.envelopeId, (m.get(t.envelopeId) || 0) + 1); }
-    if (t.payee && t.type !== 'transfer') payees.set(U.norm(t.payee), { name: t.payee, envelopeId: t.type === 'expense' ? t.envelopeId : null, type: t.type, date: t.date });
+    if (t.type !== 'transfer' && t.envelopeId && t.payee) for (const tk of tokens(t.payee)) { if (!tokenVotes.has(tk)) tokenVotes.set(tk, new Map()); const m = tokenVotes.get(tk); m.set(t.envelopeId, (m.get(t.envelopeId) || 0) + 1); }
+    if (t.payee && t.type !== 'transfer') payees.set(U.norm(t.payee), { name: t.payee, envelopeId: t.type !== 'transfer' ? t.envelopeId : null, type: t.type, date: t.date });
   }
   const c = {
     balance: (id) => U.round2(bal.get(id) || 0),
     income: (ym) => U.round2(inc.get(ym) || 0),
     expense: (ym) => U.round2(exp.get(ym) || 0),
     uncategorized: (ym) => U.round2(unc.get(ym) || 0),
+    earned: (envId, ym) => U.round2(earned.get(`${envId}|${ym}`) || 0),
     spent: (envId, ym) => U.round2(spent.get(`${envId}|${ym}`) || 0),
     budget(env, ym) { const o = over.get(`${env.id}__${ym}`); return o !== undefined ? o : Number(env.defaultBudget) || 0; },
     carry(env, ym) {
@@ -657,8 +710,8 @@ function C() {
 
 const activeAccounts = () => state.data.accounts.filter((a) => !a.archived);
 const activeEnvelopes = () => state.data.envelopes.filter((e) => !e.archived);
-const accName = (id) => (state.data.accounts.find((a) => a.id === id) || {}).name || '—';
-const envById = (id) => state.data.envelopes.find((e) => e.id === id) || null;
+const accName = (id) => (state.all.accounts.find((a) => a.id === id) || {}).name || '—';
+const envById = (id) => state.all.envelopes.find((e) => e.id === id) || null;
 
 // ------------------------------------------------------------
 // Modales, toasts
@@ -694,20 +747,20 @@ function choiceModal(title, message, choices) {   // choices: [{key,label,cls}]
 const confirmModal = (message, okLabel = 'Confirmer') =>
   choiceModal('Confirmation', message, [{ key: null, label: 'Annuler' }, { key: 'ok', label: okLabel, cls: 'btn-danger' }]).then((k) => k === 'ok');
 
-function toast(message, kind = 'info', action = null) {
+function toast(message, kind = 'info', action = null, ms = 0) {
   document.querySelectorAll('.toast').forEach((t) => t.remove());
   const t = el('div', { class: `toast toast-${kind}`, role: 'status' }, el('span', {}, message));
   if (action) t.appendChild(el('button', { type: 'button', onclick: () => { t.remove(); action.fn(); } }, action.label));
   document.body.appendChild(t);
   requestAnimationFrame(() => t.classList.add('show'));
-  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 250); }, action ? 6000 : 2400);
+  setTimeout(() => { t.classList.remove('show'); setTimeout(() => t.remove(), 250); }, ms || (action ? 6000 : 2400));
 }
 
 // ------------------------------------------------------------
 // Navigation / thème
 // ------------------------------------------------------------
-function setView(v) { state.view = v; window.scrollTo(0, 0); render(); }
-function setMonth(ym) { state.month = ym; render(); }
+function setView(v) { state.view = v; clearSelection(); window.scrollTo(0, 0); render(); }
+function setMonth(ym) { state.month = ym; clearSelection(); render(); }
 function goEnvelope(id) { state.filters = { accountId: '', envelopeId: id, q: '', all: false }; state.limit = 150; setView('transactions'); }
 function applyTheme() {
   const root = document.documentElement;
@@ -732,9 +785,9 @@ function setEnvelopeBudget(env, ym, amount) {   // pas de render : la vue Envelo
   reloadData();
 }
 function deleteEnvelope(env) {
-  DB.delMany('envelopeBudgets', state.data.envelopeBudgets.filter((b) => b.envelopeId === env.id).map((b) => b.id));
-  DB.putMany('transactions', state.data.transactions.filter((t) => t.envelopeId === env.id).map((t) => ({ ...t, envelopeId: null })));
-  DB.putMany('recurring', state.data.recurring.filter((r) => r.envelopeId === env.id).map((r) => ({ ...r, envelopeId: null })));
+  DB.delMany('envelopeBudgets', state.all.envelopeBudgets.filter((b) => b.envelopeId === env.id).map((b) => b.id));
+  DB.putMany('transactions', state.all.transactions.filter((t) => t.envelopeId === env.id).map((t) => ({ ...t, envelopeId: null })));
+  DB.putMany('recurring', state.all.recurring.filter((r) => r.envelopeId === env.id).map((r) => ({ ...r, envelopeId: null })));
   DB.del('envelopes', env.id); commit(); toast('Enveloppe supprimée', 'success');
 }
 function deleteAccount(acc) {
@@ -756,7 +809,7 @@ function generateRecurring() {
       const date = U.dateFor(ym, r.day);
       if (date < r.startDate) continue;
       if (date > today) break;
-      created.push({ id: DB.uid(), date, accountId: r.accountId, toAccountId: r.type === 'transfer' ? r.toAccountId : null, envelopeId: r.type === 'expense' ? r.envelopeId : null,
+      created.push({ id: DB.uid(), date, accountId: r.accountId, toAccountId: r.type === 'transfer' ? r.toAccountId : null, envelopeId: r.type !== 'transfer' ? r.envelopeId : null,
         type: r.type, amount: r.amount, payee: r.payee, notes: r.notes || '', recurringId: r.id, createdAt: Date.now() });
       gen.add(ym); changed = true;
     }
@@ -823,6 +876,341 @@ function seedStarter() {
 }
 
 // ============================================================
+// fix.js — correction rapide d'une opération (enveloppe, compte, type),
+// sélection multiple, propagation aux opérations du même libellé
+// ============================================================
+const selection = { on: false, ids: new Set(), refresh: () => {} };
+const clearSelection = () => { selection.on = false; selection.ids.clear(); };
+
+// Applique un changement à une ou plusieurs opérations, avec « Annuler ».
+// patch(t) renvoie les champs à modifier, ou null pour ignorer cette opération.
+function changeTx(ids, patch, msg, opts = {}) {
+  const old = ids.map((i) => DB.get('transactions', i)).filter(Boolean), upd = []; let skipped = 0;
+  for (const t of old) { const p = patch(t); if (!p) { skipped++; continue; } upd.push({ ...t, ...p }); }
+  if (!upd.length) { toast('Aucune opération à modifier', 'info'); return false; }
+  DB.putMany('transactions', upd);
+  if (opts.clearSel) selection.ids.clear();
+  commit();
+  toast(msg + (skipped ? ` (${skipped} ignorée${skipped > 1 ? 's' : ''})` : ''), 'success', opts.action || { label: 'Annuler', fn: () => { DB.putMany('transactions', old); commit(); } }, 7000);
+  return true;
+}
+
+const TAG = { fixed: 'fixe', variable: 'variable', revenue: 'recette' };
+const envOptions = (currentId, sc = 'perso', type = 'expense') => [{ key: '', label: sc === 'pro' ? 'Non classé' : 'Sans enveloppe', current: !currentId },
+  ...state.all.envelopes.filter((e) => (!e.archived || e.id === currentId) && scopeOf(e) === sc && (type === 'income') === (e.kind === 'revenue'))
+    .sort((a, b) => KIND_ORDER.indexOf(a.kind) - KIND_ORDER.indexOf(b.kind)).map((e) => ({ key: e.id, label: e.name, dot: e.color, tag: sc === 'pro' && e.kind !== 'revenue' ? TAG[e.kind] : '', current: e.id === currentId }))];
+const accOptions = (currentId) => state.all.accounts.filter((a) => !a.archived || a.id === currentId).filter((a) => state.scope === 'all' || scopeOf(a) === state.scope || a.id === currentId).map((a) => ({ key: a.id, label: (scopeOf(a) === 'pro' ? '💼 ' : '') + a.name, current: a.id === currentId }));
+const pickBtn = (o, fn) => el('button', { type: 'button', class: `cp ${o.current ? 'on' : ''}`, onclick: fn }, o.dot ? el('span', { class: 'dot', style: `background:${o.dot}` }) : null, o.label, o.tag ? el('small', { class: 'cp-tag' }, o.tag) : null);
+
+function openPicker(title, options, onPick) {
+  showModal(title, el('div', { class: 'cpick big' }, options.map((o) => pickBtn(o, () => { closeModal(); onPick(o.key); }))));
+}
+
+// ----- enveloppe d'une opération (+ proposition de corriger les « jumelles ») -----
+function setEnvelopeFor(t, envId) {
+  const env = envById(envId), id = envId || null;
+  const others = t.payee ? state.data.transactions.filter((x) => x.id !== t.id && x.type === t.type && scopeOfAcc(x.accountId) === scopeOfAcc(t.accountId) && U.norm(x.payee) === U.norm(t.payee) && (x.envelopeId || null) !== id) : [];
+  changeTx([t.id], (x) => (x.type !== 'transfer' ? { envelopeId: id } : null), env ? `Rangé dans « ${env.name} »` : 'Enveloppe retirée', others.length
+    ? { action: { label: `Appliquer aux ${others.length} autre${others.length > 1 ? 's' : ''} « ${t.payee} »`, fn: () => changeTx(others.map((x) => x.id), () => ({ envelopeId: id }), `${others.length} opération(s) corrigée(s)`) } } : {});
+}
+function setAccountFor(t, accId, which = 'from') {
+  const crossScope = which !== 'to' && t.type !== 'transfer' && scopeOfAcc(accId) !== scopeOfAcc(t.accountId);
+  const patch = which === 'to' ? { toAccountId: accId } : { accountId: accId, ...(crossScope ? { envelopeId: null } : {}) };
+  const nf = which === 'to' ? t.accountId : accId, nt = which === 'to' ? accId : t.toAccountId;
+  if (t.type === 'transfer' && nf === nt) { toast('Choisis deux comptes différents', 'error'); return; }
+  changeTx([t.id], () => patch, `Déplacé vers « ${accName(accId)} »${crossScope ? ' — choisis la catégorie' : ''}`);
+  DB.setSetting('lastAccountId', accId);
+  if (crossScope) setTimeout(() => openQuickFix(DB.get('transactions', t.id), 'env'), 60);
+}
+
+// ----- feuille de correction rapide : un geste = un changement -----
+function openQuickFix(t0, focus = 'env') {
+  const t = DB.get('transactions', t0.id) || t0, isX = t.type === 'transfer', isExp = t.type !== 'transfer', sc = scopeOfAcc(t.accountId);
+  const sign = isX ? '⇄ ' : isExp ? '−' : '+';
+  const sections = [];
+  if (!isX) sections.push(['type', el('div', { class: 'form-row' }, el('label', {}, 'Type'),
+    segmented([['expense', 'Dépense'], ['income', 'Revenu']], t.type, (v) => { if (v === t.type) return; closeModal(); changeTx([t.id], (x) => ({ type: v, envelopeId: null }), v === 'income' ? 'Passé en revenu' : 'Passé en dépense'); })) ]);
+  const eo = isExp ? envOptions(t.envelopeId, sc, t.type) : [];
+  if (isExp && (eo.length > 1 || t.type === 'expense')) sections.push(['env', el('div', { class: 'form-row' }, el('label', {}, t.type === 'income' ? 'Catégorie de recette' : sc === 'pro' ? 'Catégorie' : 'Enveloppe'), el('div', { class: 'cpick' }, eo.map((o) => pickBtn(o, () => { closeModal(); if (!o.current) setEnvelopeFor(t, o.key); })))) ]);
+  sections.push(['acc', el('div', { class: 'form-row' }, el('label', {}, isX ? 'Du compte' : 'Compte'), el('div', { class: 'cpick' }, accOptions(t.accountId).map((o) => pickBtn(o, () => { closeModal(); if (!o.current) setAccountFor(t, o.key, 'from'); })))) ]);
+  if (isX) sections.push(['to', el('div', { class: 'form-row' }, el('label', {}, 'Vers le compte'), el('div', { class: 'cpick' }, accOptions(t.toAccountId).map((o) => pickBtn(o, () => { closeModal(); if (!o.current) setAccountFor(t, o.key, 'to'); })))) ]);
+  sections.sort((a, b) => (a[0] === focus ? -1 : b[0] === focus ? 1 : 0));
+  showModal('Corriger', el('div', { class: 'form' },
+    el('div', { class: 'qf-head' }, el('b', {}, t.payee || (isX ? 'Virement' : '(sans libellé)')), el('span', { class: 'tnum muted' }, `${sign}${money(t.amount)} · ${t.date.slice(8)}/${t.date.slice(5, 7)}`)),
+    sections.map((s) => s[1]),
+    el('div', { class: 'modal-actions' },
+      el('button', { type: 'button', class: 'btn btn-ghost spacer', style: 'color:var(--neg)', onclick: () => { closeModal(); deleteTransaction(t.id); } }, 'Supprimer'),
+      el('button', { type: 'button', class: 'btn', onclick: () => { closeModal(); openTxModal(t); } }, 'Tout modifier…'))));
+}
+
+// ----- sélection multiple -----
+function bulkEnvelope() {
+  const ids = [...selection.ids]; if (!ids.length) return;
+  const t0 = DB.get('transactions', ids[0]) || {};
+  openPicker(`Catégorie pour ${ids.length} opération${ids.length > 1 ? 's' : ''}`, envOptions(null, scopeOfAcc(t0.accountId), t0.type === 'income' ? 'income' : 'expense').map((o) => ({ ...o, current: false })),
+    (k) => changeTx(ids, (t) => (t.type !== 'transfer' && (!k || envFits(envById(k), t)) ? { envelopeId: k || null } : null), k ? `Rangées dans « ${envById(k).name} »` : 'Catégorie retirée', { clearSel: true }));
+}
+function bulkAccount() {
+  const ids = [...selection.ids]; if (!ids.length) return;
+  openPicker(`Compte pour ${ids.length} opération${ids.length > 1 ? 's' : ''}`, accOptions(null).map((o) => ({ ...o, current: false })),
+    (k) => changeTx(ids, (t) => (t.type === 'transfer' && t.toAccountId === k ? null : { accountId: k, ...(t.type !== 'transfer' && scopeOfAcc(k) !== scopeOfAcc(t.accountId) ? { envelopeId: null } : {}) }), `Déplacées vers « ${accName(k)} »`, { clearSel: true }));
+}
+async function bulkDelete() {
+  const ids = [...selection.ids]; if (!ids.length) return;
+  if (!(await confirmModal(`Supprimer ${ids.length} opération${ids.length > 1 ? 's' : ''} ?`, 'Supprimer'))) return;
+  const old = ids.map((i) => DB.get('transactions', i)).filter(Boolean);
+  DB.delMany('transactions', ids); selection.ids.clear(); commit();
+  toast(`${old.length} opération(s) supprimée(s)`, 'info', { label: 'Annuler', fn: () => { DB.putMany('transactions', old); commit(); } }, 7000);
+}
+
+// ============================================================
+// pro.js — espaces Perso / Pro, catégories pro (fixes / variables / recettes),
+// tableau de bord pro et organigramme de santé financière
+// ============================================================
+const KIND_LABEL = { fixed: 'Charges fixes', variable: 'Charges variables', revenue: 'Recettes' };
+const KIND_ORDER = ['revenue', 'variable', 'fixed'];
+// [kind, nom, couleur] — catégories inspirées de l'appli Sensations Macarons
+const PRO_PRESET = [
+  ['revenue', 'Ventes marchés', '#2e9d6b'], ['revenue', 'Ventes en ligne', '#1f8f8a'], ['revenue', 'Commandes & événements', '#3aa655'],
+  ['revenue', 'Ventes pros / revendeurs', '#5aa02c'], ['revenue', 'Ateliers & animations', '#27ae8f'], ['revenue', 'Autres recettes', '#7fb069'],
+  ['fixed', 'Assurance professionnelle', '#2c5aa0'], ['fixed', 'Loyer & local', '#3b6ea8'], ['fixed', 'Énergie', '#4a7fb5'],
+  ['fixed', 'Site web & hébergement', '#5b6fc4'], ['fixed', 'Abonnements & logiciels', '#6a5fc1'], ['fixed', 'Frais bancaires', '#52708f'],
+  ['fixed', 'Cotisations & impôts', '#34495e'], ['fixed', 'Comptable', '#456b8a'], ['fixed', 'Crédits & leasing', '#5d6d7e'],
+  ['variable', 'Ingrédients (amandes, sucre, œufs)', '#e67e22'], ['variable', 'Chocolat, crèmes & parfums', '#a04000'], ['variable', 'Colorants & arômes', '#e84393'],
+  ['variable', 'Emballages (boîtes, sachets)', '#d35400'], ['variable', 'Étiquettes, rubans & décoration', '#c2185b'], ['variable', 'Stands & marchés', '#cb4335'],
+  ['variable', 'Transport & livraison', '#c0392b'], ['variable', 'Marketing & communication', '#d6336c'], ['variable', 'Équipement & petit matériel', '#b9770e'],
+  ['variable', 'Formation', '#a569bd'], ['variable', 'Frais de paiement', '#cb6b4e'], ['variable', 'Autres charges', '#8d6e63'],
+];
+
+const scopeOf = (x) => (x && x.scope === 'pro' ? 'pro' : 'perso');
+const scopeOfAcc = (id) => scopeOf(state.all.accounts.find((a) => a.id === id));
+const accLabel = (id) => (state.scope === 'all' && scopeOfAcc(id) === 'pro' ? '💼 ' : '') + accName(id);
+const hasProAccount = () => state.all.accounts.some((a) => scopeOf(a) === 'pro' && !a.archived);
+// Une enveloppe convient-elle à une opération (même espace, bon sens recette/dépense) ?
+const envFits = (env, t) => !!env && scopeOf(env) === scopeOfAcc(t.accountId) && (t.type === 'income') === (env.kind === 'revenue') && t.type !== 'transfer';
+
+function scopeData(all, sc) {
+  const accs = all.accounts.filter((a) => scopeOf(a) === sc), ids = new Set(accs.map((a) => a.id));
+  const envs = all.envelopes.filter((e) => scopeOf(e) === sc), eids = new Set(envs.map((e) => e.id));
+  const mine = (x) => ids.has(x.accountId) || (x.toAccountId && ids.has(x.toAccountId));
+  return { accounts: accs, envelopes: envs, envelopeBudgets: all.envelopeBudgets.filter((b) => eids.has(b.envelopeId)),
+    transactions: all.transactions.filter(mine), recurring: all.recurring.filter(mine), goals: all.goals.filter((g) => scopeOf(g) === sc) };
+}
+function setScope(v) {
+  DB.setSetting('scope', v);
+  state.filters = { accountId: '', envelopeId: '', q: '', all: false };
+  clearSelection(); reloadData(); render();
+}
+function installProPreset() {
+  const have = new Set(state.all.envelopes.filter((e) => scopeOf(e) === 'pro').map((e) => U.norm(e.name)));
+  const now = Date.now(), add = PRO_PRESET.filter(([, n]) => !have.has(U.norm(n)))
+    .map(([kind, name, color], i) => ({ id: DB.uid(), name, color, group: KIND_LABEL[kind], scope: 'pro', kind, defaultBudget: 0, rollover: false, archived: false, createdAt: now + i }));
+  if (add.length) DB.putMany('envelopes', add);
+  return add.length;
+}
+
+// ---------- calculs pro (indépendants du filtre d'espace) ----------
+const _pc = { v: -1, stats: new Map(), bal: null };
+function _pcheck() { if (_pc.v !== state.version) { _pc.v = state.version; _pc.stats = new Map(); _pc.bal = null; } }
+function proBalances() {
+  _pcheck(); if (_pc.bal) return _pc.bal;
+  const m = new Map(state.all.accounts.map((a) => [a.id, Number(a.openingBalance) || 0]));
+  for (const t of state.all.transactions) {
+    const a = Math.abs(t.amount);
+    if (t.type === 'income') m.set(t.accountId, (m.get(t.accountId) || 0) + a);
+    else if (t.type === 'expense') m.set(t.accountId, (m.get(t.accountId) || 0) - a);
+    else { m.set(t.accountId, (m.get(t.accountId) || 0) - a); if (t.toAccountId) m.set(t.toAccountId, (m.get(t.toAccountId) || 0) + a); }
+  }
+  return (_pc.bal = m);
+}
+const scopeBalance = (sc) => U.round2(state.all.accounts.filter((a) => scopeOf(a) === sc && !a.archived).reduce((s, a) => s + (proBalances().get(a.id) || 0), 0));
+function budgetOfEnv(e, ym) { const o = state.all.envelopeBudgets.find((b) => b.envelopeId === e.id && b.yearMonth === ym); return o ? Number(o.amount) || 0 : Number(e.defaultBudget) || 0; }
+
+function flow(sc, ym) {
+  const ids = new Set(state.all.accounts.filter((a) => scopeOf(a) === sc).map((a) => a.id)); let inc = 0, exp = 0;
+  for (const t of state.all.transactions) { if (t.date.slice(0, 7) !== ym || !ids.has(t.accountId)) continue; const a = Math.abs(t.amount); if (t.type === 'income') inc += a; else if (t.type === 'expense') exp += a; }
+  return { inc: U.round2(inc), exp: U.round2(exp), res: U.round2(inc - exp) };
+}
+
+function proStats(ym) {
+  _pcheck(); if (_pc.stats.has(ym)) return _pc.stats.get(ym);
+  const A = state.all, ids = new Set(A.accounts.filter((a) => scopeOf(a) === 'pro').map((a) => a.id));
+  const envs = A.envelopes.filter((e) => scopeOf(e) === 'pro'), envMap = new Map(envs.map((e) => [e.id, e]));
+  const s = { ym, rev: 0, fixed: 0, variable: 0, unclassified: 0, byEnv: new Map(), nUncl: 0, nTx: 0 };
+  const add = (k, v) => s.byEnv.set(k, (s.byEnv.get(k) || 0) + v);
+  for (const t of A.transactions) {
+    if (t.date.slice(0, 7) !== ym || !ids.has(t.accountId)) continue;
+    const a = Math.abs(t.amount);
+    if (t.type === 'income') { s.rev += a; s.nTx++; add(t.envelopeId || '_none', a); }
+    else if (t.type === 'expense') {
+      s.nTx++; const e = envMap.get(t.envelopeId);
+      if (e && (e.kind === 'fixed' || e.kind === 'variable')) s[e.kind] += a; else { s.unclassified += a; s.nUncl++; }
+      add(t.envelopeId || '_none', a);
+    }
+  }
+  for (const k of ['rev', 'fixed', 'variable', 'unclassified']) s[k] = U.round2(s[k]);
+  s.varTotal = U.round2(s.variable + s.unclassified);
+  s.margin = U.round2(s.rev - s.varTotal);
+  s.marginRate = s.rev > 0 ? s.margin / s.rev : null;
+  s.result = U.round2(s.margin - s.fixed);
+  s.plannedFixed = U.round2(envs.filter((e) => e.kind === 'fixed' && !e.archived).reduce((x, e) => x + budgetOfEnv(e, ym), 0));
+  s.plannedRev = U.round2(envs.filter((e) => e.kind === 'revenue' && !e.archived).reduce((x, e) => x + budgetOfEnv(e, ym), 0));
+  const past = [1, 2, 3].map((i) => { const p = U.shiftYM(ym, -i), o = A.transactions; return p; });
+  let pf = 0, pn = 0; for (const p of past) { const st = _fixedOnly(p, ids, envMap); if (st > 0) { pf += st; pn++; } }
+  s.fixedRef = U.round2(Math.max(s.plannedFixed, s.fixed, pn ? pf / pn : 0));
+  s.cash = scopeBalance('pro');
+  s.autonomy = s.fixedRef > 0 ? s.cash / s.fixedRef : null;
+  s.breakEven = s.marginRate && s.marginRate > 0 && s.fixedRef > 0 ? U.round2(s.fixedRef / s.marginRate) : null;
+  s.envs = envs;
+  _pc.stats.set(ym, s); return s;
+}
+function _fixedOnly(ym, ids, envMap) {
+  let f = 0;
+  for (const t of state.all.transactions) { if (t.type !== 'expense' || t.date.slice(0, 7) !== ym || !ids.has(t.accountId)) continue; const e = envMap.get(t.envelopeId); if (e && e.kind === 'fixed') f += Math.abs(t.amount); }
+  return f;
+}
+
+const ST = { good: ['✅', 'Sain'], warn: ['⚠️', 'À surveiller'], bad: ['⛔', 'Critique'], neutral: ['➖', 'Pas de données'] };
+function proHealth(s) {
+  const active = s.nTx > 0;
+  const rate = (v) => (s.rev > 0 ? v / s.rev : null);
+  const st = {};
+  st.rev = !active ? 'neutral' : s.plannedRev > 0 ? (s.rev >= s.plannedRev ? 'good' : s.rev >= s.plannedRev * 0.7 ? 'warn' : 'bad') : s.rev > 0 ? 'good' : 'warn';
+  const vr = rate(s.varTotal);
+  st.variable = !active || (s.varTotal === 0) ? 'neutral' : vr === null ? 'warn' : vr <= 0.4 ? 'good' : vr <= 0.6 ? 'warn' : 'bad';
+  st.margin = s.rev > 0 ? (s.marginRate >= 0.6 ? 'good' : s.marginRate >= 0.4 ? 'warn' : 'bad') : 'neutral';
+  const fr = rate(s.fixed);
+  st.fixed = s.fixed === 0 && s.fixedRef === 0 ? 'neutral' : fr === null ? 'warn' : fr <= 0.3 ? 'good' : fr <= 0.5 ? 'warn' : 'bad';
+  st.result = !active ? 'neutral' : s.result >= 0 && s.rev > 0 ? 'good' : s.result > -0.25 * Math.max(s.rev, s.fixedRef) ? 'warn' : 'bad';
+  st.cash = s.autonomy === null ? (s.cash >= 0 ? 'good' : 'bad') : s.autonomy >= 3 ? 'good' : s.autonomy >= 1 ? 'warn' : 'bad';
+  const core = [st.result, st.cash];
+  st.global = !active && !state.all.transactions.some((t) => scopeOfAcc(t.accountId) === 'pro') ? 'neutral'
+    : core.filter((x) => x === 'bad').length >= 2 ? 'bad' : core.includes('bad') || [st.margin, st.fixed, st.result, st.cash].includes('warn') ? 'warn' : 'good';
+  return st;
+}
+const GLOBAL_TXT = { good: 'Entreprise saine', warn: 'À surveiller', bad: 'Situation fragile', neutral: 'Pas encore de données' };
+
+// ---------- interface ----------
+function scopeSwitch() {
+  const mk = (v, l) => el('button', { type: 'button', class: `scope-btn ${state.scope === v ? 'on' : ''}`, 'aria-pressed': String(state.scope === v), onclick: () => { if (state.scope !== v) setScope(v); } }, l);
+  return el('div', { class: 'scope-switch', role: 'group', 'aria-label': 'Espace' }, mk('all', 'Tout'), mk('perso', '👤 Perso'), mk('pro', '💼 Pro'));
+}
+
+function openProSetup() {
+  const name = el('input', { type: 'text', value: 'Compte pro', required: true });
+  const bal = el('input', { type: 'text', inputmode: 'decimal', placeholder: '0,00', autocomplete: 'off' });
+  const cats = el('input', { type: 'checkbox', checked: true });
+  const form = el('form', { class: 'form', novalidate: true },
+    el('p', { class: 'muted', style: 'margin:0' }, "Crée l'espace pro : un compte dédié à l'activité et des catégories prêtes à l'emploi (recettes, charges fixes, charges variables). Tu pourras tout modifier."),
+    row('Nom du compte pro', name), row('Solde actuel du compte (optionnel)', bal),
+    el('label', { class: 'checkrow' }, cats, el('span', {}, `Ajouter les ${PRO_PRESET.length} catégories préétablies`)),
+    el('div', { class: 'modal-actions' }, el('button', { type: 'button', class: 'btn', onclick: closeModal }, 'Annuler'), el('button', { type: 'submit', class: 'btn btn-primary' }, 'Créer mon espace pro')));
+  form.addEventListener('submit', (ev) => {
+    ev.preventDefault();
+    const n = name.value.trim(); if (!n) { toast('Donne un nom au compte', 'error'); return; }
+    const b = bal.value.trim() === '' ? 0 : U.parseNumber(bal.value); if (Number.isNaN(b)) { toast('Solde invalide', 'error'); return; }
+    DB.put('accounts', { id: DB.uid(), name: n, type: 'Compte courant', openingBalance: U.round2(b), archived: false, scope: 'pro', createdAt: Date.now() });
+    if (cats.checked) installProPreset();
+    DB.setSetting('scope', 'pro'); closeModal(); commit(); toast('Espace pro créé', 'success');
+  });
+  showModal('💼 Créer mon espace pro', form);
+}
+
+function proLine(env, s, ym, kind) {
+  const v = s.byEnv.get(env.id) || 0, budget = budgetOfEnv(env, ym), share = s.rev > 0 && kind !== 'revenue' ? ` · ${U.fmtPct(v / s.rev)} du CA` : '';
+  const pct = budget > 0 ? Math.min(100, (v / budget) * 100) : 0;
+  const cls = kind === 'revenue' ? '' : budget > 0 && v > budget ? 'over' : budget > 0 && v > budget * 0.9 ? 'warn' : '';
+  return el('div', { class: 'eline', onclick: () => goEnvelope(env.id) }, el('span', { class: 'dot', style: `background:${env.color}` }), el('span', { class: 'nm' }, env.name, share ? el('small', { class: 'muted' }, share) : null),
+    el('span', { class: 'am' }, el('b', {}, money(v)), budget > 0 ? ` / ${money(budget)}` : ''), budget > 0 ? el('div', { class: 'bar' }, el('i', { class: cls, style: `width:${pct}%` })) : null);
+}
+function proSection(kind, s, ym, id) {
+  const list = s.envs.filter((e) => e.kind === kind && (!e.archived || (s.byEnv.get(e.id) || 0) > 0));
+  const total = kind === 'revenue' ? s.rev : kind === 'fixed' ? s.fixed : s.variable;
+  const rows = list.slice().sort((a, b) => (s.byEnv.get(b.id) || 0) - (s.byEnv.get(a.id) || 0) || a.name.localeCompare(b.name)).map((e) => proLine(e, s, ym, kind));
+  return el('section', { class: 'section', id }, sectionHead(`${KIND_LABEL[kind]} — ${money(total)}`, el('button', { class: 'btn btn-sm', onclick: () => openEnvelopeModal(null, { scope: 'pro', kind }) }, '+ Catégorie')),
+    rows.length ? rows : el('p', { class: 'empty' }, 'Aucune catégorie.'),
+    kind === 'variable' && s.unclassified > 0 ? el('div', { class: 'eline', onclick: () => { state.filters = { accountId: '', envelopeId: '__none__', q: '', all: true }; setView('transactions'); } }, el('span', { class: 'dot', style: 'background:var(--warn)' }), el('span', { class: 'nm' }, '⚠️ Non classé', el('small', { class: 'muted' }, ` · ${s.nUncl} opération(s) à ranger`)), el('span', { class: 'am' }, el('b', {}, money(s.unclassified)))) : null);
+}
+
+function orgNode(o) {
+  const [ico, txt] = ST[o.status];
+  return el('li', {}, el('button', { type: 'button', class: `org-node st-${o.status}`, onclick: o.go || null, 'aria-label': `${o.title} : ${o.value}, ${txt}` },
+    el('span', { class: 'org-ico' }, o.ico), el('span', { class: 'org-txt' }, el('b', {}, o.title), el('small', {}, o.sub || '')), el('span', { class: 'org-val tnum' }, o.value),
+    el('span', { class: 'org-st' }, `${ico} ${o.stText || txt}`)), o.kids && o.kids.length ? el('ul', {}, o.kids) : null);
+}
+const scrollTo = (id) => () => { const n = document.getElementById(id); if (n) n.scrollIntoView({ behavior: 'smooth', block: 'start' }); };
+
+function orgChart(s, h) {
+  const aut = s.autonomy === null ? '—' : s.autonomy >= 12 ? '12 mois +' : `${s.autonomy.toFixed(1).replace('.', ',')} mois`;
+  const mr = s.marginRate === null ? '—' : U.fmtPct(s.marginRate);
+  const tree = orgNode({ ico: '🏢', title: "Santé de l'entreprise", value: GLOBAL_TXT[h.global], sub: 'Résultat + trésorerie', status: h.global, stText: ST[h.global][1] === 'Sain' ? 'Sain' : undefined, kids: [
+    orgNode({ ico: '📈', title: 'Résultat du mois', value: U.fmtSigned(s.result, state.currency), sub: 'Marge brute − charges fixes', status: h.result, kids: [
+      orgNode({ ico: '🧮', title: 'Marge brute', value: money(s.margin), sub: `Taux de marge : ${mr}`, status: h.margin, kids: [
+        orgNode({ ico: '💶', title: 'Recettes', value: money(s.rev), sub: s.plannedRev > 0 ? `Objectif : ${money(s.plannedRev)}` : 'Ventes encaissées', status: h.rev, go: scrollTo('sec-revenue') }),
+        orgNode({ ico: '🥚', title: 'Charges variables', value: money(s.varTotal), sub: s.rev > 0 ? `${U.fmtPct(s.varTotal / s.rev)} du CA` : 'Selon l\'activité', status: h.variable, go: scrollTo('sec-variable') })] }),
+      orgNode({ ico: '🏠', title: 'Charges fixes', value: money(s.fixed), sub: s.plannedFixed > 0 ? `Prévu : ${money(s.plannedFixed)}` : s.rev > 0 ? `${U.fmtPct(s.fixed / s.rev)} du CA` : 'Chaque mois', status: h.fixed, go: scrollTo('sec-fixed') })] }),
+    orgNode({ ico: '🏦', title: 'Trésorerie', value: money(s.cash), sub: `Autonomie : ${aut} de charges fixes`, status: h.cash })] });
+  return el('ul', { class: 'org' }, tree);
+}
+
+function proAdvice(s, h) {
+  const out = [];
+  if (s.nUncl > 0) out.push(`🗂️ ${s.nUncl} dépense(s) non classée(s) (${money(s.unclassified)}) : classe-les en charge fixe ou variable pour fiabiliser le résultat.`);
+  if (s.rev > 0 && s.marginRate !== null && s.marginRate < 0.4) out.push('🧮 Marge brute sous 40 % : revois tes prix de vente ou le coût des matières premières.');
+  if (s.rev > 0 && s.fixed / s.rev > 0.5) out.push('🏠 Les charges fixes dépassent la moitié du CA : surveille les abonnements et loyers.');
+  if (s.breakEven && s.rev < s.breakEven) out.push(`🎯 Il manque ${money(U.round2(s.breakEven - s.rev))} de recettes ce mois pour couvrir tes charges fixes.`);
+  if (s.autonomy !== null && s.autonomy < 1) out.push('🏦 Trésorerie inférieure à un mois de charges fixes : garde une réserve.');
+  if (!out.length && h.global === 'good') out.push('👏 Tous les voyants sont au vert ce mois-ci.');
+  return out;
+}
+
+function viewProDashboard(root) {
+  const ym = state.month, nodes = [scopeSwitch()];
+  if (!hasProAccount()) {
+    nodes.push(el('section', { class: 'section pro-setup' }, el('h2', {}, '💼 Ton espace pro'), el('p', {}, "Sépare ton activité de ton budget perso : suivi des recettes, charges fixes et variables, point mort et organigramme de santé financière."),
+      el('div', { class: 'actions' }, el('button', { class: 'btn btn-primary', onclick: openProSetup }, 'Créer mon espace pro'), el('button', { class: 'btn', onclick: () => openAccountModal(null, { scope: 'pro' }) }, 'Ajouter un compte pro seul'))));
+    return put(root, nodes);
+  }
+  const s = proStats(ym), h = proHealth(s), charges = U.round2(s.fixed + s.varTotal);
+  nodes.push(quickBar());
+  nodes.push(el('div', { class: 'cards' }, card('Trésorerie', money(s.cash), s.cash >= 0 ? 'pos' : 'neg'), card('Recettes', money(s.rev), 'pos'), card('Charges', money(charges), 'neg'),
+    card('Résultat', U.fmtSigned(s.result, state.currency), s.result >= 0 ? 'pos' : 'neg', s.rev > 0 ? `Marge nette : ${U.fmtPct(s.result / s.rev)}` : '')));
+  const adv = proAdvice(s, h);
+  nodes.push(el('section', { class: 'section' }, sectionHead("Santé de l'entreprise"), orgChart(s, h),
+    adv.length ? el('ul', { class: 'advice' }, adv.map((a) => el('li', {}, a))) : null));
+  if (s.breakEven) {
+    const pct = Math.min(100, (s.rev / s.breakEven) * 100);
+    nodes.push(el('section', { class: 'section' }, sectionHead('Point mort'),
+      el('p', { style: 'margin:0 0 8px' }, `Pour couvrir tes charges fixes (${money(s.fixedRef)}), il te faut `, el('b', {}, money(s.breakEven)), ' de recettes par mois.'),
+      el('div', { class: 'bar big' }, el('i', { class: pct >= 100 ? '' : pct >= 70 ? 'warn' : 'over', style: `width:${pct}%` })),
+      el('div', { class: 'muted', style: 'margin-top:4px' }, `${money(s.rev)} encaissés — ${Math.round(pct)} % du point mort`)));
+  }
+  nodes.push(proSection('revenue', s, ym, 'sec-revenue'), proSection('variable', s, ym, 'sec-variable'), proSection('fixed', s, ym, 'sec-fixed'));
+  const months = Array.from({ length: 6 }, (_, i) => U.shiftYM(ym, i - 5)).map((m) => { const x = proStats(m); return { ym: m, inc: x.rev, exp: U.round2(x.fixed + x.varTotal) }; });
+  if (months.some((m) => m.inc || m.exp)) nodes.push(el('section', { class: 'section viz bars' }, sectionHead('6 derniers mois'),
+    el('div', { style: 'margin-bottom:6px' }, el('span', { class: 'key' }, el('i', { style: 'background:var(--s-income)' }), 'Recettes'), el('span', { class: 'key' }, el('i', { style: 'background:var(--s-expense)' }), 'Charges')), barChart(months)));
+  const accounts = activeAccounts();
+  nodes.push(el('section', { class: 'section' }, sectionHead('Comptes pro', el('button', { class: 'btn btn-sm', onclick: () => openAccountModal(null, { scope: 'pro' }) }, '+ Ajouter')),
+    el('div', { class: 'account-grid' }, accounts.map((a) => { const b = proBalances().get(a.id) || 0; return el('div', { class: 'account-card', onclick: () => openAccountModal(a) }, el('div', { class: 'account-name' }, a.name), el('div', { class: `account-balance ${b < 0 ? 'neg' : ''}` }, money(U.round2(b))), el('div', { class: 'account-type' }, a.type || '—')); }))));
+  const recent = state.data.transactions.slice().sort(cmpTx).slice(0, 6);
+  nodes.push(el('section', { class: 'section' }, sectionHead('Dernières opérations pro', el('button', { class: 'btn btn-sm', onclick: () => { state.filters = { accountId: '', envelopeId: '', q: '', all: true }; setView('transactions'); } }, 'Tout voir')),
+    recent.length ? recent.map((t) => txRow(t, true)) : el('p', { class: 'empty' }, 'Aucune opération. Utilise « Ajout rapide » (ex. « +120 marché samedi »).')));
+  put(root, nodes);
+}
+
+// tuiles Perso / Pro sur l'accueil « Tout »
+function scopeTiles() {
+  const ym = state.month, p = flow('perso', ym);
+  const perso = el('button', { type: 'button', class: 'scope-tile', onclick: () => setScope('perso') }, el('div', { class: 'st-h' }, '👤 Perso'), el('div', { class: 'st-v tnum' }, money(scopeBalance('perso'))),
+    el('div', { class: 'st-s' }, `${U.fmtSigned(p.res, state.currency)} ce mois`));
+  let pro;
+  if (!hasProAccount()) pro = el('button', { type: 'button', class: 'scope-tile', onclick: openProSetup }, el('div', { class: 'st-h' }, '💼 Pro'), el('div', { class: 'st-v' }, 'Créer mon espace'), el('div', { class: 'st-s' }, 'Recettes, charges, santé'));
+  else { const s = proStats(ym), h = proHealth(s); pro = el('button', { type: 'button', class: `scope-tile st-${h.global}`, onclick: () => setScope('pro') }, el('div', { class: 'st-h' }, '💼 Pro'), el('div', { class: 'st-v tnum' }, money(s.cash)),
+    el('div', { class: 'st-s' }, `${U.fmtSigned(s.result, state.currency)} ce mois · ${ST[h.global][0]} ${GLOBAL_TXT[h.global]}`)); }
+  return el('div', { class: 'scope-tiles' }, perso, pro);
+}
+
+// ============================================================
 // smart.js — « intelligence » locale (aucun envoi de données) :
 // ajout rapide en langage naturel, catégorisation apprise, conseils,
 // prévision, score, séries, badges, confettis.
@@ -846,24 +1234,54 @@ const CATS = [
   { env: /loisir|culture|divertiss|shopping/, kw: ['cinema', 'ugc', 'pathe', 'gaumont', 'steam', 'fnac', 'cultura', 'decathlon', 'concert', 'spectacle', 'ticketmaster', 'zalando', 'vinted', 'jeux', 'musee', 'amazon'] },
   { env: /epargne|invest/, kw: ['livret', 'epargne', 'assurance vie', 'trade republic'] },
 ];
-CATS.forEach((c) => { c.res = c.kw.map((k) => { const w = U.norm(k).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); return new RegExp('(^|[^a-z0-9])' + w + (w.length <= 3 ? '([^a-z0-9]|$)' : '')); }); });
+const PRO_CATS = [
+  { env: /assurance/, kw: ['assurance pro', 'rc pro', 'hiscox', 'axa pro', 'responsabilite civile'] },
+  { env: /loyer|local/, kw: ['loyer atelier', 'loyer local', 'bail', 'loyer pro'] },
+  { env: /energ/, kw: ['edf', 'engie', 'totalenergies', 'veolia', 'electricite', 'eau'] },
+  { env: /site|hebergement/, kw: ['ovh', 'o2switch', 'wix', 'shopify', 'squarespace', 'gandi', 'nom de domaine', 'hebergement', 'wordpress'] },
+  { env: /abonn|logiciel/, kw: ['canva', 'adobe', 'google workspace', 'notion', 'zapier', 'chatgpt', 'openai', 'claude', 'anthropic', 'swift publisher', 'dropbox', 'icloud', 'microsoft', 'pennylane', 'indy', 'abby', 'tiime'] },
+  { env: /bancaire/, kw: ['qonto', 'shine', 'frais bancaires', 'agios', 'cotisation carte', 'banque'] },
+  { env: /cotisation|impot/, kw: ['urssaf', 'cfe', 'impots', 'dgfip', 'tva', 'cipav', 'chambre des metiers', 'cma', 'taxe'] },
+  { env: /comptable/, kw: ['comptable', 'expert comptable', 'compta'] },
+  { env: /credit|leasing/, kw: ['credit', 'leasing', 'pret', 'emprunt'] },
+  { env: /ingredient/, kw: ['amande', 'amandes', 'sucre', 'oeufs', 'oeuf', 'blanc d oeuf', 'beurre', 'farine', 'poudre', 'metro', 'promocash', 'grand frais', 'biocoop', 'ingredient', 'ingredients', 'lait', 'creme'] },
+  { env: /chocolat|creme|parfum/, kw: ['chocolat', 'callebaut', 'barry', 'valrhona', 'cacao', 'vanille', 'pistache', 'framboise', 'praline', 'caramel', 'nutella', 'puree', 'confiture', 'fruit', 'fruits'] },
+  { env: /colorant|arome/, kw: ['colorant', 'colorants', 'arome', 'aromes', 'extrait', 'patisdecor', 'meilleur du chef', 'scrapcooking'] },
+  { env: /emballage/, kw: ['emballage', 'emballages', 'boite', 'boites', 'sachet', 'sachets', 'packhelp', 'rajapack', 'carton', 'sac kraft', 'cartonnage', 'coffret'] },
+  { env: /etiquette|ruban|decoration/, kw: ['etiquette', 'etiquettes', 'ruban', 'rubans', 'vistaprint', 'autocollant', 'stickers', 'decoration', 'papier'] },
+  { env: /stand|marche/, kw: ['marche', 'emplacement', 'stand', 'placier', 'halles', 'salon', 'foire', 'droit de place', 'marche de noel'] },
+  { env: /transport|livraison/, kw: ['essence', 'carburant', 'total', 'esso', 'peage', 'vinci', 'mondial relay', 'colissimo', 'chronopost', 'la poste', 'ups', 'dpd', 'boxtal', 'sendcloud', 'livraison', 'sncf', 'parking'] },
+  { env: /marketing|communication/, kw: ['facebook', 'meta', 'instagram', 'google ads', 'flyer', 'flyers', 'affiche', 'publicite', 'mailchimp', 'brevo', 'photographe', 'influenceur'] },
+  { env: /equipement|materiel/, kw: ['ikea', 'leroy merlin', 'castorama', 'materiel', 'darty', 'boulanger', 'matfer', 'silpat', 'robot', 'four', 'batteur', 'kitchenaid', 'thermometre', 'balance', 'frigo', 'congelateur', 'amazon'] },
+  { env: /formation/, kw: ['formation', 'stage', 'udemy', 'coursera', 'cfa'] },
+  { env: /paiement|commission/, kw: ['stripe', 'sumup', 'paypal', 'zettle', 'commission', 'frais de paiement'] },
+];
+const PRO_INCOME_CATS = [
+  { env: /marche/, kw: ['marche', 'stand', 'halles', 'salon', 'foire'] },
+  { env: /ligne/, kw: ['site', 'eboutique', 'boutique', 'stripe', 'paypal', 'shopify', 'web', 'en ligne'] },
+  { env: /commande|evenement/, kw: ['commande', 'mariage', 'anniversaire', 'bapteme', 'coffret', 'evenement', 'devis', 'acompte', 'traiteur'] },
+  { env: /pros|revendeur/, kw: ['revendeur', 'restaurant', 'hotel', 'entreprise', 'cse', 'b2b', 'depot vente', 'epicerie'] },
+  { env: /atelier|animation/, kw: ['atelier', 'animation', 'initiation', 'team building', 'cours'] },
+];
+CATS.concat(PRO_CATS, PRO_INCOME_CATS).forEach((c) => { c.res = c.kw.map((k) => { const w = U.norm(k).trim().replace(/[.*+?^${}()|[\]\\]/g, '\\$&'); return new RegExp('(^|[^a-z0-9])' + w + (w.length <= 3 ? '([^a-z0-9]|$)' : '')); }); });
 
-function suggestEnvelope(payee) {
+function suggestEnvelope(payee, scope = null, type = 'expense') {
   const p = (payee || '').trim(); if (!p) return null;
-  const c = C(), ok = (id) => { const e = envById(id); return !!e && !e.archived; };
+  const c = C(), ok = (id) => { const e = envById(id); return !!e && !e.archived && (!scope || (scopeOf(e) === scope && (type === 'income') === (e.kind === 'revenue'))); };
   const hit = c.lookupPayee(p);
   if (hit && hit.envelopeId && ok(hit.envelopeId)) return { envelopeId: hit.envelopeId, source: 'habitude' };
   const votes = new Map(); let total = 0;
   for (const t of tokens(p)) { const m = c.tokenVotes.get(t); if (!m) continue; for (const [id, n] of m) { votes.set(id, (votes.get(id) || 0) + n); total += n; } }
   if (total) { const [id, n] = [...votes.entries()].sort((a, b) => b[1] - a[1])[0]; if (ok(id) && n / total >= 0.6) return { envelopeId: id, source: 'appris' }; }
   const np = U.norm(p);
-  for (const cat of CATS) if (cat.res.some((r) => r.test(np))) { const e = activeEnvelopes().find((x) => cat.env.test(U.norm(x.name))); if (e) return { envelopeId: e.id, source: 'suggestion' }; }
+  const pool = scope === 'pro' ? (type === 'income' ? PRO_INCOME_CATS : PRO_CATS) : scope === 'perso' ? CATS : null;
+  for (const cat of pool || CATS) if (cat.res.some((r) => r.test(np))) { const e = state.all.envelopes.find((x) => !x.archived && (!scope || (scopeOf(x) === scope && (type === 'income') === (x.kind === 'revenue'))) && cat.env.test(U.norm(x.name))); if (e) return { envelopeId: e.id, source: 'suggestion' }; }
   return null;
 }
 
 // ---------- ajout rapide en langage naturel ----------
 const WEEKDAYS = ['dimanche', 'lundi', 'mardi', 'mercredi', 'jeudi', 'vendredi', 'samedi'];
-const INCOME_KW = /\b(salaire|paie|paye|remboursement|rembourse|prime|allocations?|apl|caf|recu|encaisse|vente)\b/;
+const INCOME_KW = /\b(salaire|paie|paye|remboursement|rembourse|prime|allocations?|apl|caf|recu|encaisse|vente|ventes|recette|acompte|encaissement)\b/;
 const EDGE_STOP = new Set(['de', 'du', 'des', 'la', 'le', 'les', 'un', 'une', 'chez', 'pour', 'a', 'au', 'aux', 'sur', 'vers', 'en', 'dans', 'par', 'depense', 'achat', 'paye', 'et', 'eur', 'euro', 'euros']);
 const looseRe = (w) => new RegExp('(^|[^\\p{L}\\d])' + [...w].map((ch) => ch.replace(/[.*+?^${}()|[\]\\]/g, '\\$&') + '[\\u0300-\\u036f]*').join('') + '(?![\\p{L}\\d])', 'iu');
 
@@ -921,7 +1339,7 @@ function parseQuick(raw) {
   while (words.length && EDGE_STOP.has(U.norm(words[words.length - 1]))) words.pop();
   let payee = words.join(' '); payee = payee.charAt(0).toUpperCase() + payee.slice(1);
   if (type === 'transfer' && !payee) payee = 'Virement';
-  const sug = type === 'expense' ? suggestEnvelope(payee) : null;
+  const accScope = scopeOfAcc(accountId), sug = type !== 'transfer' && (type === 'expense' || accScope === 'pro') ? suggestEnvelope(payee, accScope, type) : null;
   return { type, amount: U.round2(amount), date, payee, accountId, toAccountId, envelopeId: sug ? sug.envelopeId : null, source: sug ? sug.source : null };
 }
 
@@ -1129,7 +1547,7 @@ function renderChrome() {
         el('button', { class: 'icon-btn', 'aria-label': 'Mois suivant', onclick: () => setMonth(U.shiftYM(state.month, 1)) }, '›'),
         state.month !== U.todayYM() ? el('button', { class: 'btn btn-ghost btn-sm', onclick: () => setMonth(U.todayYM()) }, "Aujourd'hui") : null)
     : el('div', { class: 'month-nav' }, el('span', { class: 'month-label' }, { goals: 'Objectifs', more: 'Plus', accounts: 'Comptes', recurring: 'Récurrentes', settings: 'Réglages' }[state.view] || ''));
-  header.appendChild(el('div', { class: 'topbar' }, el('span', { class: 'brand' }, '💰 Budget'), nav, month));
+  header.appendChild(el('div', { class: 'topbar' }, el('span', { class: 'brand' }, '💰 Budget', state.scope !== 'all' ? el('button', { type: 'button', class: 'scope-pill', 'aria-label': 'Changer d\'espace', onclick: () => { setView('dashboard'); } }, state.scope === 'pro' ? '💼 Pro' : '👤 Perso') : null), nav, month));
 
   const tabbar = document.getElementById('tabbar');
   tabbar.textContent = '';
@@ -1203,13 +1621,26 @@ function txRow(t, showDate = false, accountFilter = '') {
     else { amountTxt = '⇄ ' + money(Math.abs(t.amount)); cls = 'xfer'; }
   } else { const v = t.type === 'expense' ? -Math.abs(t.amount) : Math.abs(t.amount); amountTxt = U.fmtSigned(v, state.currency); cls = v < 0 ? 'neg' : 'pos'; }
   const dot = isX ? 'var(--muted)' : t.type === 'income' ? 'var(--pos)' : (env ? env.color : '#98a2ad');
-  const meta = [t.recurringId ? '🔁' : null, showDate ? `${t.date.slice(8, 10)}/${t.date.slice(5, 7)}` : null, isX ? `${accName(t.accountId)} → ${accName(t.toAccountId)}` : accName(t.accountId), env ? env.name : null, t.notes || null].filter(Boolean).join(' · ');
-  return el('div', { class: 'tx-row', onclick: () => openTxModal(t) },
-    el('span', { class: 'dot', style: `background:${dot}` }),
-    el('div', { class: 'tx-main' }, el('div', { class: 'tx-payee' }, t.payee || (isX ? 'Virement' : '(sans libellé)')), el('div', { class: 'tx-meta' }, meta)),
+  const selMode = selection.on && state.view === 'transactions', checked = selection.ids.has(t.id);
+  const date = showDate ? `${t.date.slice(8, 10)}/${t.date.slice(5, 7)}` : null;
+  let metaNodes;
+  if (selMode) metaNodes = [[t.recurringId ? '🔁' : null, date, isX ? `${accName(t.accountId)} → ${accName(t.toAccountId)}` : accName(t.accountId), env ? env.name : null, t.notes || null].filter(Boolean).join(' · ')];
+  else {
+    metaNodes = [t.recurringId ? el('span', {}, '🔁') : null, date ? el('span', {}, date) : null];
+    if (isX) metaNodes.push(mchip(`${accLabel(t.accountId)} → ${accLabel(t.toAccountId)}`, '', () => openQuickFix(t, 'acc')));
+    else {
+      metaNodes.push(mchip(accLabel(t.accountId), '', () => openQuickFix(t, 'acc')));
+      if (t.type === 'expense' || (t.type === 'income' && scopeOfAcc(t.accountId) === 'pro')) metaNodes.push(env ? mchip(env.name, '', () => openQuickFix(t, 'env')) : mchip(scopeOfAcc(t.accountId) === 'pro' ? '＋ catégorie' : '＋ enveloppe', 'warn', () => openQuickFix(t, 'env')));
+    }
+    if (t.notes) metaNodes.push(el('span', { class: 'tx-note' }, t.notes));
+  }
+  return el('div', { class: `tx-row ${selMode && checked ? 'selected' : ''}`, onclick: () => { if (selMode) { if (checked) selection.ids.delete(t.id); else selection.ids.add(t.id); selection.refresh(); } else openTxModal(t); } },
+    selMode ? el('span', { class: 'chk' }, checked ? '☑' : '☐') : el('span', { class: 'dot', style: `background:${dot}` }),
+    el('div', { class: 'tx-main' }, el('div', { class: 'tx-payee' }, t.payee || (isX ? 'Virement' : '(sans libellé)')), el('div', { class: 'tx-meta' }, metaNodes)),
     el('div', { class: `tx-amount ${cls}` }, amountTxt),
     el('button', { class: 'icon-btn tx-del', 'aria-label': 'Supprimer', onclick: (e) => { e.stopPropagation(); deleteTransaction(t.id); } }, '×'));
 }
+function mchip(label, cls, fn) { return el('button', { type: 'button', class: `mchip ${cls || ''}`, 'aria-label': `Corriger : ${label}`, onclick: (e) => { e.stopPropagation(); fn(); } }, label); }
 
 function viewTransactions(root) {
   const f = state.filters;
@@ -1218,12 +1649,27 @@ function viewTransactions(root) {
     el('option', { value: '' }, 'Tous les comptes'), state.data.accounts.map((a) => el('option', { value: a.id }, a.name + (a.archived ? ' (archivé)' : ''))));
   accSel.value = f.accountId;
   const envSel = el('select', { 'aria-label': 'Enveloppe', onchange: (e) => { f.envelopeId = e.target.value; state.limit = 150; fillList(); } },
-    el('option', { value: '' }, 'Toutes les enveloppes'), state.data.envelopes.map((e) => el('option', { value: e.id }, e.name + (e.archived ? ' (archivée)' : ''))));
+    el('option', { value: '' }, 'Toutes les enveloppes'), el('option', { value: '__none__' }, '⚠️ Dépenses sans enveloppe'), state.data.envelopes.map((e) => el('option', { value: e.id }, e.name + (e.archived ? ' (archivée)' : ''))));
   envSel.value = f.envelopeId;
   const search = el('input', { type: 'search', placeholder: 'Rechercher (libellé, note, montant…)', value: f.q, 'aria-label': 'Rechercher', oninput: (e) => { f.q = e.target.value; state.limit = 150; fillList(); } });
   const allChk = el('input', { type: 'checkbox', checked: f.all, onchange: (e) => { f.all = e.target.checked; state.limit = 150; fillList(); } });
   const pills = el('div', { class: 'pills' });
   const listBox = el('div');
+  const bar = el('div', { class: 'selbar', hidden: true });
+  let visibleIds = [];
+  selection.refresh = () => fillList();
+  function drawBar() {
+    bar.hidden = !selection.on; bar.textContent = '';
+    if (!selection.on) return;
+    const n = selection.ids.size, dis = n === 0;
+    bar.append(el('span', { class: 'sn' }, `${n} sélectionnée${n > 1 ? 's' : ''}`),
+      el('button', { class: 'btn btn-sm', onclick: () => { visibleIds.forEach((i) => selection.ids.add(i)); fillList(); } }, 'Tout'),
+      el('button', { class: 'btn btn-sm btn-primary', disabled: dis, onclick: bulkEnvelope }, 'Enveloppe'),
+      el('button', { class: 'btn btn-sm btn-primary', disabled: dis, onclick: bulkAccount }, 'Compte'),
+      el('button', { class: 'btn btn-sm', style: 'color:var(--neg)', disabled: dis, onclick: bulkDelete }, 'Supprimer'),
+      el('button', { class: 'icon-btn', 'aria-label': 'Quitter la sélection', onclick: () => { clearSelection(); fillList(); } }, '×'));
+  }
+  const selBtn = el('button', { class: 'btn btn-sm', onclick: () => { if (selection.on) clearSelection(); else selection.on = true; fillList(); } }, '☑ Sélectionner');
 
   function fillList() {
     const q = U.norm(f.q), allMonths = f.all || !!q;
@@ -1231,12 +1677,13 @@ function viewTransactions(root) {
     const list = state.data.transactions.filter((t) => {
       if (!allMonths && t.date.slice(0, 7) !== state.month) return false;
       if (f.accountId && t.accountId !== f.accountId && t.toAccountId !== f.accountId) return false;
-      if (f.envelopeId && t.envelopeId !== f.envelopeId) return false;
+      if (f.envelopeId === '__none__') { if (t.type !== 'expense' || t.envelopeId) return false; } else if (f.envelopeId && t.envelopeId !== f.envelopeId) return false;
       if (q && !U.norm(`${t.payee} ${t.notes} ${(envById(t.envelopeId) || {}).name || ''} ${accName(t.accountId)} ${t.amount}`).includes(q)) return false;
       return true;
     }).sort(cmpTx);
     let inc = 0, exp = 0;
     for (const t of list) { if (t.type === 'income') inc += t.amount; else if (t.type === 'expense') exp += t.amount; }
+    visibleIds = list.map((t) => t.id); selBtn.textContent = selection.on ? '✓ Terminer' : '☑ Sélectionner'; drawBar();
     pills.textContent = '';
     pills.append(el('span', { class: 'pill pos' }, `+ ${money(inc)}`), el('span', { class: 'pill neg' }, `− ${money(exp)}`));
     listBox.textContent = '';
@@ -1255,11 +1702,12 @@ function viewTransactions(root) {
 
   put(root, 
     el('div', { class: 'section-head' }, title, el('div', { class: 'actions' },
+      selBtn,
       el('button', { class: 'btn btn-sm', onclick: () => setView('recurring') }, '🔁 Récurrentes'),
       fileButton('Importer CSV', '.csv,.txt,text/csv,text/plain', importCsvFile, 'btn btn-sm'))),
     el('div', { class: 'filters' }, el('div', { class: 'wide' }, search), accSel, envSel,
       el('div', { class: 'filters-foot' }, el('label', { class: 'check' }, allChk, 'Tous les mois'), pills)),
-    listBox);
+    listBox, bar);
   fillList();
 }
 
@@ -1277,13 +1725,15 @@ function viewEnvelopes(root) {
 
   function drawSummary() {
     const c = C();
-    const act = activeEnvelopes();
+    const act = activeEnvelopes().filter((e) => e.kind !== 'revenue');
     const income = c.income(ym), budget = act.reduce((s, e) => s + c.budget(e, ym), 0), spent = act.reduce((s, e) => s + c.spent(e.id, ym), 0);
     summary.textContent = '';
+    if (state.scope === 'pro' && hasProAccount()) { const s = proStats(ym); summary.append(card('Recettes', money(s.rev), 'pos'), card('Charges variables', money(s.varTotal)), card('Charges fixes', money(s.fixed)), card('Résultat', U.fmtSigned(s.result, state.currency), s.result >= 0 ? 'pos' : 'neg')); return; }
     summary.append(card('Revenus du mois', money(income), 'pos'), card('Budgété', money(budget)), card('Dépensé', money(spent), spent <= budget ? 'pos' : 'neg'),
       card('Reste à répartir', U.fmtSigned(U.round2(income - budget), state.currency), income - budget >= 0 ? 'pos' : 'neg', 'revenus − budgets'));
   }
   function makeRow(env) {
+    const rev = env.kind === 'revenue';
     const nameEl = el('div', { class: 'name', onclick: () => openEnvelopeModal(env) });
     const spentEl = el('div', { class: 'spent tnum' }), availEl = el('div', { class: 'avail tnum' }), fill = el('i');
     const input = el('input', { type: 'text', inputmode: 'decimal', class: 'input-sm', placeholder: '0', 'aria-label': `Budget ${env.name}`, autocomplete: 'off',
@@ -1295,21 +1745,22 @@ function viewEnvelopes(root) {
       } });
     const node = el('div', { class: 'erow', style: env.archived ? 'opacity:.6' : '' },
       el('span', { class: 'dot', style: `background:${env.color}` }), nameEl,
-      el('div', { class: 'budget' }, el('span', { class: 'lbl' }, 'Budget'), input),
-      el('div', { class: 'spent' }, el('span', { class: 'lbl' }, 'Dépensé'), spentEl),
-      el('div', { class: 'avail' }, el('span', { class: 'lbl' }, 'Disponible'), availEl),
+      el('div', { class: 'budget' }, el('span', { class: 'lbl' }, rev ? 'Objectif' : 'Budget'), input),
+      el('div', { class: 'spent' }, el('span', { class: 'lbl' }, rev ? 'Encaissé' : 'Dépensé'), spentEl),
+      el('div', { class: 'avail' }, el('span', { class: 'lbl' }, rev ? 'Écart' : 'Disponible'), availEl),
       el('div', { class: 'act' }, el('button', { class: 'icon-btn', 'aria-label': 'Modifier', onclick: () => openEnvelopeModal(env) }, '✎')),
       el('div', { class: 'bar' }, fill));
     function refresh() {
       const st = C().stats(env, ym);
+      if (rev) st.spent = C().earned(env.id, ym), st.available = U.round2(st.spent - st.budget);
       nameEl.textContent = env.name; if (env.rollover) nameEl.appendChild(el('span', { class: 'tag' }, st.carry ? `↻ report ${U.fmtSigned(st.carry, state.currency)}` : '↻ report'));
       if (env.archived) nameEl.appendChild(el('span', { class: 'tag' }, 'archivée'));
       if (document.activeElement !== input) input.value = st.budget ? U.fmtInput(st.budget) : '';
       spentEl.textContent = money(st.spent);
       availEl.textContent = money(st.available);
       const total = st.budget + st.carry;
-      availEl.className = `avail tnum ${st.available < 0 ? 'neg' : total > 0 && st.available < total * 0.1 ? 'warn' : total > 0 ? 'ok' : ''}`;
-      const f = barFill(st.spent, total); fill.className = f.cls; fill.style.width = f.pct + '%';
+      availEl.className = `avail tnum ${rev ? (st.available >= 0 ? 'ok' : st.budget > 0 ? 'warn' : '') : st.available < 0 ? 'neg' : total > 0 && st.available < total * 0.1 ? 'warn' : total > 0 ? 'ok' : ''}`;
+      const f = barFill(st.spent, total); fill.className = rev ? '' : f.cls; fill.style.width = (rev ? (total > 0 ? Math.min(100, st.spent / total * 100) : 0) : f.pct) + '%';
     }
     refreshers.push(refresh); refresh();
     return node;
@@ -1317,7 +1768,12 @@ function viewEnvelopes(root) {
 
   drawSummary();
   list.append(el('div', { class: 'erow hdr' }, el('div'), el('div', {}, 'Nom'), el('div', {}, 'Budget'), el('div', {}, 'Dépensé'), el('div', {}, 'Disponible'), el('div')));
-  envs.forEach((e) => list.appendChild(makeRow(e)));
+  let lastKind = null;
+  envs.sort((a, b) => (scopeOf(a) === 'pro' ? KIND_ORDER.indexOf(a.kind) : 9) - (scopeOf(b) === 'pro' ? KIND_ORDER.indexOf(b.kind) : 9)).forEach((e) => {
+    const k = scopeOf(e) === 'pro' ? e.kind : 'perso';
+    if (k !== lastKind && (state.scope !== 'perso')) { lastKind = k; list.appendChild(el('div', { class: 'day-head' }, k === 'perso' ? '👤 Perso' : `💼 ${KIND_LABEL[k] || 'Pro'}`)); }
+    list.appendChild(makeRow(e));
+  });
   const unc = C().uncategorized(ym);
   if (unc > 0) list.appendChild(el('div', { class: 'erow', style: 'grid-template-areas:\'dot name spent spent\'' }, el('span', { class: 'dot', style: 'background:var(--muted)' }), el('div', { class: 'name' }, 'Hors enveloppe'), el('div', { class: 'spent tnum' }, money(unc))));
   if (!envs.length) list.appendChild(el('p', { class: 'empty' }, 'Aucune enveloppe.'));
@@ -1332,10 +1788,10 @@ function viewEnvelopes(root) {
 function viewAccounts(root) {
   const c = C();
   const act = activeAccounts(), arch = state.data.accounts.filter((a) => a.archived);
-  const total = U.round2(act.reduce((s, a) => s + c.balance(a.id), 0));
+  const total = U.round2(act.reduce((s, a) => s + (proBalances().get(a.id) || 0), 0));
   const row = (a) => el('div', { class: `arow ${a.archived ? 'archived' : ''}`, onclick: () => openAccountModal(a) },
-    el('div', {}, el('div', { class: 'account-name' }, a.name), el('div', { class: 'account-type' }, a.type || '—')),
-    el('div', { class: `tx-amount ${c.balance(a.id) < 0 ? 'neg' : ''}` }, money(c.balance(a.id))),
+    el('div', {}, el('div', { class: 'account-name' }, a.name), el('div', { class: 'account-type' }, `${scopeOf(a) === 'pro' ? '💼 Pro' : '👤 Perso'} · ${a.type || '—'}`)),
+    el('div', { class: `tx-amount ${(proBalances().get(a.id) || 0) < 0 ? 'neg' : ''}` }, money(U.round2(proBalances().get(a.id) || 0))),
     el('button', { class: 'icon-btn', 'aria-label': 'Modifier', onclick: (e) => { e.stopPropagation(); openAccountModal(a); } }, '✎'));
   put(root, el('div', { class: 'section-head' }, el('h2', { class: 'page-title' }, 'Comptes'), el('button', { class: 'btn btn-primary btn-sm', onclick: () => openAccountModal() }, '+ Nouveau compte')),
     el('div', { class: 'cards' }, card('Solde global', money(total), total >= 0 ? 'pos' : 'neg')),
@@ -1371,6 +1827,8 @@ function viewSettings(root) {
       el('div', { class: 'form-grid' },
         el('div', { class: 'form-row' }, el('label', {}, 'Devise'), sel(['EUR', 'USD', 'GBP', 'CHF', 'CAD', 'JPY'].map((x) => [x, x]), state.currency, (e) => { DB.setSetting('currency', e.target.value); commit(); toast('Devise mise à jour', 'success'); })),
         el('div', { class: 'form-row' }, el('label', {}, 'Thème'), sel([['auto', 'Automatique'], ['light', 'Clair'], ['dark', 'Sombre']], state.theme, (e) => { DB.setSetting('theme', e.target.value); reloadData(); applyTheme(); render(); }))))),
+    el('section', { class: 'section' }, el('h2', {}, '💼 Espace pro'), el('p', { class: 'muted' }, 'Sépare ton activité de ton budget perso (comptes, catégories, tableau de bord).'),
+      el('div', { class: 'actions' }, hasProAccount() ? el('button', { class: 'btn', onclick: () => { const n = installProPreset(); commit(); toast(n ? `${n} catégorie(s) pro ajoutée(s)` : 'Toutes les catégories pro sont déjà là', 'success'); } }, '➕ Compléter les catégories pro') : el('button', { class: 'btn btn-primary', onclick: openProSetup }, 'Créer mon espace pro'))),
     el('section', { class: 'section' }, el('h2', {}, 'Automatisations'), el('p', { class: 'muted' }, 'Loyer, salaire, abonnements : crée-les une fois, elles s\'ajoutent toutes seules.'),
       el('button', { class: 'btn', onclick: () => setView('recurring') }, `🔁 Opérations récurrentes (${state.data.recurring.length})`)),
     el('section', { class: 'section' }, el('h2', {}, 'Données'),
@@ -1438,28 +1896,34 @@ function quickBar() {
   const input = el('input', { type: 'text', placeholder: 'Ajout rapide : « 12,50 boulangerie hier »', autocomplete: 'off', enterkeyhint: 'done', 'aria-label': 'Ajout rapide en langage naturel' });
   const preview = el('div', { class: 'qprev' });
   const lbl = { expense: 'Dépense', income: 'Revenu', transfer: 'Virement' };
-  let parsed = null;
+  let parsed = null, ov = {};
   function save() {
     if (!parsed) return; const r = parsed;
-    DB.put('transactions', { id: DB.uid(), date: r.date, accountId: r.accountId, toAccountId: r.toAccountId, envelopeId: r.envelopeId, type: r.type, amount: r.amount, payee: r.payee, notes: '', recurringId: null, createdAt: Date.now() });
-    DB.setSetting('lastAccountId', r.accountId); commit(); toast('Ajouté : ' + (r.payee || lbl[r.type]) + ' ' + money(r.amount), 'success');
+    const tx = { id: DB.uid(), date: r.date, accountId: r.accountId, toAccountId: r.toAccountId, envelopeId: r.envelopeId, type: r.type, amount: r.amount, payee: r.payee, notes: '', recurringId: null, createdAt: Date.now() };
+    DB.put('transactions', tx); DB.setSetting('lastAccountId', r.accountId); commit();
+    const where = r.type === 'transfer' ? `${accName(r.accountId)} → ${accName(r.toAccountId)}` : [r.type === 'expense' || (r.type === 'income' && r.envelopeId) ? (envById(r.envelopeId) || { name: 'non classé' }).name : null, accLabel(r.accountId)].filter(Boolean).join(' · ');
+    toast(`Ajouté : ${r.payee || lbl[r.type]} ${money(r.amount)} → ${where}`, 'success', { label: 'Corriger', fn: () => openQuickFix(tx, r.type === 'transfer' ? 'acc' : 'env') }, 9000);
   }
   function upd() {
     preview.textContent = ''; parsed = null;
     if (!input.value.trim()) return;
-    const r = parseQuick(input.value);
+    let r = parseQuick(input.value);
+    if (r && !r.error) {
+      r = { ...r, ...ov };
+      if (ov.accountId && ov.envelopeId === undefined && r.type !== 'transfer') { const sc = scopeOfAcc(r.accountId); r.envelopeId = (r.type === 'expense' || sc === 'pro' ? (suggestEnvelope(r.payee, sc, r.type) || {}).envelopeId : null) || null; }
+    }
     if (!r || r.error) { preview.appendChild(el('span', { class: 'muted' }, r && r.error === 'compte' ? "Crée d'abord un compte." : 'Ajoute un montant, par exemple « 45 essence » ou « +1850 salaire ».')); return; }
     parsed = r;
     const env = envById(r.envelopeId), sign = r.type === 'expense' ? -1 : r.type === 'income' ? 1 : 0;
     preview.append(el('div', { class: 'chips' },
       el('span', { class: `chip strong ${sign < 0 ? 'neg' : sign > 0 ? 'pos' : ''}` }, sign ? U.fmtSigned(sign * r.amount, state.currency) : '⇄ ' + money(r.amount)),
       chip(r.payee || lbl[r.type]),
-      r.type === 'expense' ? chip(env ? `✉️ ${env.name}${r.source === 'suggestion' ? ' (suggéré)' : ''}` : 'sans enveloppe') : null,
-      chip(r.type === 'transfer' ? `${accName(r.accountId)} → ${accName(r.toAccountId)}` : accName(r.accountId)),
+      r.type === 'expense' || (r.type === 'income' && scopeOfAcc(r.accountId) === 'pro') ? mchip(env ? `✉️ ${env.name}${r.source === 'suggestion' && ov.envelopeId === undefined ? ' (suggéré)' : ''} ▾` : 'non classé ▾', env ? '' : 'warn', () => openPicker('Catégorie', envOptions(r.envelopeId, scopeOfAcc(r.accountId), r.type), (k) => { ov.envelopeId = k || null; upd(); })) : null,
+      r.type === 'transfer' ? chip(`${accLabel(r.accountId)} → ${accLabel(r.toAccountId)}`) : mchip(`${accLabel(r.accountId)} ▾`, '', () => openPicker('Compte', accOptions(r.accountId), (k) => { ov.accountId = k; upd(); })),
       r.date !== U.todayISO() ? chip('📅 ' + U.dayLabel(r.date)) : null),
       el('div', { class: 'actions', style: 'margin-top:8px' }, el('button', { class: 'btn btn-primary btn-sm', onclick: save }, 'Ajouter'), el('button', { class: 'btn btn-sm', onclick: () => openTxModal(null, { ...r }) }, 'Modifier…')));
   }
-  input.addEventListener('input', upd);
+  input.addEventListener('input', () => { ov = {}; upd(); });
   input.addEventListener('keydown', (e) => { if (e.key === 'Enter') { e.preventDefault(); save(); } });
   return el('div', { class: 'qbar' }, el('div', { class: 'qrow' }, el('span', { class: 'qi' }, '✨'), input), preview);
 }
@@ -1497,12 +1961,14 @@ function miniStatus() {
 
 // ============================================================ Accueil
 function viewDashboard(root) {
+  if (state.scope === 'pro') return viewProDashboard(root);
   const c = C(), ym = state.month, isCur = ym === U.todayYM();
   const accounts = activeAccounts(), envs = activeEnvelopes();
-  const net = U.round2(accounts.reduce((s, a) => s + c.balance(a.id), 0));
+  const net = U.round2(accounts.reduce((s, a) => s + (proBalances().get(a.id) || 0), 0));
   const income = c.income(ym), expense = c.expense(ym), diff = U.round2(income - expense);
   const rows = envs.map((env) => ({ env, ...c.stats(env, ym) }));
-  const nodes = [];
+  const nodes = [scopeSwitch()];
+  if (state.scope === 'all') nodes.push(scopeTiles());
 
   const nTx = state.data.transactions.length;
   if (!DB.getSetting('welcomeDismissed', false) && nTx === 0 && accounts.every((a) => !a.openingBalance)) {
@@ -1545,7 +2011,7 @@ function viewDashboard(root) {
     }) : el('p', { class: 'empty' }, 'Aucun budget défini. Va dans « Enveloppes » ou laisse-moi en suggérer.'),
     shown.length ? null : el('button', { class: 'btn btn-block', onclick: openBudgetSuggest }, '🪄 Suggérer des budgets')));
   nodes.push(el('section', { class: 'section' }, sectionHead('Comptes', el('button', { class: 'btn btn-sm', onclick: () => openAccountModal() }, '+ Ajouter')),
-    el('div', { class: 'account-grid' }, accounts.map((a) => { const b = c.balance(a.id); return el('div', { class: 'account-card', onclick: () => openAccountModal(a) }, el('div', { class: 'account-name' }, a.name), el('div', { class: `account-balance ${b < 0 ? 'neg' : ''}` }, money(b)), el('div', { class: 'account-type' }, a.type || '—')); })),
+    el('div', { class: 'account-grid' }, accounts.map((a) => { const b = U.round2(proBalances().get(a.id) || 0); return el('div', { class: 'account-card', onclick: () => openAccountModal(a) }, el('div', { class: 'account-name' }, a.name), el('div', { class: `account-balance ${b < 0 ? 'neg' : ''}` }, money(b)), el('div', { class: 'account-type' }, (scopeOf(a) === 'pro' ? '💼 ' : '') + (a.type || '—'))); })),
     accounts.length ? null : el('p', { class: 'empty' }, 'Aucun compte.')));
   const recent = state.data.transactions.slice().sort(cmpTx).slice(0, 6);
   nodes.push(el('section', { class: 'section' }, sectionHead('Dernières opérations', el('button', { class: 'btn btn-sm', onclick: () => { state.filters = { accountId: '', envelopeId: '', q: '', all: true }; setView('transactions'); } }, 'Tout voir')),
@@ -1673,32 +2139,43 @@ const parseField = (v) => (String(v).trim() === '' ? NaN : U.parseNumber(v));
 // Champs communs à une opération et à une récurrence
 function txFields(init, { withDate = true } = {}) {
   let type = init.type || 'expense';
-  const accs = state.data.accounts.filter((a) => !a.archived || a.id === init.accountId || a.id === init.toAccountId);
-  const envs = state.data.envelopes.filter((e) => !e.archived || e.id === init.envelopeId);
+  const accs = state.all.accounts.filter((a) => (!a.archived || a.id === init.accountId || a.id === init.toAccountId) && (state.scope === 'all' || scopeOf(a) === state.scope || a.id === init.accountId || a.id === init.toAccountId));
   const amount = el('input', { type: 'text', inputmode: 'decimal', class: 'amount-input', name: 'amount', autocomplete: 'off', placeholder: '0,00', 'aria-label': 'Montant', value: init.amount ? U.fmtInput(init.amount) : '' });
   const payee = el('input', { type: 'text', name: 'payee', list: 'payee-list', autocomplete: 'off', placeholder: 'Carrefour, Salaire…', value: init.payee || '' });
   const accSel = el('select', { name: 'accountId' }, accs.map((a) => opt(a.id, a.name)));
   const toSel = el('select', { name: 'toAccountId' }, accs.map((a) => opt(a.id, a.name)));
-  const envSel = el('select', { name: 'envelopeId' }, opt('', '(aucune)'), envs.map((e) => opt(e.id, e.name)));
+  const envSel = el('select', { name: 'envelopeId' });
+  const envLbl = el('label', {}, 'Enveloppe');
   accSel.value = init.accountId || (accs[0] || {}).id || '';
   toSel.value = init.toAccountId || (accs.find((a) => a.id !== accSel.value) || {}).id || '';
-  envSel.value = init.envelopeId || '';
   let envTouched = !!init.envelopeId;
   envSel.addEventListener('change', () => { envTouched = true; });
-  const rowTo = row('Vers le compte', toSel), rowEnv = row('Enveloppe', envSel);
+  const rowTo = row('Vers le compte', toSel), rowEnv = el('div', { class: 'form-row' }, envLbl, envSel);
   const accLabel = el('label', {}, 'Compte');
   const rowAcc = el('div', { class: 'form-row' }, accLabel, accSel);
   const dl = el('datalist', { id: 'payee-list' }, C().payeeNames().map((n) => el('option', { value: n })));
+  function fillEnv(keep) {
+    const sc = scopeOfAcc(accSel.value), cur = keep !== undefined ? keep : envSel.value;
+    const list = state.all.envelopes.filter((e) => (!e.archived || e.id === cur) && scopeOf(e) === sc && (type === 'income') === (e.kind === 'revenue'));
+    envSel.textContent = ''; envSel.appendChild(opt('', sc === 'pro' ? '(non classé)' : '(aucune)'));
+    if (sc === 'pro') for (const k of KIND_ORDER) { const g = list.filter((e) => e.kind === k); if (g.length) envSel.appendChild(el('optgroup', { label: KIND_LABEL[k] }, g.map((e) => opt(e.id, e.name)))); }
+    else list.forEach((e) => envSel.appendChild(opt(e.id, e.name)));
+    envSel.value = list.some((e) => e.id === cur) ? cur : '';
+    envLbl.textContent = type === 'income' ? 'Catégorie de recette' : sc === 'pro' ? 'Catégorie' : 'Enveloppe';
+    rowEnv.hidden = type === 'transfer' || (type === 'income' && !list.length);
+  }
   function applyType() {
     rowTo.hidden = type !== 'transfer';
-    rowEnv.hidden = type !== 'expense';
     accLabel.textContent = type === 'transfer' ? 'Du compte' : 'Compte';
+    fillEnv();
   }
+  fillEnv(init.envelopeId || '');
+  accSel.addEventListener('change', () => { envTouched = false; fillEnv(''); });
   // pré-remplit l'enveloppe depuis le dernier usage du même libellé
   const suggest = () => {
-    if (envTouched || type !== 'expense') return;
-    const sg = suggestEnvelope(payee.value);
-    if (sg && envs.some((e) => e.id === sg.envelopeId)) envSel.value = sg.envelopeId;
+    if (envTouched || type === 'transfer') return;
+    const sg = suggestEnvelope(payee.value, scopeOfAcc(accSel.value), type);
+    if (sg && [...envSel.options].some((o) => o.value === sg.envelopeId)) envSel.value = sg.envelopeId;
   };
   payee.addEventListener('change', suggest); payee.addEventListener('blur', suggest);
   const seg = segmented([['expense', 'Dépense'], ['income', 'Revenu'], ['transfer', 'Virement']], type, (v) => { type = v; applyType(); });
@@ -1713,7 +2190,7 @@ function txFields(init, { withDate = true } = {}) {
       if (type === 'transfer') {
         if (!toSel.value || toSel.value === accSel.value) return { error: 'Choisis deux comptes différents' };
       }
-      return { value: { type, amount: U.round2(a), accountId: accSel.value, toAccountId: type === 'transfer' ? toSel.value : null, envelopeId: type === 'expense' ? (envSel.value || null) : null, payee: payee.value.trim(), } };
+      return { value: { type, amount: U.round2(a), accountId: accSel.value, toAccountId: type === 'transfer' ? toSel.value : null, envelopeId: type !== 'transfer' ? (envSel.value || null) : null, payee: payee.value.trim(), } };
     },
   };
 }
@@ -1749,16 +2226,20 @@ function openTxModal(existing = null, preset = {}) {
 }
 
 // ============================================================ Enveloppe
-function openEnvelopeModal(existing = null) {
-  const isEdit = !!existing, e0 = existing || {};
+function openEnvelopeModal(existing = null, preset = {}) {
+  const isEdit = !!existing, e0 = existing || { scope: state.scope === 'pro' ? 'pro' : 'perso', ...preset };
   const name = el('input', { type: 'text', required: true, value: e0.name || '', placeholder: 'Courses, Loyer…' });
   const color = el('input', { type: 'color', value: e0.color || '#3498db' });
   const group = el('input', { type: 'text', value: e0.group || '', placeholder: 'Maison, Vie sociale…' });
   const def = el('input', { type: 'text', inputmode: 'decimal', value: e0.defaultBudget ? U.fmtInput(e0.defaultBudget) : '', placeholder: '0', autocomplete: 'off' });
+  const scopeSel = el('select', {}, opt('perso', '👤 Perso'), opt('pro', '💼 Pro')); scopeSel.value = scopeOf(e0);
+  const kindSel = el('select', {}, opt('revenue', '💶 Recette'), opt('variable', '🥚 Charge variable'), opt('fixed', '🏠 Charge fixe')); kindSel.value = e0.kind || 'variable';
+  const kindRow = row('Type (espace pro)', kindSel); kindRow.hidden = scopeSel.value !== 'pro';
+  scopeSel.addEventListener('change', () => { kindRow.hidden = scopeSel.value !== 'pro'; });
   const roll = el('input', { type: 'checkbox', checked: !!e0.rollover });
   const arch = el('input', { type: 'checkbox', checked: !!e0.archived });
   const form = el('form', { class: 'form', novalidate: true },
-    row('Nom', name),
+    row('Nom', name), row('Espace', scopeSel), kindRow,
     el('div', { class: 'form-grid' }, row('Couleur', color), row('Budget mensuel par défaut', def)),
     row('Groupe (optionnel)', group),
     el('label', { class: 'checkrow' }, roll, el('span', {}, 'Reporter le reste (ou le dépassement) au mois suivant')),
@@ -1773,7 +2254,7 @@ function openEnvelopeModal(existing = null) {
     if (!n) { toast('Donne un nom à l\'enveloppe', 'error'); name.focus(); return; }
     const d = def.value.trim() === '' ? 0 : U.parseNumber(def.value);
     if (Number.isNaN(d) || d < 0) { toast('Budget par défaut invalide', 'error'); return; }
-    DB.put('envelopes', { id: isEdit ? existing.id : DB.uid(), name: n, color: color.value, group: group.value.trim(), defaultBudget: U.round2(d), rollover: roll.checked, archived: isEdit ? arch.checked : false, createdAt: isEdit ? existing.createdAt : Date.now() });
+    DB.put('envelopes', { id: isEdit ? existing.id : DB.uid(), name: n, color: color.value, group: scopeSel.value === 'pro' ? KIND_LABEL[kindSel.value] : group.value.trim(), scope: scopeSel.value, kind: scopeSel.value === 'pro' ? kindSel.value : '', defaultBudget: U.round2(d), rollover: roll.checked, archived: isEdit ? arch.checked : false, createdAt: isEdit ? existing.createdAt : Date.now() });
     closeModal(); commit(); toast(isEdit ? 'Enveloppe modifiée' : 'Enveloppe créée', 'success');
   });
   showModal(isEdit ? "Modifier l'enveloppe" : 'Nouvelle enveloppe', form);
@@ -1781,16 +2262,17 @@ function openEnvelopeModal(existing = null) {
 }
 
 // ============================================================ Compte
-function openAccountModal(existing = null) {
-  const isEdit = !!existing, a0 = existing || {};
+function openAccountModal(existing = null, preset = {}) {
+  const isEdit = !!existing, a0 = existing || { scope: state.scope === 'pro' ? 'pro' : 'perso', ...preset };
   const types = ['Compte courant', 'Épargne', 'Espèces', 'Carte bancaire', 'Autre'];
   const name = el('input', { type: 'text', required: true, value: a0.name || '', placeholder: 'Compte courant, Livret A…' });
   const type = el('select', {}, types.map((t) => opt(t, t))); type.value = types.includes(a0.type) ? a0.type : 'Compte courant';
+  const scopeSel = el('select', {}, opt('perso', '👤 Perso'), opt('pro', '💼 Pro')); scopeSel.value = scopeOf(a0);
   const ob = el('input', { type: 'text', inputmode: 'decimal', value: a0.openingBalance ? U.fmtInput(a0.openingBalance) : '', placeholder: '0,00', autocomplete: 'off' });
   const arch = el('input', { type: 'checkbox', checked: !!a0.archived });
   const form = el('form', { class: 'form', novalidate: true },
-    row('Nom', name), row('Type', type), row('Solde initial (avant toute opération saisie)', ob),
-    isEdit ? el('div', { class: 'muted' }, `Solde actuel : ${money(C().balance(existing.id))}`, ' ', el('a', { href: '#', onclick: (e) => { e.preventDefault(); openAdjustModal(existing); } }, 'Corriger pour qu\'il colle à la banque')) : null,
+    row('Nom', name), row('Espace', scopeSel), row('Type', type), row('Solde initial (avant toute opération saisie)', ob),
+    isEdit ? el('div', { class: 'muted' }, `Solde actuel : ${money(U.round2(proBalances().get(existing.id) || 0))}`, ' ', el('a', { href: '#', onclick: (e) => { e.preventDefault(); openAdjustModal(existing); } }, 'Corriger pour qu\'il colle à la banque')) : null,
     isEdit ? el('label', { class: 'checkrow' }, arch, el('span', {}, 'Archivé (masqué, exclu du solde total)')) : null,
     el('div', { class: 'modal-actions' },
       isEdit ? el('button', { type: 'button', class: 'btn btn-ghost spacer', style: 'color:var(--neg)', onclick: async () => {
@@ -1804,7 +2286,7 @@ function openAccountModal(existing = null) {
     const n = name.value.trim(); if (!n) { toast('Donne un nom au compte', 'error'); name.focus(); return; }
     const b = ob.value.trim() === '' ? 0 : U.parseNumber(ob.value);
     if (Number.isNaN(b)) { toast('Solde initial invalide', 'error'); return; }
-    DB.put('accounts', { id: isEdit ? existing.id : DB.uid(), name: n, type: type.value, openingBalance: U.round2(b), archived: isEdit ? arch.checked : false, createdAt: isEdit ? existing.createdAt : Date.now() });
+    DB.put('accounts', { id: isEdit ? existing.id : DB.uid(), name: n, type: type.value, openingBalance: U.round2(b), scope: scopeSel.value, archived: isEdit ? arch.checked : false, createdAt: isEdit ? existing.createdAt : Date.now() });
     closeModal(); commit(); toast(isEdit ? 'Compte modifié' : 'Compte créé', 'success');
   });
   showModal(isEdit ? 'Modifier le compte' : 'Nouveau compte', form);
@@ -1937,7 +2419,7 @@ function openCsvImport(rows) {
   importBtn.addEventListener('click', () => {
     const c = C(); const now = Date.now();
     const txs = result.fresh.map((it, i) => {
-      const sg = it.type === 'expense' ? suggestEnvelope(it.payee) : null;
+      const sg = it.type === 'expense' || scopeOfAcc(cfg.accountId) === 'pro' ? suggestEnvelope(it.payee, scopeOfAcc(cfg.accountId), it.type) : null;
       const env = sg ? sg.envelopeId : null;
       return { id: DB.uid(), date: it.date, accountId: cfg.accountId, toAccountId: null, envelopeId: env, type: it.type, amount: it.amount, payee: it.payee, notes: '', recurringId: null, createdAt: now + i };
     });
@@ -1984,7 +2466,7 @@ function openGoalModal(existing = null, preset = {}) {
     if (!(t > 0)) { toast('Indique le montant visé', 'error'); target.focus(); return; }
     if (Number.isNaN(sv) || sv < 0) { toast('Montant déjà épargné invalide', 'error'); return; }
     if (deadline.value && !U.validISO(deadline.value)) { toast('Échéance invalide', 'error'); return; }
-    DB.put('goals', { id: isEdit ? existing.id : DB.uid(), name: n, emoji: emoji.value.trim() || '🎯', target: U.round2(t), saved: U.round2(sv), deadline: deadline.value || null, color: color.value, createdAt: isEdit ? existing.createdAt : Date.now() });
+    DB.put('goals', { id: isEdit ? existing.id : DB.uid(), name: n, emoji: emoji.value.trim() || '🎯', target: U.round2(t), saved: U.round2(sv), deadline: deadline.value || null, color: color.value, scope: isEdit ? scopeOf(existing) : (state.scope === 'pro' ? 'pro' : 'perso'), createdAt: isEdit ? existing.createdAt : Date.now() });
     closeModal(); commit(); toast(isEdit ? 'Objectif modifié' : 'Objectif créé', 'success');
     if (U.round2(sv) >= U.round2(t) && (!isEdit || existing.saved < existing.target)) confetti();
   });
@@ -2084,6 +2566,7 @@ function openForecastModal() {
 // main.js — rendu et démarrage
 // ============================================================
 function render() {
+  document.body.dataset.scope = state.scope;
   renderChrome();
   const root = document.getElementById('app-main');
   root.textContent = '';
